@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Bảng màu Galaxy/Navy/Purple */
+    --navy-deep: #020617;      /* Navy siêu đậm */
+    --navy-light: #1e1b4b;     /* Navy pha tím */
+    --purple-glow: #4c1d95;    /* Tím huyền ảo */
+    --white-light: #f8fafc;    /* Trắng nhẹ cho text */
+    
+    /* Màu nút: Vàng chanh tươi hơn nữa */
+    --btn-neon: #fde047;       /* Vàng chanh tươi (Yellow-300) */
+    --btn-neon-hover: #fbbf24; /* Vàng đậm hơn khi hover */
+  }
+
+  body {
+    /* Hiệu ứng Gradient đa điểm (Mesh) giúp web tươi tắn và có chiều sâu */
+    background: radial-gradient(at 0% 0%, #1e1b4b 0px, transparent 50%),
+                radial-gradient(at 100% 0%, #4c1d95 0px, transparent 50%),
+                radial-gradient(at 50% 100%, #020617 0px, transparent 50%),
+                linear-gradient(135deg, #020617 0%, #0f172a 100%);
+    background-attachment: fixed;
+    color: var(--white-light);
+    @apply antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  /* Nút bấm tươi rói, có hiệu ứng phát sáng nhẹ */
+  .btn-bright {
+    @apply px-7 py-3 bg-[var(--btn-neon)] hover:bg-[var(--btn-neon-hover)]
+           text-slate-900 font-bold rounded-full transition-all duration-300
+           active:scale-95 shadow-[0_0_20px_rgba(253,224,71,0.3)] 
+           hover:shadow-[0_0_30px_rgba(253,224,71,0.5)] uppercase text-sm tracking-wider;
+  }
+
+  /* Card phim với viền trắng nhẹ cực mỏng để tách biệt nền */
+  .movie-card {
+    @apply relative overflow-hidden rounded-2xl bg-white/5 backdrop-blur-sm
+           border border-white/10 transition-all duration-500 
+           hover:border-white/30 hover:-translate-y-2 shadow-2xl;
+  }
+
+  /* Kính mờ (Glassmorphism) pha chút trắng nhẹ */
+  .glass-effect {
+    @apply bg-white/10 backdrop-blur-xl border border-white/20 
+           hover:bg-white/20 transition-all duration-300;
+  }
+}
+
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+}
