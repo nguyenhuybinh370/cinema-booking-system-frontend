@@ -73,14 +73,6 @@ const Rooms = () => {
           </thead>
           <tbody className="divide-y divide-white/5">
             {rooms.map((room) => (
-<<<<<<< Updated upstream
-              <tr key={room.MaPhongChieu} className="hover:bg-white/[0.02] transition-colors">
-                <td className="px-6 py-4 font-bold text-white">{room.TenPhong}</td>
-                <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
-                    room.MaLoaiPhong === 'LP03' ? 'bg-amber-500/10 text-amber-500' : 
-                    room.MaLoaiPhong === 'LP02' ? 'bg-blue-500/10 text-blue-500' : 'bg-slate-500/10 text-slate-500'
-=======
               <tr key={room.MaPhongChieu} className="hover:bg-white/[0.02] transition-colors group">
                 <td className="px-6 py-4">
                   <Link 
@@ -94,30 +86,10 @@ const Rooms = () => {
                   <span className={`px-3 py-1 rounded-lg text-[10px] font-bold border ${
                     room.MaLoaiPhong === 'LP03' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 
                     room.MaLoaiPhong === 'LP02' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' : 'bg-slate-500/10 text-slate-500 border-white/5'
->>>>>>> Stashed changes
                   }`}>
                     {ROOM_TYPES.find(t => t.MaLoaiPhong === room.MaLoaiPhong)?.TenLoaiPhong}
                   </span>
                 </td>
-<<<<<<< Updated upstream
-                <td className="px-6 py-4 text-slate-400">{room.SoGhe} ghế</td>
-                <td className="px-6 py-4 text-slate-400">
-                  {SEAT_MAPS.find(m => m.MaSoDoGhe === room.MaSoDoGhe)?.MaSoDoGhe}
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
-                    room.Status === 'Active' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-orange-500/10 text-orange-500'
-                  }`}>
-                    {room.Status === 'Active' ? 'Đang sử dụng' : 'Đang bảo trì'}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex gap-4">
-                    <button className="text-sm font-bold text-slate-400 hover:text-white transition-colors">Sửa</button>
-                    <button 
-                      onClick={() => handleToggleStatus(room.MaPhongChieu)}
-                      className="text-sm font-bold text-slate-400 hover:text-red-500 transition-colors"
-=======
                 <td className="px-6 py-4 text-slate-400 font-medium">{room.SoGhe} ghế</td>
                 <td className="px-6 py-4 text-slate-400 text-sm font-mono">
                   {room.MaSoDoGhe}
@@ -136,7 +108,6 @@ const Rooms = () => {
                       to={`/admin/rooms/${room.MaPhongChieu}/seats`}
                       className="p-2 hover:bg-white/5 text-slate-500 hover:text-white rounded-xl transition-all"
                       title="Cấu hình ghế"
->>>>>>> Stashed changes
                     >
                       <LayoutGrid size={18} />
                     </Link>
@@ -168,11 +139,7 @@ const Rooms = () => {
             <input 
               type="text" 
               required
-<<<<<<< Updated upstream
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors"
-=======
               className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-white font-bold"
->>>>>>> Stashed changes
               value={formData.TenPhong}
               onChange={e => setFormData({ ...formData, TenPhong: e.target.value })}
               placeholder="VD: Phòng chiếu 01"
@@ -183,11 +150,7 @@ const Rooms = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Loại phòng</label>
               <select 
-<<<<<<< Updated upstream
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors"
-=======
                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-sm"
->>>>>>> Stashed changes
                 value={formData.MaLoaiPhong}
                 onChange={e => setFormData({ ...formData, MaLoaiPhong: e.target.value })}
               >
@@ -199,11 +162,7 @@ const Rooms = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Sơ đồ mẫu</label>
               <select 
-<<<<<<< Updated upstream
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors"
-=======
                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-sm"
->>>>>>> Stashed changes
                 value={formData.MaSoDoGhe}
                 onChange={e => setFormData({ ...formData, MaSoDoGhe: e.target.value })}
               >
@@ -215,20 +174,10 @@ const Rooms = () => {
           </div>
 
           <div className="space-y-2">
-<<<<<<< Updated upstream
-            <label className="text-sm font-bold text-slate-400 uppercase tracking-wider">Sức chứa (Tự động)</label>
-            <input 
-              type="text" 
-              disabled
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-slate-500"
-              value={`${getSeatCount(formData.MaSoDoGhe)} ghế`}
-            />
-=======
             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Sức chứa dự kiến</label>
             <div className="w-full bg-white/5 border border-white/5 rounded-xl py-3 px-4 text-slate-500 font-bold">
               {getSeatCount(formData.MaSoDoGhe)} ghế
             </div>
->>>>>>> Stashed changes
           </div>
 
           <div className="space-y-4">
@@ -257,12 +206,7 @@ const Rooms = () => {
             </div>
           </div>
 
-<<<<<<< Updated upstream
-
-          <div className="flex gap-4 pt-4">
-=======
           <div className="flex gap-4 pt-4 border-t border-white/5">
->>>>>>> Stashed changes
             <button 
               type="button"
               onClick={() => setIsModalOpen(false)}
