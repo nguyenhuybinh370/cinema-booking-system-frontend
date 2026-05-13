@@ -9,6 +9,7 @@ import SeatMaps from './pages/Admin/SeatMaps'
 import Pricing from './pages/Admin/Pricing'
 import Personnel from './pages/Admin/Personnel'
 import Showtimes from './pages/Admin/Showtimes'
+import Stats from './pages/Admin/Stats'
 
 function App() {
   return (
@@ -26,9 +27,9 @@ function App() {
         <Route path="/admin/pricing" element={<Pricing />} />
         <Route path="/admin/personnel" element={<Personnel />} />
         <Route path="/admin/showtimes" element={<Showtimes />} />
-
-        <Route path="/admin/stats" element={<div className="p-10 text-white">Stats Module Placeholder</div>} />
+        <Route path="/admin/stats" element={<Stats />} />
       </Routes>
+
     </>
   )
 }
