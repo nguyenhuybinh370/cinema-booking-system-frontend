@@ -13,6 +13,7 @@ import Pricing from './pages/Admin/Pricing'
 import Personnel from './pages/Admin/Personnel'
 import Showtimes from './pages/Admin/Showtimes'
 import Stats from './pages/Admin/Stats'
+import SeatMapTemplates from './pages/Admin/SeatMapTemplates'
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
         <Route path="/admin/rooms" element={<Rooms />} />
         <Route path="/admin/rooms/:roomId/seats" element={<SeatMaps />} />
         <Route path="/admin/movies" element={<Movies />} />
+        <Route path="/admin/seat-templates" element={<SeatMapTemplates />} />
 
         <Route path="/admin/pricing" element={<Pricing />} />
         <Route path="/admin/personnel" element={<Personnel />} />
