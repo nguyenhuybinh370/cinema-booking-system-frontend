@@ -7,6 +7,7 @@ import Rooms from './pages/Admin/Rooms'
 import Movies from './pages/Admin/Movies'
 import SeatMaps from './pages/Admin/SeatMaps'
 import Pricing from './pages/Admin/Pricing'
+import Personnel from './pages/Admin/Personnel'
 
 function App() {
   return (
@@ -22,8 +23,8 @@ function App() {
         <Route path="/admin/movies" element={<Movies />} />
         <Route path="/admin/seat-maps" element={<SeatMaps />} />
         <Route path="/admin/pricing" element={<Pricing />} />
+        <Route path="/admin/personnel" element={<Personnel />} />
 
-        <Route path="/admin/personnel" element={<div className="p-10 text-white">Personnel Module Placeholder</div>} />
         <Route path="/admin/showtimes" element={<div className="p-10 text-white">Showtimes Module Placeholder</div>} />
         <Route path="/admin/stats" element={<div className="p-10 text-white">Stats Module Placeholder</div>} />
       </Routes>
