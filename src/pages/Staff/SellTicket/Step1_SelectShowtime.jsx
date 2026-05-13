@@ -25,17 +25,46 @@ const MOCK_MOVIES = [
   },
 ];
 
+// Thêm thông tin Giá vé, Phụ thu Phòng, Phụ thu Ngày vào Suất chiếu
 const MOCK_SHOWTIMES = {
   M1: [
-    { id: "S1", time: "09:00", room: "Phòng 1" },
-    { id: "S2", time: "13:30", room: "Phòng IMAX" },
-    { id: "S3", time: "19:00", room: "Phòng 2" },
+    {
+      id: "S1",
+      time: "09:00",
+      room: "Phòng 1 (Standard)",
+      basePrice: 60000,
+      roomSurcharge: 0,
+      daySurcharge: 10000,
+    },
+    {
+      id: "S2",
+      time: "13:30",
+      room: "Phòng IMAX",
+      basePrice: 60000,
+      roomSurcharge: 30000,
+      daySurcharge: 10000,
+    },
   ],
   M2: [
-    { id: "S4", time: "10:00", room: "Phòng 3" },
-    { id: "S5", time: "15:00", room: "Phòng 1" },
+    {
+      id: "S4",
+      time: "10:00",
+      room: "Phòng 3 (Standard)",
+      basePrice: 50000,
+      roomSurcharge: 0,
+      daySurcharge: 0,
+    },
   ],
-  M3: [{ id: "S6", time: "20:30", room: "Phòng IMAX" }],
+  M3: [
+    {
+      id: "S6",
+      time: "20:30",
+      room: "Phòng IMAX",
+      basePrice: 70000,
+      roomSurcharge: 30000,
+      daySurcharge: 15000,
+    },
+  ],
 };
 
 const Step1_SelectShowtime = ({ onNext }) => {
