@@ -28,8 +28,9 @@ function App() {
         {/* Admin Routes */}
         <Route path="/admin" element={<Navigate to="/admin/rooms" replace />} />
         <Route path="/admin/rooms" element={<Rooms />} />
+        <Route path="/admin/rooms/:roomId/seats" element={<SeatMaps />} />
         <Route path="/admin/movies" element={<Movies />} />
-        <Route path="/admin/seat-maps" element={<SeatMaps />} />
+
         <Route path="/admin/pricing" element={<Pricing />} />
         <Route path="/admin/personnel" element={<Personnel />} />
         <Route path="/admin/showtimes" element={<Showtimes />} />

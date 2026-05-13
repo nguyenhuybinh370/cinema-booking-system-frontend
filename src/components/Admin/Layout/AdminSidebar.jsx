@@ -15,7 +15,6 @@ const AdminSidebar = () => {
   const menuItems = [
     { name: 'Phòng chiếu', icon: LayoutDashboard, path: '/admin/rooms' },
     { name: 'Phim', icon: Film, path: '/admin/movies' },
-    { name: 'Sơ đồ ghế', icon: Grid3X3, path: '/admin/seat-maps' },
     { name: 'Bảng giá', icon: BadgeDollarSign, path: '/admin/pricing' },
     { name: 'Nhân sự', icon: Users, path: '/admin/personnel' },
     { name: 'Suất chiếu', icon: CalendarDays, path: '/admin/showtimes' },

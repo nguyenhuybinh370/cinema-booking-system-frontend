@@ -1,39 +1,45 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
-import { ROOMS, SEAT_TYPES } from '../../constants/adminMockData';
-import { Lock, Unlock, MousePointer2 } from 'lucide-react';
+import { ROOMS, SEAT_TYPES, SEAT_MAPS } from '../../constants/adminMockData';
+import { Lock, Unlock, ChevronLeft, Save } from 'lucide-react';
 
 const SeatMaps = () => {
-  const [selectedRoom, setSelectedRoom] = useState(ROOMS[0].id);
-  const [rows, setRows] = useState(8);
-  const [cols, setCols] = useState(10);
+  const { roomId } = useParams();
+  const navigate = useNavigate();
+  
+  // Find room and its template
+  const room = ROOMS.find(r => r.MaPhongChieu === roomId);
+  const template = SEAT_MAPS.find(m => m.MaSoDoGhe === room?.MaSoDoGhe);
+  
   const [matrix, setMatrix] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState([]);
 
-  // Generate matrix
-  const generateMatrix = () => {
-    const newMatrix = [];
-    for (let r = 0; r < rows; r++) {
-      const row = [];
-      const rowChar = String.fromCharCode(65 + r); // A, B, C...
-      for (let c = 0; c < cols; c++) {
-        row.push({
-          id: `${rowChar}${c + 1}`,
-          type: 'Normal',
-          isLocked: false,
-          row: rowChar,
-          col: c + 1
-        });
-      }
-      newMatrix.push(row);
-    }
-    setMatrix(newMatrix);
-    setSelectedSeats([]);
-  };
-
+  // Mock initial seat data for the room (this would come from CHITIET_SODOGHE)
   useEffect(() => {
-    generateMatrix();
-  }, []);
+    if (template) {
+      const rows = template.TongHang;
+      const cols = template.TongCot;
+      const newMatrix = [];
+      
+      for (let r = 0; r < rows; r++) {
+        const row = [];
+        const rowChar = String.fromCharCode(65 + r);
+        for (let c = 0; c < cols; c++) {
+          row.push({
+            MaChiTietSoDo: `${room.MaPhongChieu}-${rowChar}${c + 1}`,
+            MaSoDoGhe: room.MaSoDoGhe,
+            MaLoaiGhe: 'LG01', // Default to Normal
+            Hang: rowChar,
+            Cot: c + 1,
+            KhaDung: 1 // Available
+          });
+        }
+        newMatrix.push(row);
+      }
+      setMatrix(newMatrix);
+    }
+  }, [template, room]);
 
   const handleSeatClick = (seatId, e) => {
     if (e.shiftKey) {
@@ -50,180 +56,165 @@ const SeatMaps = () => {
   const updateSelectedSeats = (updates) => {
     const newMatrix = matrix.map(row => 
       row.map(seat => 
-        selectedSeats.includes(seat.id) ? { ...seat, ...updates } : seat
+        selectedSeats.includes(seat.MaChiTietSoDo) ? { ...seat, ...updates } : seat
       )
     );
     setMatrix(newMatrix);
   };
 
-  const getSeatColor = (type, isLocked) => {
-    if (isLocked) return 'bg-slate-800 border-slate-700 text-slate-600';
-    switch (type) {
-      case 'VIP': return 'bg-amber-500 border-amber-400 text-navy-deep';
-      case 'Sweetbox': return 'bg-rose-500 border-rose-400 text-white';
+  const getSeatColor = (typeId, khaDung) => {
+    if (khaDung === 0) return 'bg-slate-800 border-slate-700 text-slate-600 shadow-inner';
+    switch (typeId) {
+      case 'LG02': return 'bg-amber-500 border-amber-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.3)]';
+      case 'LG03': return 'bg-rose-500 border-rose-400 text-white shadow-[0_0_15px_rgba(244,63,94,0.3)]';
       default: return 'bg-slate-700 border-slate-600 text-slate-300';
     }
   };
 
+  if (!room || !template) return (
+    <AdminLayout>
+      <div className="text-white p-8">Phòng không tồn tại hoặc chưa cấu hình sơ đồ.</div>
+    </AdminLayout>
+  );
+
   return (
     <AdminLayout>
+      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Cấu hình sơ đồ ghế</h1>
-          <p className="text-slate-500">Số hóa sơ đồ ghế ngồi và phân loại hạng ghế.</p>
-        </div>
-        <div className="flex gap-4">
-          <select 
-            className="bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500"
-            value={selectedRoom}
-            onChange={e => setSelectedRoom(e.target.value)}
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/admin/rooms')}
+            className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-slate-400 hover:text-white transition-all"
           >
-            {ROOMS.map(room => (
-              <option key={room.id} value={room.id} className="bg-[#0f1117]">{room.name}</option>
-            ))}
-          </select>
-          <button className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20">
-            Lưu sơ đồ
+            <ChevronLeft size={24} />
           </button>
+          <div>
+            <h1 className="text-3xl font-bold text-white text-glow">Cấu hình: {room.TenPhong}</h1>
+            <p className="text-slate-500 font-medium">Sơ đồ gốc: {template.MaSoDoGhe} ({template.TongHang}x{template.TongCot})</p>
+          </div>
         </div>
+        <button className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2">
+          <Save size={20} />
+          Lưu cấu hình
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Config Panel */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-[#0f1117] border border-white/5 rounded-3xl p-6">
-            <h3 className="text-lg font-bold mb-6 text-white border-l-4 border-red-500 pl-4">Cấu hình lưới</h3>
-            <div className="space-y-4">
-              <div className="flex gap-4">
-                <div className="flex-grow space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Số hàng</label>
-                  <input 
-                    type="number" 
-                    value={rows} 
-                    onChange={e => setRows(parseInt(e.target.value))}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2 px-3 focus:outline-none focus:border-red-500 transition-all"
-                  />
-                </div>
-                <div className="flex-grow space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Số cột</label>
-                  <input 
-                    type="number" 
-                    value={cols} 
-                    onChange={e => setCols(parseInt(e.target.value))}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2 px-3 focus:outline-none focus:border-red-500 transition-all"
-                  />
-                </div>
-              </div>
-              <button 
-                onClick={() => {
-                  if (window.confirm("Tạo lại sơ đồ sẽ xóa cấu hình ghế hiện tại. Tiếp tục?")) {
-                    generateMatrix();
-                  }
-                }}
-                className="w-full py-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl font-bold transition-all text-xs uppercase tracking-widest"
-              >
-                Tạo ma trận mới
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-[#0f1117] border border-white/5 rounded-3xl p-6">
-            <h3 className="text-lg font-bold mb-6 text-white border-l-4 border-amber-500 pl-4">Chỉnh sửa vùng chọn</h3>
-            <p className="text-xs text-slate-500 mb-4 italic">Giữ Shift để chọn nhiều ghế</p>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Toolbox */}
+        <div className="lg:col-span-3 space-y-6">
+          <div className="bg-[#0f1117] border border-white/5 rounded-3xl p-6 shadow-2xl">
+            <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em] mb-6">Chỉnh sửa vùng chọn</h3>
+            <p className="text-[10px] text-slate-600 mb-4 italic leading-relaxed">Giữ Shift để chọn nhiều ghế cùng lúc.</p>
             
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Phân loại hạng ghế</label>
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Loại ghế</label>
                 <div className="grid grid-cols-1 gap-2">
                   {SEAT_TYPES.map(type => (
                     <button
-                      key={type.id}
-                      onClick={() => updateSelectedSeats({ type: type.id })}
+                      key={type.MaLoaiGhe}
+                      onClick={() => updateSelectedSeats({ MaLoaiGhe: type.MaLoaiGhe })}
                       disabled={selectedSeats.length === 0}
-                      className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all group"
                     >
-                      <span className="text-sm font-medium">{type.name}</span>
-                      <div className={`w-4 h-4 rounded ${getSeatColor(type.id, false)} border`}></div>
+                      <span className="text-sm font-bold text-slate-300 group-hover:text-white">{type.TenLoaiGhe}</span>
+                      <div className={`w-4 h-4 rounded ${getSeatColor(type.MaLoaiGhe, 1)} border border-white/10`}></div>
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="space-y-2 pt-4">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Trạng thái vật lý</label>
+              <div className="space-y-3 pt-4 border-t border-white/5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Trạng thái vận hành</label>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => updateSelectedSeats({ isLocked: true })}
+                    onClick={() => updateSelectedSeats({ KhaDung: 0 })}
                     disabled={selectedSeats.length === 0}
-                    className="flex-grow flex items-center justify-center gap-2 p-3 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 disabled:opacity-50 transition-all"
+                    className="flex-grow flex items-center justify-center gap-2 p-4 rounded-xl bg-red-500/10 text-red-500 border border-red-500/10 hover:bg-red-500/20 disabled:opacity-30 transition-all"
                   >
                     <Lock size={16} />
-                    <span className="text-xs font-bold uppercase">Khóa</span>
+                    <span className="text-[10px] font-black uppercase">Khóa</span>
                   </button>
                   <button
-                    onClick={() => updateSelectedSeats({ isLocked: false })}
+                    onClick={() => updateSelectedSeats({ KhaDung: 1 })}
                     disabled={selectedSeats.length === 0}
-                    className="flex-grow flex items-center justify-center gap-2 p-3 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 disabled:opacity-50 transition-all"
+                    className="flex-grow flex items-center justify-center gap-2 p-4 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/10 hover:bg-emerald-500/20 disabled:opacity-30 transition-all"
                   >
                     <Unlock size={16} />
-                    <span className="text-xs font-bold uppercase">Mở</span>
+                    <span className="text-[10px] font-black uppercase">Mở</span>
                   </button>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Selection Stats */}
+          {selectedSeats.length > 0 && (
+            <div className="bg-white/5 border border-white/5 rounded-3xl p-6 animate-in fade-in slide-in-from-bottom-4">
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Đang chọn</span>
+              <div className="mt-2 text-2xl font-black text-white">{selectedSeats.length} <span className="text-sm font-bold text-slate-500">ghế</span></div>
+            </div>
+          )}
         </div>
 
-        {/* Matrix Grid */}
-        <div className="lg:col-span-3">
-          <div className="bg-[#0f1117] border border-white/5 rounded-[3rem] p-12 flex flex-col items-center">
-            {/* Screen indicator */}
-            <div className="w-2/3 h-2 bg-gradient-to-b from-slate-700 to-transparent rounded-full mb-20 relative">
-              <span className="absolute -top-8 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase tracking-[0.5em] text-slate-600">Màn Hình</span>
+        {/* Matrix Canvas */}
+        <div className="lg:col-span-9">
+          <div className="bg-[#0f1117] border border-white/5 rounded-[3rem] p-16 flex flex-col items-center shadow-2xl relative overflow-hidden">
+            {/* Ambient background glow */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-40 bg-red-500/5 blur-[100px]"></div>
+
+            {/* Screen */}
+            <div className="w-full max-w-2xl h-1 bg-gradient-to-r from-transparent via-slate-700 to-transparent rounded-full mb-24 relative">
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                <span className="text-[10px] font-black uppercase tracking-[0.8em] text-slate-600">Screen</span>
+                <div className="w-40 h-px bg-white/5 mt-2"></div>
+              </div>
             </div>
 
-            <div className="inline-grid gap-3" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+            <div 
+              className="inline-grid gap-2 p-8 bg-black/20 rounded-[2rem] border border-white/5" 
+              style={{ gridTemplateColumns: `repeat(${template.TongCot}, minmax(0, 1fr))` }}
+            >
               {matrix.flat().map((seat) => (
                 <button
-                  key={seat.id}
-                  onClick={(e) => handleSeatClick(seat.id, e)}
+                  key={seat.MaChiTietSoDo}
+                  onClick={(e) => handleSeatClick(seat.MaChiTietSoDo, e)}
                   className={`
-                    w-10 h-10 rounded-lg border text-[10px] font-bold transition-all
-                    flex items-center justify-center relative
-                    ${getSeatColor(seat.type, seat.isLocked)}
-                    ${selectedSeats.includes(seat.id) ? 'ring-2 ring-white ring-offset-2 ring-offset-[#0f1117] scale-110 z-10 shadow-2xl' : ''}
-                    hover:scale-105
+                    w-9 h-9 rounded-md border text-[9px] font-black transition-all
+                    flex items-center justify-center relative group/seat
+                    ${getSeatColor(seat.MaLoaiGhe, seat.KhaDung)}
+                    ${selectedSeats.includes(seat.MaChiTietSoDo) ? 'ring-2 ring-white ring-offset-4 ring-offset-[#0f1117] scale-110 z-10 shadow-2xl' : 'hover:scale-105'}
                   `}
                 >
-                  {seat.isLocked ? <Lock size={12} /> : seat.id}
-                  {selectedSeats.includes(seat.id) && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center">
-                      <div className="w-1.5 h-1.5 bg-navy-deep rounded-full"></div>
-                    </div>
-                  )}
+                  {seat.KhaDung === 0 ? <Lock size={12} className="opacity-50" /> : `${seat.Hang}${seat.Cot}`}
+                  
+                  {/* Tooltip on hover */}
+                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-black rounded text-[8px] text-white opacity-0 group-hover/seat:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none border border-white/10">
+                    Hàng {seat.Hang} - Cột {seat.Cot}
+                  </div>
                 </button>
               ))}
             </div>
 
             {/* Legend */}
-            <div className="mt-20 flex flex-wrap justify-center gap-8 text-[10px] font-black uppercase tracking-widest text-slate-500">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-slate-700 border border-slate-600"></div>
-                <span>Ghế thường</span>
+            <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8">
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-md bg-slate-700 border border-slate-600"></div>
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Thường</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-amber-500 border border-amber-400"></div>
-                <span>Ghế VIP</span>
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-md bg-amber-500 border border-amber-400"></div>
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">VIP</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-rose-500 border border-rose-400"></div>
-                <span>Sweetbox</span>
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-md bg-rose-500 border border-rose-400"></div>
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Sweetbox</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-slate-800 border border-slate-700 flex items-center justify-center">
-                  <Lock size={8} />
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-md bg-slate-800 border border-slate-700 flex items-center justify-center">
+                  <Lock size={10} className="text-slate-600" />
                 </div>
-                <span>Ghế hỏng/Khóa</span>
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Đã Khóa</span>
               </div>
             </div>
           </div>
