@@ -7,12 +7,14 @@ import {
   Users, 
   CalendarDays, 
   BarChart3,
-  LogOut
+  LogOut,
+  Grid3X3
 } from 'lucide-react';
 
 const AdminSidebar = () => {
   const menuItems = [
     { name: 'Phòng chiếu', icon: LayoutDashboard, path: '/admin/rooms' },
+    { name: 'Sơ đồ mẫu', icon: Grid3X3, path: '/admin/seat-templates' },
     { name: 'Phim', icon: Film, path: '/admin/movies' },
     { name: 'Bảng giá', icon: BadgeDollarSign, path: '/admin/pricing' },
     { name: 'Nhân sự', icon: Users, path: '/admin/personnel' },
