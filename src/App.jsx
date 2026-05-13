@@ -1,8 +1,7 @@
 import { Route, Routes, Navigate } from "react-router-dom";
 import Home from "./pages/Client/Home";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
-
-// Import StaffLayout mà chúng ta vừa tạo
+import SellTicketWizard from "./pages/Staff/SellTicket/SellTicketWizard";
 import StaffLayout from "./components/StaffLayout/StaffLayout";
 
 function App() {
@@ -22,16 +21,7 @@ function App() {
             />
 
             {/* Dùng <div> tạm thời để không bị lỗi import, sau này tạo file thì thay vào */}
-            <Route
-              path="sell-ticket"
-              element={
-                <div className="bg-card p-6 rounded-lg border border-border">
-                  <h2 className="text-xl font-bold">
-                    Màn hình Bán vé (Đang phát triển...)
-                  </h2>
-                </div>
-              }
-            />
+            <Route path="sell-ticket" element={<SellTicketWizard />} />
 
             <Route
               path="check-in"
