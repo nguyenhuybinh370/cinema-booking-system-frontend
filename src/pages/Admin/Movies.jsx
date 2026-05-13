@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import Modal from '../../components/Admin/Common/Modal';
 import adminService from '../../services/adminService';
+import useAdminForm from '../../hooks/useAdminForm';
 import { Search, MoreVertical, Plus } from 'lucide-react';
 import StatusBadge from '../../components/Admin/Common/StatusBadge';
 
@@ -10,7 +11,8 @@ const Movies = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
+
+  const initialFormState = {
     TenPhim: '',
     TheLoai: '',
     ThoiLuong: '',
@@ -24,13 +26,30 @@ const Movies = () => {
     HinhAnh: '',
     trailerUrl: '',
     KhaDung: 1
-  });
+  };
 
   const loadMovies = async () => {
     const data = await adminService.getMovies();
     setMovies(data);
     setLoading(false);
   };
+
+  const {
+    formData,
+    setFormData,
+    handleChange,
+    handleSubmit
+  } = useAdminForm(initialFormState, async (data, { resetForm }) => {
+    const newMovie = {
+      MaPhim: `M${String(movies.length + 1).padStart(2, '0')}`,
+      ...data,
+      ThoiLuong: parseInt(data.ThoiLuong)
+    };
+    await adminService.addMovie(newMovie);
+    await loadMovies();
+    setIsModalOpen(false);
+    resetForm();
+  });
 
   useEffect(() => {
     let ignore = false;
@@ -48,37 +67,6 @@ const Movies = () => {
   const filteredMovies = filter === 'All' 
     ? movies 
     : movies.filter(m => m.Status === filter);
-
-  const handleAddMovie = async (e) => {
-    e.preventDefault();
-    const newMovie = {
-      MaPhim: `M${String(movies.length + 1).padStart(2, '0')}`,
-      ...formData,
-      ThoiLuong: parseInt(formData.ThoiLuong)
-    };
-    await adminService.addMovie(newMovie);
-    loadMovies();
-    setIsModalOpen(false);
-    resetForm();
-  };
-
-  const resetForm = () => {
-    setFormData({
-      TenPhim: '',
-      TheLoai: '',
-      ThoiLuong: '',
-      Status: 'Coming Soon',
-      GioiHanTuoi: 'P',
-      NgayKhoiChieu: '',
-      NgayKetThuc: '',
-      DaoDien: '',
-      DienVien: '',
-      NoiDung: '',
-      HinhAnh: '',
-      trailerUrl: '',
-      KhaDung: 1
-    });
-  };
 
   return (
     <AdminLayout>
@@ -169,7 +157,7 @@ const Movies = () => {
         onClose={() => setIsModalOpen(false)}
         title="Thêm phim mới"
       >
-        <form onSubmit={handleAddMovie} className="space-y-8 max-h-[80vh] overflow-y-auto pr-4 custom-scrollbar">
+        <form onSubmit={handleSubmit} className="space-y-8 max-h-[80vh] overflow-y-auto pr-4 custom-scrollbar">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left: Media Preview & Main Actions */}
             <div className="lg:col-span-4 space-y-6">
@@ -187,9 +175,10 @@ const Movies = () => {
                 </div>
                 <input 
                   type="text" 
+                  name="HinhAnh"
                   className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-xs"
                   value={formData.HinhAnh}
-                  onChange={e => setFormData({ ...formData, HinhAnh: e.target.value })}
+                  onChange={handleChange}
                   placeholder="Dán URL hình ảnh tại đây..."
                 />
               </div>
@@ -216,9 +205,10 @@ const Movies = () => {
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Tên phim</label>
                   <input 
                     type="text" required
+                    name="TenPhim"
                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-5 focus:outline-none focus:border-red-500 transition-all text-lg font-bold text-white"
                     value={formData.TenPhim}
-                    onChange={e => setFormData({ ...formData, TenPhim: e.target.value })}
+                    onChange={handleChange}
                     placeholder="VD: Avengers: Endgame"
                   />
                 </div>
@@ -227,9 +217,10 @@ const Movies = () => {
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Thể loại</label>
                   <input 
                     type="text" required
+                    name="TheLoai"
                     className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm"
                     value={formData.TheLoai}
-                    onChange={e => setFormData({ ...formData, TheLoai: e.target.value })}
+                    onChange={handleChange}
                     placeholder="Hành động, Viễn tưởng..."
                   />
                 </div>
@@ -237,9 +228,10 @@ const Movies = () => {
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Trạng thái phát hành</label>
                   <select 
+                    name="Status"
                     className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm"
                     value={formData.Status}
-                    onChange={e => setFormData({ ...formData, Status: e.target.value })}
+                    onChange={handleChange}
                   >
                     <option value="Coming Soon" className="bg-[#0f1117]">Sắp ra mắt</option>
                     <option value="Showing" className="bg-[#0f1117]">Đang chiếu</option>
@@ -251,18 +243,20 @@ const Movies = () => {
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Thời lượng (Phút)</label>
                   <input 
                     type="number" required
+                    name="ThoiLuong"
                     className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm"
                     value={formData.ThoiLuong}
-                    onChange={e => setFormData({ ...formData, ThoiLuong: e.target.value })}
+                    onChange={handleChange}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Giới hạn tuổi</label>
                   <select 
+                    name="GioiHanTuoi"
                     className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm"
                     value={formData.GioiHanTuoi}
-                    onChange={e => setFormData({ ...formData, GioiHanTuoi: e.target.value })}
+                    onChange={handleChange}
                   >
                     <option value="P" className="bg-[#0f1117]">P - Mọi lứa tuổi</option>
                     <option value="C13" className="bg-[#0f1117]">C13 - Trên 13 tuổi</option>
@@ -275,9 +269,10 @@ const Movies = () => {
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Ngày khởi chiếu</label>
                   <input 
                     type="date" required
+                    name="NgayKhoiChieu"
                     className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm"
                     value={formData.NgayKhoiChieu}
-                    onChange={e => setFormData({ ...formData, NgayKhoiChieu: e.target.value })}
+                    onChange={handleChange}
                   />
                 </div>
 
@@ -285,9 +280,10 @@ const Movies = () => {
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Ngày kết thúc</label>
                   <input 
                     type="date"
+                    name="NgayKetThuc"
                     className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm"
                     value={formData.NgayKetThuc}
-                    onChange={e => setFormData({ ...formData, NgayKetThuc: e.target.value })}
+                    onChange={handleChange}
                   />
                 </div>
               </div>
@@ -296,9 +292,10 @@ const Movies = () => {
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nội dung phim</label>
                 <textarea 
                   required
+                  name="NoiDung"
                   className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-5 focus:outline-none focus:border-red-500 transition-all text-sm min-h-[120px] resize-none"
                   value={formData.NoiDung}
-                  onChange={e => setFormData({ ...formData, NoiDung: e.target.value })}
+                  onChange={handleChange}
                   placeholder="Nhập tóm tắt nội dung phim..."
                 ></textarea>
               </div>
@@ -308,18 +305,20 @@ const Movies = () => {
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Đạo diễn</label>
                   <input 
                     type="text"
+                    name="DaoDien"
                     className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm"
                     value={formData.DaoDien}
-                    onChange={e => setFormData({ ...formData, DaoDien: e.target.value })}
+                    onChange={handleChange}
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Trailer URL (YouTube)</label>
                   <input 
                     type="text"
+                    name="trailerUrl"
                     className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm"
                     value={formData.trailerUrl}
-                    onChange={e => setFormData({ ...formData, trailerUrl: e.target.value })}
+                    onChange={handleChange}
                     placeholder="https://youtube.com/..."
                   />
                 </div>

@@ -5,6 +5,7 @@ import Modal from '../../components/Admin/Common/Modal';
 import AdminTable from '../../components/Admin/Common/AdminTable';
 import StatusBadge from '../../components/Admin/Common/StatusBadge';
 import adminService from '../../services/adminService';
+import useAdminForm from '../../hooks/useAdminForm';
 import { LayoutGrid, Plus, MoreVertical } from 'lucide-react';
 
 const Rooms = () => {
@@ -13,12 +14,13 @@ const Rooms = () => {
   const [loading, setLoading] = useState(true);
   const [roomTypes, setRoomTypes] = useState([]);
   const [seatMaps, setSeatMaps] = useState([]);
-  const [formData, setFormData] = useState({
+
+  const initialFormState = {
     TenPhong: '',
     MaLoaiPhong: 'LP01',
     MaSoDoGhe: 'SM01',
     Status: 'Active'
-  });
+  };
 
   const loadData = async () => {
     const [roomsData, typesData, mapsData] = await Promise.all([
@@ -51,33 +53,35 @@ const Rooms = () => {
     return () => { ignore = true; };
   }, []);
 
-  const handleToggleStatus = async (id) => {
-    if (window.confirm("Các suất chiếu đã lên lịch sẽ không bị ảnh hưởng. Xác nhận?")) {
-      const room = rooms.find(r => r.MaPhongChieu === id);
-      const newStatus = room.Status === 'Active' ? 'Maintenance' : 'Active';
-      await adminService.updateRoom(id, { Status: newStatus });
-      loadData();
-    }
-  };
-
   const getSeatCount = (seatMapId) => {
     const map = seatMaps.find(m => m.MaSoDoGhe === seatMapId);
     return map ? map.TongHang * map.TongCot : 0;
   };
 
-  const handleAddRoom = async (e) => {
-    e.preventDefault();
+  const {
+    formData,
+    handleChange,
+    handleSubmit
+  } = useAdminForm(initialFormState, async (data, { resetForm }) => {
     const newRoom = {
       MaPhongChieu: `PC${String(rooms.length + 1).padStart(2, '0')}`,
-      ...formData,
-      SoGhe: getSeatCount(formData.MaSoDoGhe),
+      ...data,
+      SoGhe: getSeatCount(data.MaSoDoGhe),
       KhaDung: 1
     };
-    // In a real app, we'd call adminService.addRoom
-    // For now, let's just push to rooms and update state
-    setRooms([...rooms, newRoom]);
+    // Simulate add room
+    setRooms(prev => [...prev, newRoom]);
     setIsModalOpen(false);
-    setFormData({ TenPhong: '', MaLoaiPhong: 'LP01', MaSoDoGhe: 'SM01', Status: 'Active' });
+    resetForm();
+  });
+
+  const handleToggleStatus = async (id) => {
+    if (window.confirm("Các suất chiếu đã lên lịch sẽ không bị ảnh hưởng. Xác nhận?")) {
+      const room = rooms.find(r => r.MaPhongChieu === id);
+      const newStatus = room.Status === 'Active' ? 'Maintenance' : 'Active';
+      await adminService.updateRoom(id, { Status: newStatus });
+      await loadData();
+    }
   };
 
   const columns = [
@@ -98,7 +102,7 @@ const Rooms = () => {
         const type = roomTypes.find(t => t.MaLoaiPhong === room.MaLoaiPhong);
         return (
           <span className={`px-3 py-1 rounded-lg text-[10px] font-bold border ${
-            room.MaLoaiPhong === 'LP03' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 
+            room.MaLoaiPhong === 'LP03' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 
             room.MaLoaiPhong === 'LP02' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' : 'bg-slate-500/10 text-slate-500 border-white/5'
           }`}>
             {type?.TenLoaiPhong}
@@ -169,15 +173,16 @@ const Rooms = () => {
         onClose={() => setIsModalOpen(false)}
         title="Thêm phòng chiếu mới"
       >
-        <form onSubmit={handleAddRoom} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Tên phòng</label>
             <input 
               type="text" 
+              name="TenPhong"
               required
               className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-white font-bold"
               value={formData.TenPhong}
-              onChange={e => setFormData({ ...formData, TenPhong: e.target.value })}
+              onChange={handleChange}
               placeholder="VD: Phòng chiếu 01"
             />
           </div>
@@ -186,9 +191,10 @@ const Rooms = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Loại phòng</label>
               <select 
+                name="MaLoaiPhong"
                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-sm"
                 value={formData.MaLoaiPhong}
-                onChange={e => setFormData({ ...formData, MaLoaiPhong: e.target.value })}
+                onChange={handleChange}
               >
                 {roomTypes.map(type => (
                   <option key={type.MaLoaiPhong} value={type.MaLoaiPhong} className="bg-[#0f1117]">{type.TenLoaiPhong}</option>
@@ -198,9 +204,10 @@ const Rooms = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Sơ đồ mẫu</label>
               <select 
+                name="MaSoDoGhe"
                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-sm"
                 value={formData.MaSoDoGhe}
-                onChange={e => setFormData({ ...formData, MaSoDoGhe: e.target.value })}
+                onChange={handleChange}
               >
                 {seatMaps.map(map => (
                   <option key={map.MaSoDoGhe} value={map.MaSoDoGhe} className="bg-[#0f1117]">{map.MaSoDoGhe} ({map.TongHang}x{map.TongCot})</option>
@@ -222,20 +229,22 @@ const Rooms = () => {
               <label className="flex items-center gap-2 cursor-pointer group">
                 <input 
                   type="radio" 
-                  name="status" 
+                  name="Status" 
+                  value="Active"
                   className="w-4 h-4 accent-red-500"
                   checked={formData.Status === 'Active'}
-                  onChange={() => setFormData({ ...formData, Status: 'Active' })}
+                  onChange={handleChange}
                 />
                 <span className="text-sm font-bold text-slate-300 group-hover:text-white transition-colors">Sẵn sàng</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer group">
                 <input 
                   type="radio" 
-                  name="status" 
+                  name="Status" 
+                  value="Maintenance"
                   className="w-4 h-4 accent-red-500"
                   checked={formData.Status === 'Maintenance'}
-                  onChange={() => setFormData({ ...formData, Status: 'Maintenance' })}
+                  onChange={handleChange}
                 />
                 <span className="text-sm font-bold text-slate-300 group-hover:text-white transition-colors">Bảo trì</span>
               </label>
