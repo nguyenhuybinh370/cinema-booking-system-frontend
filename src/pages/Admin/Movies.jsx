@@ -3,6 +3,7 @@ import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import Modal from '../../components/Admin/Common/Modal';
 import { ADMIN_MOVIES } from '../../constants/adminMockData';
 import { Search, MoreVertical, Plus } from 'lucide-react';
+import StatusBadge from '../../components/Admin/Common/StatusBadge';
 
 const Movies = () => {
   const [movies, setMovies] = useState(ADMIN_MOVIES);
@@ -28,14 +29,6 @@ const Movies = () => {
     ? movies 
     : movies.filter(m => m.Status === filter);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Showing': return 'bg-emerald-500/10 text-emerald-500';
-      case 'Coming Soon': return 'bg-blue-500/10 text-blue-500';
-      case 'Ended': return 'bg-slate-500/10 text-slate-500';
-      default: return 'bg-slate-500/10 text-slate-500';
-    }
-  };
 
   const handleAddMovie = (e) => {
     e.preventDefault();
@@ -95,9 +88,7 @@ const Movies = () => {
               <img src={movie.HinhAnh} alt={movie.TenPhim} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117] via-transparent to-transparent"></div>
               <div className="absolute top-4 left-4">
-                <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${getStatusColor(movie.Status)}`}>
-                  {movie.Status}
-                </span>
+                <StatusBadge status={movie.Status} />
               </div>
               <div className="absolute top-4 right-4">
                 <button className="p-2 bg-black/40 backdrop-blur-md rounded-xl text-white hover:bg-red-500 transition-all">

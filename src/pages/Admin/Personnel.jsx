@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import Modal from '../../components/Admin/Common/Modal';
+import AdminTable from '../../components/Admin/Common/AdminTable';
+import StatusBadge from '../../components/Admin/Common/StatusBadge';
 import { STAFF } from '../../constants/adminMockData';
 import { Search, ShieldCheck, UserX, UserCheck, Edit2, X } from 'lucide-react';
 
@@ -10,17 +12,61 @@ const Personnel = () => {
   const [isPermPanelOpen, setIsPermPanelOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
 
-  const getRoleBadge = (role) => {
-    switch (role) {
-      case 'Admin': return 'bg-red-500/10 text-red-500 border-red-500/20';
-      case 'Manager': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
-      default: return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-    }
-  };
-
   const permissions = [
     'Quản lý phòng chiếu', 'Quản lý phim', 'Cấu hình sơ đồ ghế', 
     'Cấu hình bảng giá', 'Quản lý nhân sự', 'Quản lý suất chiếu', 'Xem thống kê'
+  ];
+
+  const columns = [
+    {
+      header: 'Nhân viên',
+      render: (person) => (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white font-bold border border-white/10">
+            {person.HoTen.charAt(0)}
+          </div>
+          <div className="flex flex-col">
+            <span className="font-bold text-white text-sm">{person.HoTen}</span>
+            <span className="text-xs text-slate-500">{person.Email}</span>
+          </div>
+        </div>
+      )
+    },
+    { header: 'Chức vụ', accessor: 'ChucVu', className: 'text-sm text-slate-400' },
+    {
+      header: 'Vai trò',
+      render: (person) => <StatusBadge status={person.Role} />
+    },
+    {
+      header: 'Trạng thái',
+      render: (person) => (
+        <div className="flex items-center gap-2">
+          <div className={`w-1.5 h-1.5 rounded-full ${person.Status === 'Active' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-500'}`}></div>
+          <span className="text-xs font-medium text-slate-300">{person.Status === 'Active' ? 'Hoạt động' : 'Vô hiệu hóa'}</span>
+        </div>
+      )
+    },
+    {
+      header: 'Hành động',
+      className: 'text-right',
+      render: (person) => (
+        <div className="flex justify-end gap-2">
+          <button 
+            onClick={(e) => { e.stopPropagation(); setSelectedStaff(person); setIsPermPanelOpen(true); }}
+            className="p-2 hover:bg-emerald-500/10 text-slate-500 hover:text-emerald-500 rounded-xl transition-all"
+            title="Phân quyền"
+          >
+            <ShieldCheck size={18} />
+          </button>
+          <button className="p-2 hover:bg-white/5 text-slate-500 hover:text-white rounded-xl transition-all" title="Sửa">
+            <Edit2 size={18} />
+          </button>
+          <button className="p-2 hover:bg-red-500/10 text-slate-500 hover:text-red-500 rounded-xl transition-all" title="Vô hiệu hóa">
+            {person.Status === 'Active' ? <UserX size={18} /> : <UserCheck size={18} />}
+          </button>
+        </div>
+      )
+    }
   ];
 
   return (
@@ -57,65 +103,7 @@ const Personnel = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-[#0f1117] border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="bg-white/5 border-b border-white/5">
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Nhân viên</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Chức vụ</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Vai trò</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Trạng thái</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Hành động</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {staff.map((person) => (
-              <tr key={person.MaNhanVien} className={`group hover:bg-white/[0.02] transition-colors ${person.Status === 'Inactive' ? 'opacity-50' : ''}`}>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white font-bold border border-white/10">
-                      {person.HoTen.charAt(0)}
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-bold text-white text-sm">{person.HoTen}</span>
-                      <span className="text-xs text-slate-500">{person.Email}</span>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm text-slate-400">{person.ChucVu}</td>
-                <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold border ${getRoleBadge(person.Role)}`}>
-                    {person.Role}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-1.5 h-1.5 rounded-full ${person.Status === 'Active' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-500'}`}></div>
-                    <span className="text-xs font-medium text-slate-300">{person.Status === 'Active' ? 'Hoạt động' : 'Vô hiệu hóa'}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex justify-end gap-2">
-                    <button 
-                      onClick={() => { setSelectedStaff(person); setIsPermPanelOpen(true); }}
-                      className="p-2 hover:bg-emerald-500/10 text-slate-500 hover:text-emerald-500 rounded-xl transition-all"
-                      title="Phân quyền"
-                    >
-                      <ShieldCheck size={18} />
-                    </button>
-                    <button className="p-2 hover:bg-white/5 text-slate-500 hover:text-white rounded-xl transition-all" title="Sửa">
-                      <Edit2 size={18} />
-                    </button>
-                    <button className="p-2 hover:bg-red-500/10 text-slate-500 hover:text-red-500 rounded-xl transition-all" title="Vô hiệu hóa">
-                      {person.Status === 'Active' ? <UserX size={18} /> : <UserCheck size={18} />}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <AdminTable columns={columns} data={staff} rowKey="MaNhanVien" />
 
       {/* Permission Panel (Slide-in) */}
       {isPermPanelOpen && (
@@ -136,7 +124,6 @@ const Personnel = () => {
                 <p className="text-xs text-slate-500">{selectedStaff?.Role} • {selectedStaff?.ChucVu}</p>
               </div>
             </div>
-
 
             <div className="space-y-4">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 mb-4">Danh sách quyền hạn</p>

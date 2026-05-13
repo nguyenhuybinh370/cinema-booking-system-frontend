@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import Modal from '../../components/Admin/Common/Modal';
+import AdminTable from '../../components/Admin/Common/AdminTable';
+import StatusBadge from '../../components/Admin/Common/StatusBadge';
 import { ROOMS, ROOM_TYPES, SEAT_MAPS } from '../../constants/adminMockData';
 import { LayoutGrid, Plus, MoreVertical } from 'lucide-react';
 
@@ -43,6 +45,68 @@ const Rooms = () => {
     setFormData({ TenPhong: '', MaLoaiPhong: 'LP01', MaSoDoGhe: 'SM01', Status: 'Active' });
   };
 
+  const columns = [
+    {
+      header: 'Tên phòng',
+      render: (room) => (
+        <Link 
+          to={`/admin/rooms/${room.MaPhongChieu}/seats`}
+          className="font-bold text-white hover:text-red-500 transition-colors"
+        >
+          {room.TenPhong}
+        </Link>
+      )
+    },
+    {
+      header: 'Loại phòng',
+      render: (room) => {
+        const type = ROOM_TYPES.find(t => t.MaLoaiPhong === room.MaLoaiPhong);
+        return (
+          <span className={`px-3 py-1 rounded-lg text-[10px] font-bold border ${
+            room.MaLoaiPhong === 'LP03' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 
+            room.MaLoaiPhong === 'LP02' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' : 'bg-slate-500/10 text-slate-500 border-white/5'
+          }`}>
+            {type?.TenLoaiPhong}
+          </span>
+        );
+      }
+    },
+    { header: 'Sức chứa', render: (room) => <span className="text-slate-400 font-medium">{room.SoGhe} ghế</span> },
+    { header: 'Sơ đồ ghế', accessor: 'MaSoDoGhe', className: 'text-slate-400 text-sm font-mono' },
+    {
+      header: 'Trạng thái',
+      render: (room) => (
+        <div className="flex items-center gap-2">
+          <StatusBadge status={room.Status === 'Active' ? 1 : 0} />
+        </div>
+      )
+    },
+    {
+      header: 'Hành động',
+      className: 'text-right',
+      render: (room) => (
+        <div className="flex justify-end gap-2">
+          <Link 
+            to={`/admin/rooms/${room.MaPhongChieu}/seats`}
+            className="p-2 hover:bg-white/5 text-slate-500 hover:text-white rounded-xl transition-all"
+            title="Cấu hình ghế"
+          >
+            <LayoutGrid size={18} />
+          </Link>
+          <button className="p-2 hover:bg-white/5 text-slate-500 hover:text-white rounded-xl transition-all">
+            <MoreVertical size={18} />
+          </button>
+          <button 
+            onClick={() => handleToggleStatus(room.MaPhongChieu)}
+            className="text-xs font-bold text-red-500 hover:underline px-2"
+          >
+            {room.Status === 'Active' ? 'Bảo trì' : 'Kích hoạt'}
+          </button>
+        </div>
+      )
+    }
+  ];
+
   return (
     <AdminLayout>
       <div className="flex justify-between items-center mb-8">
@@ -59,74 +123,7 @@ const Rooms = () => {
         </button>
       </div>
 
-      <div className="bg-[#0f1117] border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-white/5 border-b border-white/5">
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Tên phòng</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Loại phòng</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Sức chứa</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Sơ đồ ghế</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Trạng thái</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Hành động</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {rooms.map((room) => (
-              <tr key={room.MaPhongChieu} className="hover:bg-white/[0.02] transition-colors group">
-                <td className="px-6 py-4">
-                  <Link 
-                    to={`/admin/rooms/${room.MaPhongChieu}/seats`}
-                    className="font-bold text-white hover:text-red-500 transition-colors"
-                  >
-                    {room.TenPhong}
-                  </Link>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-lg text-[10px] font-bold border ${
-                    room.MaLoaiPhong === 'LP03' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 
-                    room.MaLoaiPhong === 'LP02' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' : 'bg-slate-500/10 text-slate-500 border-white/5'
-                  }`}>
-                    {ROOM_TYPES.find(t => t.MaLoaiPhong === room.MaLoaiPhong)?.TenLoaiPhong}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-slate-400 font-medium">{room.SoGhe} ghế</td>
-                <td className="px-6 py-4 text-slate-400 text-sm font-mono">
-                  {room.MaSoDoGhe}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-1.5 h-1.5 rounded-full ${room.Status === 'Active' ? 'bg-emerald-500' : 'bg-orange-500'}`}></div>
-                    <span className="text-xs font-bold text-slate-300">
-                      {room.Status === 'Active' ? 'Sẵn sàng' : 'Bảo trì'}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex justify-end gap-2">
-                    <Link 
-                      to={`/admin/rooms/${room.MaPhongChieu}/seats`}
-                      className="p-2 hover:bg-white/5 text-slate-500 hover:text-white rounded-xl transition-all"
-                      title="Cấu hình ghế"
-                    >
-                      <LayoutGrid size={18} />
-                    </Link>
-                    <button className="p-2 hover:bg-white/5 text-slate-500 hover:text-white rounded-xl transition-all">
-                      <MoreVertical size={18} />
-                    </button>
-                    <button 
-                      onClick={() => handleToggleStatus(room.MaPhongChieu)}
-                      className="text-xs font-bold text-red-500 hover:underline px-2"
-                    >
-                      {room.Status === 'Active' ? 'Bảo trì' : 'Kích hoạt'}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <AdminTable columns={columns} data={rooms} rowKey="MaPhongChieu" />
 
       <Modal 
         isOpen={isModalOpen} 
