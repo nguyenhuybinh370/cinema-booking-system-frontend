@@ -1,0 +1,271 @@
+import React, { useState } from 'react';
+import AdminLayout from '../../components/Admin/Layout/AdminLayout';
+import Modal from '../../components/Admin/Common/Modal';
+import { ADMIN_MOVIES } from '../../constants/adminMockData';
+import { Search, Filter, MoreVertical, Plus } from 'lucide-react';
+
+const Movies = () => {
+  const [movies, setMovies] = useState(ADMIN_MOVIES);
+  const [filter, setFilter] = useState('All');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    genres: '',
+    duration: '',
+    status: 'Coming Soon',
+    ageRating: 'P',
+    releaseDate: '',
+    endDate: '',
+    director: '',
+    cast: '',
+    description: '',
+    image: '',
+    trailerUrl: ''
+  });
+
+  const filteredMovies = filter === 'All' 
+    ? movies 
+    : movies.filter(m => m.status === filter);
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Showing': return 'bg-emerald-500/10 text-emerald-500';
+      case 'Coming Soon': return 'bg-blue-500/10 text-blue-500';
+      case 'Ended': return 'bg-slate-500/10 text-slate-500';
+      default: return 'bg-slate-500/10 text-slate-500';
+    }
+  };
+
+  const handleAddMovie = (e) => {
+    e.preventDefault();
+    const newMovie = {
+      id: `M${String(movies.length + 1).padStart(2, '0')}`,
+      ...formData,
+      duration: parseInt(formData.duration)
+    };
+    setMovies([...movies, newMovie]);
+    setIsModalOpen(false);
+  };
+
+  return (
+    <AdminLayout>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-white text-glow">Quản lý phim</h1>
+          <p className="text-slate-500">Quản lý toàn bộ thông tin và vòng đời của phim.</p>
+        </div>
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-red-500/20"
+        >
+          <Plus size={20} />
+          Thêm phim mới
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-4 mb-8 bg-white/5 p-2 rounded-2xl border border-white/5">
+        {['All', 'Showing', 'Coming Soon', 'Ended'].map((status) => (
+          <button
+            key={status}
+            onClick={() => setFilter(status)}
+            className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+              filter === status ? 'bg-white/10 text-white shadow-xl' : 'text-slate-500 hover:text-slate-300'
+            }`}
+          >
+            {status === 'All' ? 'Tất cả' : status === 'Showing' ? 'Đang chiếu' : status === 'Coming Soon' ? 'Sắp ra mắt' : 'Ngừng chiếu'}
+          </button>
+        ))}
+        <div className="ml-auto flex items-center gap-2 bg-black/20 rounded-xl px-4 py-2 border border-white/5">
+          <Search size={18} className="text-slate-500" />
+          <input 
+            type="text" 
+            placeholder="Tìm kiếm phim..." 
+            className="bg-transparent border-none focus:outline-none text-sm text-white w-48"
+          />
+        </div>
+      </div>
+
+      {/* Movie Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {filteredMovies.map((movie) => (
+          <div key={movie.id} className="group bg-[#0f1117] border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-white/20 transition-all hover:-translate-y-2 shadow-2xl">
+            <div className="relative aspect-video">
+              <img src={movie.image} alt={movie.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117] via-transparent to-transparent"></div>
+              <div className="absolute top-4 left-4">
+                <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${getStatusColor(movie.status)}`}>
+                  {movie.status}
+                </span>
+              </div>
+              <div className="absolute top-4 right-4">
+                <button className="p-2 bg-black/40 backdrop-blur-md rounded-xl text-white hover:bg-red-500 transition-all">
+                  <MoreVertical size={16} />
+                </button>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-bold px-2 py-0.5 border border-slate-700 rounded text-slate-500 uppercase">{movie.ageRating}</span>
+                <span className="text-slate-500 text-xs">•</span>
+                <span className="text-slate-500 text-xs font-medium">{movie.duration} phút</span>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2 line-clamp-1 group-hover:text-red-500 transition-colors">{movie.title}</h3>
+              <p className="text-slate-500 text-sm mb-4 line-clamp-1">{movie.genres}</p>
+              
+              <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                <div className="flex flex-col">
+                  <span className="text-[10px] uppercase text-slate-600 font-bold tracking-widest">Khởi chiếu</span>
+                  <span className="text-sm font-bold text-slate-300">{movie.releaseDate}</span>
+                </div>
+                <button className="text-xs font-bold text-red-500 hover:underline">Chi tiết →</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        title="Thêm phim mới"
+      >
+        <form onSubmit={handleAddMovie} className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            {/* Column 1: Media */}
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Poster URL</label>
+                <input 
+                  type="text" 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all"
+                  value={formData.image}
+                  onChange={e => setFormData({ ...formData, image: e.target.value })}
+                  placeholder="https://..."
+                />
+                {formData.image && (
+                  <div className="mt-4 aspect-[2/3] w-40 rounded-2xl overflow-hidden border border-white/10 mx-auto">
+                    <img src={formData.image} className="w-full h-full object-cover" alt="Preview" />
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Trailer URL</label>
+                <input 
+                  type="text" 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all"
+                  value={formData.trailerUrl}
+                  onChange={e => setFormData({ ...formData, trailerUrl: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Trạng thái</label>
+                <select 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all"
+                  value={formData.status}
+                  onChange={e => setFormData({ ...formData, status: e.target.value })}
+                >
+                  <option value="Coming Soon" className="bg-[#0f1117]">Sắp ra mắt</option>
+                  <option value="Showing" className="bg-[#0f1117]">Đang chiếu</option>
+                  <option value="Ended" className="bg-[#0f1117]">Ngừng chiếu</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Column 2: Info */}
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Tên phim</label>
+                <input 
+                  type="text" required
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all"
+                  value={formData.title}
+                  onChange={e => setFormData({ ...formData, title: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Thời lượng (phút)</label>
+                  <input 
+                    type="number" required
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all"
+                    value={formData.duration}
+                    onChange={e => setFormData({ ...formData, duration: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Độ tuổi</label>
+                  <select 
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all"
+                    value={formData.ageRating}
+                    onChange={e => setFormData({ ...formData, ageRating: e.target.value })}
+                  >
+                    <option value="P" className="bg-[#0f1117]">P - Mọi lứa tuổi</option>
+                    <option value="T13" className="bg-[#0f1117]">T13 - Trên 13 tuổi</option>
+                    <option value="T16" className="bg-[#0f1117]">T16 - Trên 16 tuổi</option>
+                    <option value="T18" className="bg-[#0f1117]">T18 - Trên 18 tuổi</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Ngày khởi chiếu</label>
+                  <input 
+                    type="date" required
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm"
+                    value={formData.releaseDate}
+                    onChange={e => setFormData({ ...formData, releaseDate: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Ngày kết thúc</label>
+                  <input 
+                    type="date"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm"
+                    value={formData.endDate}
+                    onChange={e => setFormData({ ...formData, endDate: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Đạo diễn</label>
+                <input 
+                  type="text"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all"
+                  value={formData.director}
+                  onChange={e => setFormData({ ...formData, director: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Diễn viên</label>
+                <textarea 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all h-20 resize-none"
+                  value={formData.cast}
+                  onChange={e => setFormData({ ...formData, cast: e.target.value })}
+                ></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-4 pt-4">
+            <button 
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              className="flex-grow py-4 rounded-2xl font-bold border border-white/10 hover:bg-white/5 transition-all uppercase tracking-widest text-xs"
+            >
+              Hủy bỏ
+            </button>
+            <button 
+              type="submit"
+              className="flex-grow py-4 rounded-2xl font-bold bg-red-500 hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 uppercase tracking-widest text-xs"
+            >
+              Lưu thông tin phim
+            </button>
+          </div>
+        </form>
+      </Modal>
+    </AdminLayout>
+  );
+};
+
+export default Movies;

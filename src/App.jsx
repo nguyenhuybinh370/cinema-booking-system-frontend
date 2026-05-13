@@ -4,6 +4,7 @@ import MovieDetail from './pages/Client/MovieDetail'
 
 // Admin Pages
 import Rooms from './pages/Admin/Rooms'
+import Movies from './pages/Admin/Movies'
 
 function App() {
   return (
@@ -16,7 +17,8 @@ function App() {
         {/* Admin Routes */}
         <Route path="/admin" element={<Navigate to="/admin/rooms" replace />} />
         <Route path="/admin/rooms" element={<Rooms />} />
-        <Route path="/admin/movies" element={<div className="p-10 text-white">Movies Module Placeholder</div>} />
+        <Route path="/admin/movies" element={<Movies />} />
+
         <Route path="/admin/seat-maps" element={<div className="p-10 text-white">Seat Maps Module Placeholder</div>} />
         <Route path="/admin/pricing" element={<div className="p-10 text-white">Pricing Module Placeholder</div>} />
         <Route path="/admin/personnel" element={<div className="p-10 text-white">Personnel Module Placeholder</div>} />
