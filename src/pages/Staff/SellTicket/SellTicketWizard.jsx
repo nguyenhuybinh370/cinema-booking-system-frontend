@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Step1_SelectShowtime from "./Step1_SelectShowtime";
 import Step2_SelectSeat from "./Step2_SelectSeat";
-// import Step3_Checkout from './Step3_Checkout';
+import Step3_Checkout from "./Step3_Checkout";
 
 const SellTicketWizard = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -20,6 +20,12 @@ const SellTicketWizard = () => {
 
   const handlePrevStep = () => {
     setCurrentStep((prev) => prev - 1);
+  };
+
+  // Hàm này gọi khi nhấn "Bán vé mới" ở Bước 3
+  const handleReset = () => {
+    setBookingData({ movie: null, showtime: null, seats: [], totalPrice: 0 });
+    setCurrentStep(1);
   };
 
   return (
@@ -66,17 +72,11 @@ const SellTicketWizard = () => {
           />
         )}
         {currentStep === 3 && (
-          <div className="glass-effect p-10 rounded-2xl text-center">
-            <h2 className="text-2xl text-glow mb-4">
-              Bước 3: Thanh toán (Đang cập nhật)
-            </h2>
-            <button
-              className="px-6 py-3 rounded-full font-bold text-white/70 bg-white/5 hover:bg-white/10 border border-white/10 mr-4"
-              onClick={handlePrevStep}
-            >
-              Quay lại
-            </button>
-          </div>
+          <Step3_Checkout
+            bookingData={bookingData}
+            onPrev={handlePrevStep}
+            onReset={handleReset}
+          />
         )}
       </div>
     </div>

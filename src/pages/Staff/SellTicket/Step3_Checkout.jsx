@@ -1,0 +1,277 @@
+import { useState } from "react";
+
+const PAYMENT_METHODS = [
+  { id: "CASH", name: "Tiền mặt", icon: "💵" },
+  { id: "MOMO", name: "MoMo QR", icon: "📱" },
+  { id: "VNPAY", name: "VNPay", icon: "💳" },
+];
+
+const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
+  const [paymentMethod, setPaymentMethod] = useState("CASH");
+  const [amountGiven, setAmountGiven] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const totalPrice = bookingData.totalPrice || 0;
+
+  // Tính tiền thối (Chỉ áp dụng cho tiền mặt)
+  const numericAmountGiven = parseInt(amountGiven.replace(/\D/g, "")) || 0;
+  const changeAmount = numericAmountGiven - totalPrice;
+  const isValidAmount =
+    paymentMethod !== "CASH" || numericAmountGiven >= totalPrice;
+
+  // Xử lý format tiền tệ khi gõ
+  const handleAmountChange = (e) => {
+    const value = e.target.value.replace(/\D/g, "");
+    if (value) {
+      setAmountGiven(parseInt(value).toLocaleString("vi-VN"));
+    } else {
+      setAmountGiven("");
+    }
+  };
+
+  // Nạp nhanh số tiền vừa đủ
+  const handleExactAmount = () => {
+    setAmountGiven(totalPrice.toLocaleString("vi-VN"));
+  };
+
+  const handleCheckout = () => {
+    if (!isValidAmount) return;
+
+    setIsProcessing(true);
+
+    // Giả lập gọi API tạo PHIEUDATVE và GIAODICH
+    setTimeout(() => {
+      setIsProcessing(false);
+      setIsSuccess(true);
+      // Lúc này ở Backend, Entity GIAODICH đã được lưu với trạng thái "Thành công"
+    }, 1500);
+  };
+
+  // MÀN HÌNH THÀNH CÔNG
+  if (isSuccess) {
+    return (
+      <div className="h-full glass-effect rounded-3xl flex flex-col items-center justify-center p-12 text-center animate-in fade-in zoom-in duration-500">
+        <div className="w-24 h-24 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mb-6 border-2 border-green-500/50 shadow-[0_0_30px_rgba(34,197,94,0.3)]">
+          <svg
+            className="w-12 h-12"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={3}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        </div>
+        <h2 className="text-3xl font-black text-glow text-white mb-2 uppercase tracking-widest">
+          Giao dịch thành công
+        </h2>
+        <p className="text-white/60 mb-8">
+          Hệ thống đã ghi nhận doanh thu và xuất vé.
+        </p>
+
+        <div className="flex gap-4">
+          <button className="px-8 py-3 rounded-full font-bold text-slate-900 bg-white hover:bg-white/90 transition-colors uppercase text-sm shadow-lg">
+            🖨 In Vé (PDF)
+          </button>
+          <button onClick={onReset} className="btn-bright">
+            Bán vé mới
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // MÀN HÌNH THANH TOÁN
+  return (
+    <div className="flex gap-8 h-full">
+      {/* Cột trái: Tóm tắt đơn hàng (Order Summary) */}
+      <div className="flex-1 glass-effect rounded-3xl p-8 flex flex-col">
+        <h2 className="text-xl font-bold text-glow mb-6 uppercase tracking-widest border-b border-white/10 pb-4">
+          Xác Nhận Đơn Hàng
+        </h2>
+
+        <div className="flex-1 space-y-6 text-lg">
+          <div>
+            <p className="text-sm text-white/50 uppercase mb-1">Tên Phim</p>
+            <p className="font-bold text-2xl text-[var(--btn-neon)]">
+              {bookingData.movie?.title}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-white/50 uppercase mb-1">Giờ chiếu</p>
+              <p className="font-bold">{bookingData.showtime?.time}</p>
+            </div>
+            <div>
+              <p className="text-sm text-white/50 uppercase mb-1">
+                Phòng chiếu
+              </p>
+              <p className="font-bold">{bookingData.showtime?.room}</p>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-sm text-white/50 uppercase mb-1">
+              Ghế đã chọn ({bookingData.seats?.length})
+            </p>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {bookingData.seats?.map((seat) => (
+                <span
+                  key={seat}
+                  className="px-4 py-2 bg-white/10 rounded-lg border border-white/20 font-bold text-[var(--btn-neon)]"
+                >
+                  {seat}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-white/10 flex justify-between items-end">
+          <span className="text-lg text-white/60 uppercase tracking-widest">
+            Tổng Thanh Toán
+          </span>
+          <span className="text-4xl font-black text-glow text-[var(--btn-neon)]">
+            {totalPrice.toLocaleString("vi-VN")} đ
+          </span>
+        </div>
+      </div>
+
+      {/* Cột phải: Xử lý thanh toán */}
+      <div className="flex-1 glass-effect rounded-3xl p-8 flex flex-col justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-glow mb-6 uppercase tracking-widest border-b border-white/10 pb-4">
+            Phương Thức Thanh Toán
+          </h2>
+
+          <div className="grid grid-cols-3 gap-4 mb-8">
+            {PAYMENT_METHODS.map((method) => (
+              <button
+                key={method.id}
+                onClick={() => setPaymentMethod(method.id)}
+                className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-300
+                  ${
+                    paymentMethod === method.id
+                      ? "border-[var(--btn-neon)] bg-[var(--btn-neon)]/10 text-[var(--btn-neon)] shadow-[0_0_15px_rgba(253,224,71,0.2)] scale-105"
+                      : "border-white/10 text-white/50 hover:border-white/30 hover:bg-white/5"
+                  }
+                `}
+              >
+                <span className="text-2xl mb-2">{method.icon}</span>
+                <span className="text-sm font-bold uppercase">
+                  {method.name}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Logic Tính tiền thối (Chỉ hiện khi chọn Tiền Mặt) */}
+          {paymentMethod === "CASH" ? (
+            <div className="space-y-4 bg-black/20 p-6 rounded-2xl border border-white/5">
+              <div>
+                <div className="flex justify-between mb-2">
+                  <label className="text-sm text-white/60 uppercase">
+                    Tiền khách đưa
+                  </label>
+                  <button
+                    onClick={handleExactAmount}
+                    className="text-xs text-[var(--btn-neon)] hover:underline"
+                  >
+                    Vừa đủ
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={amountGiven}
+                    onChange={handleAmountChange}
+                    placeholder="Nhập số tiền..."
+                    className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-2xl font-bold text-white focus:outline-none focus:border-[var(--btn-neon)] transition-colors text-right pr-12"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40">
+                    đ
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center pt-4 border-t border-white/10">
+                <span className="text-sm text-white/60 uppercase">
+                  Tiền thối lại
+                </span>
+                <span
+                  className={`text-2xl font-bold ${changeAmount >= 0 ? "text-green-400" : "text-red-400"}`}
+                >
+                  {changeAmount >= 0
+                    ? changeAmount.toLocaleString("vi-VN")
+                    : "---"}{" "}
+                  đ
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 bg-black/20 rounded-2xl border border-white/5">
+              <div className="w-48 h-48 bg-white/10 rounded-xl mb-4 flex items-center justify-center border-2 border-dashed border-white/20">
+                <span className="text-white/30 text-sm">QR Code Mockup</span>
+              </div>
+              <p className="text-sm text-[var(--btn-neon)] animate-pulse">
+                Đang chờ khách quét mã...
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Nút Action */}
+        <div className="flex gap-4 mt-8">
+          <button
+            onClick={onPrev}
+            disabled={isProcessing}
+            className="px-6 py-4 rounded-full font-bold text-white/70 bg-white/5 hover:bg-white/10 transition-colors uppercase text-sm border border-white/10 w-1/3"
+          >
+            Quay Lại
+          </button>
+          <button
+            onClick={handleCheckout}
+            disabled={!isValidAmount || isProcessing}
+            className={`flex-1 btn-bright py-4 flex justify-center items-center gap-2 ${!isValidAmount || isProcessing ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
+          >
+            {isProcessing ? (
+              <>
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-slate-900"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Đang Xử Lý...
+              </>
+            ) : (
+              "Hoàn Tất Giao Dịch"
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Step3_Checkout;
