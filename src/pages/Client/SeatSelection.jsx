@@ -1,29 +1,22 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import MainLayout from '../../components/Layout/MainLayout';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import MainLayout from '../../layouts/MainLayout';
 import { MOVIES_MOCK } from '../../constants/movies';
 import { SEAT_TYPES } from '../../constants/adminMockData';
 import { ChevronLeft, Info } from 'lucide-react';
 
-const SeatSelection = () => {
-  const { showtimeId } = useParams();
-  const navigate = useNavigate();
-  const movie = MOVIES_MOCK[0]; // Mocking for now
-
-  const [selectedSeats, setSelectedSeats] = useState([]);
-  
-  // Mock Matrix
-  const rows = 10;
-  const cols = 14;
-  const matrix = [];
-  for (let r = 0; r < rows; r++) {
+const ROWS = 10;
+const COLS = 14;
+const GENERATED_MATRIX = (() => {
+  const newMatrix = [];
+  for (let r = 0; r < ROWS; r++) {
     const rowChar = String.fromCharCode(65 + r);
-    for (let c = 0; c < cols; c++) {
+    for (let c = 0; c < COLS; c++) {
       let type = 'LG01'; // Normal
       if (r >= 4 && r <= 7 && c >= 3 && c <= 10) type = 'LG02'; // VIP
       if (r === 9) type = 'LG03'; // Sweetbox
       
-      matrix.push({
+      newMatrix.push({
         id: `${rowChar}${c + 1}`,
         type,
         isBooked: Math.random() < 0.1,
@@ -32,6 +25,15 @@ const SeatSelection = () => {
       });
     }
   }
+  return newMatrix;
+})();
+
+const SeatSelection = () => {
+  const navigate = useNavigate();
+  const movie = MOVIES_MOCK[0]; // Mocking for now
+
+  const [selectedSeats, setSelectedSeats] = useState([]);
+  const matrix = GENERATED_MATRIX;
 
   const toggleSeat = (seat) => {
     if (seat.isBooked) return;
@@ -100,7 +102,7 @@ const SeatSelection = () => {
               </div>
 
               {/* Seats Grid */}
-              <div className="inline-grid gap-3 mb-16" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+              <div className="inline-grid gap-3 mb-16" style={{ gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))` }}>
                 {matrix.map((seat) => (
                   <button
                     key={seat.id}

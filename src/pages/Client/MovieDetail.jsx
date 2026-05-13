@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import MainLayout from '../../layouts/MainLayout';
 import { MOVIES_MOCK } from '../../constants/movies';

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import MainLayout from '../../components/Layout/MainLayout';
+import MainLayout from '../../layouts/MainLayout';
 import { CreditCard, Wallet, Smartphone, ShieldCheck, ChevronLeft } from 'lucide-react';
 
 const Checkout = () => {

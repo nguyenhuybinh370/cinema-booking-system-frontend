@@ -1,4 +1,4 @@
-import React from 'react';
+
 import MainLayout from '../../layouts/MainLayout';
 import Hero from '../../components/Home/Hero';
 import MovieGrid from '../../components/Movie/MovieGrid';
@@ -42,4 +42,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Home;
