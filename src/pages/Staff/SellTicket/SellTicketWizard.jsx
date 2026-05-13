@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Step1_SelectShowtime from "./Step1_SelectShowtime";
-// import Step2_SelectSeat from './Step2_SelectSeat';
+import Step2_SelectSeat from "./Step2_SelectSeat";
 // import Step3_Checkout from './Step3_Checkout';
 
 const SellTicketWizard = () => {
@@ -59,11 +59,21 @@ const SellTicketWizard = () => {
       <div className="flex-1">
         {currentStep === 1 && <Step1_SelectShowtime onNext={handleNextStep} />}
         {currentStep === 2 && (
+          <Step2_SelectSeat
+            onNext={handleNextStep}
+            onPrev={handlePrevStep}
+            bookingData={bookingData}
+          />
+        )}
+        {currentStep === 3 && (
           <div className="glass-effect p-10 rounded-2xl text-center">
             <h2 className="text-2xl text-glow mb-4">
-              Bước 2: Sơ đồ ghế (Đang cập nhật)
+              Bước 3: Thanh toán (Đang cập nhật)
             </h2>
-            <button className="btn-bright" onClick={handlePrevStep}>
+            <button
+              className="px-6 py-3 rounded-full font-bold text-white/70 bg-white/5 hover:bg-white/10 border border-white/10 mr-4"
+              onClick={handlePrevStep}
+            >
               Quay lại
             </button>
           </div>
