@@ -1,19 +1,49 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
-import { ROOMS, SEAT_TYPES, SEAT_MAPS } from '../../constants/adminMockData';
+import adminService from '../../services/adminService';
 import { Lock, Unlock, ChevronLeft, Save } from 'lucide-react';
 
 const SeatMaps = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
   
-  // Find room and its template
-  const room = ROOMS.find(r => r.MaPhongChieu === roomId);
-  const template = SEAT_MAPS.find(m => m.MaSoDoGhe === room?.MaSoDoGhe);
-  
+  const [room, setRoom] = useState(null);
+  const [template, setTemplate] = useState(null);
+  const [seatTypes, setSeatTypes] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [overrides, setOverrides] = useState({}); // { seatId: { MaLoaiGhe, KhaDung } }
   const [selectedSeats, setSelectedSeats] = useState([]);
+
+  useEffect(() => {
+    let ignore = false;
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [roomData, typesData] = await Promise.all([
+          adminService.getRoomById(roomId),
+          adminService.getSeatTypes()
+        ]);
+        
+        if (!ignore && roomData) {
+          setRoom(roomData);
+          setSeatTypes(typesData);
+          setOverrides(roomData.Overrides || {});
+          
+          const templateData = await adminService.getSeatMapByRoomId(roomId);
+          if (!ignore) {
+            setTemplate(templateData);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch seat map data:", error);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+    fetchData();
+    return () => { ignore = true; };
+  }, [roomId]);
 
   // Generate matrix based on template and overrides
   const matrix = useMemo(() => {
@@ -63,6 +93,18 @@ const SeatMaps = () => {
     setOverrides(newOverrides);
   };
 
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      await adminService.saveSeatConfig(roomId, overrides);
+      alert("Cấu hình sơ đồ ghế đã được lưu thành công!");
+    } catch (error) {
+      alert("Lỗi khi lưu cấu hình: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getSeatColor = (typeId, khaDung) => {
     if (khaDung === 0) return 'bg-slate-800 border-slate-700 text-slate-600 shadow-inner';
     switch (typeId) {
@@ -71,6 +113,14 @@ const SeatMaps = () => {
       default: return 'bg-slate-700 border-slate-600 text-slate-300';
     }
   };
+
+  if (loading) return (
+    <AdminLayout>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-white animate-pulse font-bold tracking-widest">ĐANG TẢI SƠ ĐỒ...</div>
+      </div>
+    </AdminLayout>
+  );
 
   if (!room || !template) return (
     <AdminLayout>
@@ -94,7 +144,10 @@ const SeatMaps = () => {
             <p className="text-slate-500 font-medium">Sơ đồ gốc: {template.MaSoDoGhe} ({template.TongHang}x{template.TongCot})</p>
           </div>
         </div>
-        <button className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2">
+        <button 
+          onClick={handleSave}
+          className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+        >
           <Save size={20} />
           Lưu cấu hình
         </button>
@@ -111,7 +164,7 @@ const SeatMaps = () => {
               <div className="space-y-3">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Loại ghế</label>
                 <div className="grid grid-cols-1 gap-2">
-                  {SEAT_TYPES.map(type => (
+                  {seatTypes.map(type => (
                     <button
                       key={type.MaLoaiGhe}
                       onClick={() => updateSelectedSeats({ MaLoaiGhe: type.MaLoaiGhe })}
@@ -133,7 +186,7 @@ const SeatMaps = () => {
                     disabled={selectedSeats.length === 0}
                     className="flex-grow flex items-center justify-center gap-2 p-4 rounded-xl bg-red-500/10 text-red-500 border border-red-500/10 hover:bg-red-500/20 disabled:opacity-30 transition-all"
                   >
-                    <Lock size={16} />
+                    <Unlock size={16} />
                     <span className="text-[10px] font-black uppercase">Khóa</span>
                   </button>
                   <button

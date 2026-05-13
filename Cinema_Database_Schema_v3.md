@@ -100,7 +100,7 @@ _Bảng 3.5 Bảng LOAIPHONG_
 | **PHONGCHIEU** |     |     |     |
 | **Tên trường** | **Kiểu dữ liệu** | **Ràng buộc** | **Mô tả** |
 | MaPhongChieu | VARCHAR(36) | Khóa chính | Mã phòng chiếu (UUID) |
-| MaPhongChieu | VARCHAR(36) | Khóa ngoại | Mã phòng chiếu |
+| MaSoDoGhe | VARCHAR(36) | Khóa ngoại | Sơ đồ ghế |
 | TenPhong | VARCHAR(100) | Not null | Tên phòng chiếu |
 | SoGhe | INT | Not null | Tổng số ghế |
 | MaLoaiPhong | VARCHAR(36) | Khóa ngoại | Mã loại phòng |

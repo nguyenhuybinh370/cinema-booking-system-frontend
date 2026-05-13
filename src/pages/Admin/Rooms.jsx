@@ -6,10 +6,11 @@ import AdminTable from '../../components/Admin/Common/AdminTable';
 import StatusBadge from '../../components/Admin/Common/StatusBadge';
 import adminService from '../../services/adminService';
 import useAdminForm from '../../hooks/useAdminForm';
-import { LayoutGrid, Plus, MoreVertical } from 'lucide-react';
+import { LayoutGrid, Plus, Edit2, Trash2 } from 'lucide-react';
 
 const Rooms = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingRoom, setEditingRoom] = useState(null);
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [roomTypes, setRoomTypes] = useState([]);
@@ -60,27 +61,49 @@ const Rooms = () => {
 
   const {
     formData,
+    setFormData,
     handleChange,
-    handleSubmit
+    handleSubmit,
+    resetForm
   } = useAdminForm(initialFormState, async (data, { resetForm }) => {
-    const newRoom = {
-      MaPhongChieu: `PC${String(rooms.length + 1).padStart(2, '0')}`,
-      ...data,
-      SoGhe: getSeatCount(data.MaSoDoGhe),
-      KhaDung: 1
-    };
-    // Simulate add room
-    setRooms(prev => [...prev, newRoom]);
+    if (editingRoom) {
+      await adminService.updateRoom(editingRoom.MaPhongChieu, {
+        ...data,
+        SoGhe: getSeatCount(data.MaSoDoGhe)
+      });
+    } else {
+      const newRoom = {
+        MaPhongChieu: `PC${String(rooms.length + 1).padStart(2, '0')}`,
+        ...data,
+        SoGhe: getSeatCount(data.MaSoDoGhe),
+        KhaDung: 1
+      };
+      await adminService.addRoom(newRoom);
+    }
+    
+    await loadData();
     setIsModalOpen(false);
+    setEditingRoom(null);
     resetForm();
   });
 
-  const handleToggleStatus = async (id) => {
-    if (window.confirm("Các suất chiếu đã lên lịch sẽ không bị ảnh hưởng. Xác nhận?")) {
-      const room = rooms.find(r => r.MaPhongChieu === id);
-      const newStatus = room.Status === 'Active' ? 'Maintenance' : 'Active';
-      await adminService.updateRoom(id, { Status: newStatus });
-      await loadData();
+  const handleEdit = (room) => {
+    setEditingRoom(room);
+    setFormData({
+      TenPhong: room.TenPhong,
+      MaLoaiPhong: room.MaLoaiPhong,
+      MaSoDoGhe: room.MaSoDoGhe,
+      Status: room.Status
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa phòng này? Các suất chiếu liên quan có thể bị ảnh hưởng.")) {
+      const success = await adminService.deleteRoom(id);
+      if (success) {
+        await loadData();
+      }
     }
   };
 
@@ -111,14 +134,10 @@ const Rooms = () => {
       }
     },
     { header: 'Sức chứa', render: (room) => <span className="text-slate-400 font-medium">{room.SoGhe} ghế</span> },
-    { header: 'Sơ đồ ghế', accessor: 'MaSoDoGhe', className: 'text-slate-400 text-sm font-mono' },
+    { header: 'Sơ đồ mẫu', accessor: 'MaSoDoGhe', className: 'text-slate-400 text-sm font-mono' },
     {
       header: 'Trạng thái',
-      render: (room) => (
-        <div className="flex items-center gap-2">
-          <StatusBadge status={room.Status} />
-        </div>
-      )
+      render: (room) => <StatusBadge status={room.Status} />
     },
     {
       header: 'Hành động',
@@ -132,14 +151,19 @@ const Rooms = () => {
           >
             <LayoutGrid size={18} />
           </Link>
-          <button className="p-2 hover:bg-white/5 text-slate-500 hover:text-white rounded-xl transition-all">
-            <MoreVertical size={18} />
+          <button 
+            onClick={() => handleEdit(room)}
+            className="p-2 hover:bg-white/5 text-blue-500 hover:text-blue-400 rounded-xl transition-all"
+            title="Sửa"
+          >
+            <Edit2 size={18} />
           </button>
           <button 
-            onClick={() => handleToggleStatus(room.MaPhongChieu)}
-            className="text-xs font-bold text-red-500 hover:underline px-2"
+            onClick={() => handleDelete(room.MaPhongChieu)}
+            className="p-2 hover:bg-white/5 text-red-500 hover:text-red-400 rounded-xl transition-all"
+            title="Xóa"
           >
-            {room.Status === 'Active' ? 'Bảo trì' : 'Kích hoạt'}
+            <Trash2 size={18} />
           </button>
         </div>
       )
@@ -154,7 +178,11 @@ const Rooms = () => {
           <p className="text-slate-500 font-medium">Danh sách các phòng chiếu vật lý trong hệ thống.</p>
         </div>
         <button 
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setEditingRoom(null);
+            resetForm();
+            setIsModalOpen(true);
+          }}
           className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 flex items-center gap-2"
         >
           <Plus size={20} />
@@ -165,13 +193,16 @@ const Rooms = () => {
       {loading ? (
         <div className="bg-white/5 border border-white/5 rounded-3xl h-64 animate-pulse"></div>
       ) : (
-        <AdminTable columns={columns} data={rooms} rowKey="MaPhongChieu" />
+        <AdminTable columns={columns} data={rooms.filter(r => r.KhaDung !== 0)} rowKey="MaPhongChieu" />
       )}
 
       <Modal 
         isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)}
-        title="Thêm phòng chiếu mới"
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingRoom(null);
+        }}
+        title={editingRoom ? "Cập nhật phòng chiếu" : "Thêm phòng chiếu mới"}
       >
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
@@ -224,7 +255,7 @@ const Rooms = () => {
           </div>
 
           <div className="space-y-4">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Trạng thái ban đầu</label>
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Trạng thái vận hành</label>
             <div className="flex gap-6">
               <label className="flex items-center gap-2 cursor-pointer group">
                 <input 
@@ -254,7 +285,10 @@ const Rooms = () => {
           <div className="flex gap-4 pt-4 border-t border-white/5">
             <button 
               type="button"
-              onClick={() => setIsModalOpen(false)}
+              onClick={() => {
+                setIsModalOpen(false);
+                setEditingRoom(null);
+              }}
               className="flex-grow py-3 px-6 rounded-xl font-bold text-slate-400 hover:bg-white/5 transition-all uppercase tracking-widest text-xs"
             >
               Hủy
@@ -263,7 +297,7 @@ const Rooms = () => {
               type="submit"
               className="flex-grow py-3 px-6 rounded-xl font-bold bg-red-500 hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 uppercase tracking-widest text-xs"
             >
-              Lưu phòng
+              {editingRoom ? "Cập nhật" : "Lưu phòng"}
             </button>
           </div>
         </form>

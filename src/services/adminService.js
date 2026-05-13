@@ -41,6 +41,11 @@ const adminService = {
     await delay();
     return ROOMS.find(r => r.MaPhongChieu === id);
   },
+  addRoom: async (room) => {
+    await delay();
+    ROOMS.push(room);
+    return room;
+  },
   updateRoom: async (maPhong, updates) => {
     await delay();
     const index = ROOMS.findIndex(r => r.MaPhongChieu === maPhong);
@@ -49,6 +54,17 @@ const adminService = {
       return ROOMS[index];
     }
     throw new Error('Room not found');
+  },
+  deleteRoom: async (maPhong) => {
+    await delay();
+    const index = ROOMS.findIndex(r => r.MaPhongChieu === maPhong);
+    if (index !== -1) {
+      // Soft delete: toggle KhaDung or Status
+      ROOMS[index].KhaDung = 0;
+      ROOMS[index].Status = 'Inactive';
+      return true;
+    }
+    return false;
   },
 
   // Personnel
@@ -69,6 +85,15 @@ const adminService = {
     const room = ROOMS.find(r => r.MaPhongChieu === roomId);
     if (!room) return null;
     return SEAT_MAPS.find(m => m.MaSoDoGhe === room.MaSoDoGhe);
+  },
+  saveSeatConfig: async (roomId, overrides) => {
+    await delay();
+    const room = ROOMS.find(r => r.MaPhongChieu === roomId);
+    if (room) {
+      room.Overrides = overrides;
+      return true;
+    }
+    return false;
   }
 };
 
