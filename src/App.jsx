@@ -3,6 +3,7 @@ import Home from "./pages/Client/Home";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import SellTicketWizard from "./pages/Staff/SellTicket/SellTicketWizard";
 import StaffLayout from "./components/StaffLayout/StaffLayout";
+import CheckIn from "./pages/Staff/Checkin";
 
 function App() {
   return (
@@ -20,19 +21,8 @@ function App() {
               element={<Navigate to="/staff/sell-ticket" replace />}
             />
 
-            {/* Dùng <div> tạm thời để không bị lỗi import, sau này tạo file thì thay vào */}
             <Route path="sell-ticket" element={<SellTicketWizard />} />
-
-            <Route
-              path="check-in"
-              element={
-                <div className="bg-card p-6 rounded-lg border border-border">
-                  <h2 className="text-xl font-bold">
-                    Màn hình Soát vé (Đang phát triển...)
-                  </h2>
-                </div>
-              }
-            />
+            <Route path="check-in" element={<CheckIn />} />
           </Route>
         </Route>
       </Routes>
