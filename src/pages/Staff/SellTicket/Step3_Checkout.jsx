@@ -6,21 +6,50 @@ const PAYMENT_METHODS = [
   { id: "VNPAY", name: "VNPay", icon: "💳" },
 ];
 
+// Cấu hình Loại Ghế (Mang sang từ Bước 2 để bóc tách hóa đơn)
+const SEAT_TYPES = {
+  REGULAR: { name: "Thường", surcharge: 0, color: "text-white/70" },
+  VIP: { name: "VIP", surcharge: 15000, color: "text-red-400" },
+  COUPLE: { name: "Ghế Đôi", surcharge: 25000, color: "text-pink-400" },
+};
+
+const getSeatType = (row) => {
+  if (["A", "B", "C", "D"].includes(row)) return SEAT_TYPES.REGULAR;
+  if (["E", "F", "G"].includes(row)) return SEAT_TYPES.VIP;
+  if (row === "H") return SEAT_TYPES.COUPLE;
+  return SEAT_TYPES.REGULAR;
+};
+
 const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
   const [paymentMethod, setPaymentMethod] = useState("CASH");
   const [amountGiven, setAmountGiven] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  // Tính lại Giá cơ bản của 1 vé (Gốc + Phụ thu phòng + Phụ thu ngày)
+  const baseTicketPrice =
+    (bookingData.showtime?.basePrice || 0) +
+    (bookingData.showtime?.roomSurcharge || 0) +
+    (bookingData.showtime?.daySurcharge || 0);
+
   const totalPrice = bookingData.totalPrice || 0;
 
-  // Tính tiền thối (Chỉ áp dụng cho tiền mặt)
+  // Bóc tách giỏ hàng để in Bill
+  const breakdown = { REGULAR: [], VIP: [], COUPLE: [] };
+  bookingData.seats?.forEach((seatId) => {
+    const row = seatId.charAt(0);
+    const typeInfo = getSeatType(row);
+    if (typeInfo.name === "Thường") breakdown.REGULAR.push(seatId);
+    if (typeInfo.name === "VIP") breakdown.VIP.push(seatId);
+    if (typeInfo.name === "Ghế Đôi") breakdown.COUPLE.push(seatId);
+  });
+
+  // Xử lý tiền thối
   const numericAmountGiven = parseInt(amountGiven.replace(/\D/g, "")) || 0;
   const changeAmount = numericAmountGiven - totalPrice;
   const isValidAmount =
     paymentMethod !== "CASH" || numericAmountGiven >= totalPrice;
 
-  // Xử lý format tiền tệ khi gõ
   const handleAmountChange = (e) => {
     const value = e.target.value.replace(/\D/g, "");
     if (value) {
@@ -30,22 +59,19 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
     }
   };
 
-  // Nạp nhanh số tiền vừa đủ
   const handleExactAmount = () => {
     setAmountGiven(totalPrice.toLocaleString("vi-VN"));
   };
 
   const handleCheckout = () => {
     if (!isValidAmount) return;
-
     setIsProcessing(true);
 
-    // Giả lập gọi API tạo PHIEUDATVE và GIAODICH
+    // Giả lập thời gian đợi API xử lý hoặc đợi Webhook từ cổng thanh toán
     setTimeout(() => {
       setIsProcessing(false);
       setIsSuccess(true);
-      // Lúc này ở Backend, Entity GIAODICH đã được lưu với trạng thái "Thành công"
-    }, 1500);
+    }, 2000);
   };
 
   // MÀN HÌNH THÀNH CÔNG
@@ -73,7 +99,6 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
         <p className="text-white/60 mb-8">
           Hệ thống đã ghi nhận doanh thu và xuất vé.
         </p>
-
         <div className="flex gap-4">
           <button className="px-8 py-3 rounded-full font-bold text-slate-900 bg-white hover:bg-white/90 transition-colors uppercase text-sm shadow-lg">
             🖨 In Vé (PDF)
@@ -89,13 +114,13 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
   // MÀN HÌNH THANH TOÁN
   return (
     <div className="flex gap-8 h-full">
-      {/* Cột trái: Tóm tắt đơn hàng (Order Summary) */}
+      {/* CỘT TRÁI: HÓA ĐƠN CHI TIẾT */}
       <div className="flex-1 glass-effect rounded-3xl p-8 flex flex-col">
         <h2 className="text-xl font-bold text-glow mb-6 uppercase tracking-widest border-b border-white/10 pb-4">
-          Xác Nhận Đơn Hàng
+          Hóa Đơn Chi Tiết
         </h2>
 
-        <div className="flex-1 space-y-6 text-lg">
+        <div className="flex-1 space-y-6">
           <div>
             <p className="text-sm text-white/50 uppercase mb-1">Tên Phim</p>
             <p className="font-bold text-2xl text-[var(--btn-neon)]">
@@ -105,35 +130,77 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-white/50 uppercase mb-1">Giờ chiếu</p>
-              <p className="font-bold">{bookingData.showtime?.time}</p>
+              <p className="text-sm text-white/50 uppercase mb-1">Suất chiếu</p>
+              <p className="font-bold text-lg">{bookingData.showtime?.time}</p>
             </div>
             <div>
               <p className="text-sm text-white/50 uppercase mb-1">
                 Phòng chiếu
               </p>
-              <p className="font-bold">{bookingData.showtime?.room}</p>
+              <p className="font-bold text-lg">{bookingData.showtime?.room}</p>
             </div>
           </div>
 
-          <div>
-            <p className="text-sm text-white/50 uppercase mb-1">
-              Ghế đã chọn ({bookingData.seats?.length})
-            </p>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {bookingData.seats?.map((seat) => (
-                <span
-                  key={seat}
-                  className="px-4 py-2 bg-white/10 rounded-lg border border-white/20 font-bold text-[var(--btn-neon)]"
-                >
-                  {seat}
-                </span>
-              ))}
+          <div className="bg-black/20 p-5 rounded-2xl border border-white/5 space-y-4">
+            <div className="flex justify-between border-b border-white/10 pb-3">
+              <span className="text-white/60">Giá vé cơ bản</span>
+              <span className="font-bold">
+                {baseTicketPrice.toLocaleString()} đ
+              </span>
             </div>
+
+            {/* Render chi tiết từng loại ghế */}
+            {breakdown.REGULAR.length > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className={SEAT_TYPES.REGULAR.color}>
+                  {breakdown.REGULAR.length}x Ghế Thường (
+                  {breakdown.REGULAR.join(", ")})
+                </span>
+                <span className="font-mono">
+                  {(
+                    (baseTicketPrice + SEAT_TYPES.REGULAR.surcharge) *
+                    breakdown.REGULAR.length
+                  ).toLocaleString()}{" "}
+                  đ
+                </span>
+              </div>
+            )}
+
+            {breakdown.VIP.length > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className={SEAT_TYPES.VIP.color}>
+                  {breakdown.VIP.length}x Ghế VIP (+15k) (
+                  {breakdown.VIP.join(", ")})
+                </span>
+                <span className="font-mono">
+                  {(
+                    (baseTicketPrice + SEAT_TYPES.VIP.surcharge) *
+                    breakdown.VIP.length
+                  ).toLocaleString()}{" "}
+                  đ
+                </span>
+              </div>
+            )}
+
+            {breakdown.COUPLE.length > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className={SEAT_TYPES.COUPLE.color}>
+                  {breakdown.COUPLE.length}x Ghế Đôi (+25k) (
+                  {breakdown.COUPLE.join(", ")})
+                </span>
+                <span className="font-mono">
+                  {(
+                    (baseTicketPrice + SEAT_TYPES.COUPLE.surcharge) *
+                    breakdown.COUPLE.length
+                  ).toLocaleString()}{" "}
+                  đ
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-white/10 flex justify-between items-end">
+        <div className="mt-6 pt-6 border-t border-white/10 flex justify-between items-end">
           <span className="text-lg text-white/60 uppercase tracking-widest">
             Tổng Thanh Toán
           </span>
@@ -143,7 +210,7 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
         </div>
       </div>
 
-      {/* Cột phải: Xử lý thanh toán */}
+      {/* CỘT PHẢI: PHƯƠNG THỨC THANH TOÁN */}
       <div className="flex-1 glass-effect rounded-3xl p-8 flex flex-col justify-between">
         <div>
           <h2 className="text-xl font-bold text-glow mb-6 uppercase tracking-widest border-b border-white/10 pb-4">
@@ -171,7 +238,6 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
             ))}
           </div>
 
-          {/* Logic Tính tiền thối (Chỉ hiện khi chọn Tiền Mặt) */}
           {paymentMethod === "CASH" ? (
             <div className="space-y-4 bg-black/20 p-6 rounded-2xl border border-white/5">
               <div>
@@ -192,14 +258,13 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
                     value={amountGiven}
                     onChange={handleAmountChange}
                     placeholder="Nhập số tiền..."
-                    className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-2xl font-bold text-white focus:outline-none focus:border-[var(--btn-neon)] transition-colors text-right pr-12"
+                    className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-2xl font-bold text-white focus:outline-none focus:border-[var(--btn-neon)] text-right pr-12"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40">
                     đ
                   </span>
                 </div>
               </div>
-
               <div className="flex justify-between items-center pt-4 border-t border-white/10">
                 <span className="text-sm text-white/60 uppercase">
                   Tiền thối lại
@@ -220,13 +285,12 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
                 <span className="text-white/30 text-sm">QR Code Mockup</span>
               </div>
               <p className="text-sm text-[var(--btn-neon)] animate-pulse">
-                Đang chờ khách quét mã...
+                Đang chờ Webhook từ {paymentMethod}...
               </p>
             </div>
           )}
         </div>
 
-        {/* Nút Action */}
         <div className="flex gap-4 mt-8">
           <button
             onClick={onPrev}
@@ -262,7 +326,7 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Đang Xử Lý...
+                Đang Ghi Nhận...
               </>
             ) : (
               "Hoàn Tất Giao Dịch"
