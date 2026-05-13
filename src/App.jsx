@@ -3,6 +3,7 @@ import Home from "./pages/Client/Home";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import SellTicketWizard from "./pages/Staff/SellTicket/SellTicketWizard";
 import StaffLayout from "./components/StaffLayout/StaffLayout";
+import Dashboard from "./pages/Staff/dashboard";
 
 function App() {
   return (
@@ -14,15 +15,10 @@ function App() {
         {/* === STAFF ROUTES (Role: STAFF) === */}
         <Route element={<ProtectedRoute allowedRoles={["STAFF"]} />}>
           <Route path="/staff" element={<StaffLayout />}>
-            {/* Chuyển hướng mặc định vào thẳng trang bán vé */}
-            <Route
-              index
-              element={<Navigate to="/staff/sell-ticket" replace />}
-            />
-
-            {/* Dùng <div> tạm thời để không bị lỗi import, sau này tạo file thì thay vào */}
+            {/* Chuyển hướng mặc định vào thẳng trang dashboard */}
+            <Route index element={<Navigate to="/staff/dashboard" replace />} />
+            <Route path="dashboard" element={<Dashboard />} />
             <Route path="sell-ticket" element={<SellTicketWizard />} />
-
             <Route
               path="check-in"
               element={
