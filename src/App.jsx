@@ -15,12 +15,9 @@ function App() {
         {/* === STAFF ROUTES (Role: STAFF) === */}
         <Route element={<ProtectedRoute allowedRoles={["STAFF"]} />}>
           <Route path="/staff" element={<StaffLayout />}>
-            {/* Chuyển hướng mặc định vào thẳng trang bán vé */}
-            <Route
-              index
-              element={<Navigate to="/staff/sell-ticket" replace />}
-            />
-
+            {/* Chuyển hướng mặc định vào thẳng trang dashboard */}
+            <Route index element={<Navigate to="/staff/dashboard" replace />} />
+            <Route path="dashboard" element={<Dashboard />} />
             <Route path="sell-ticket" element={<SellTicketWizard />} />
             <Route path="check-in" element={<CheckIn />} />
           </Route>

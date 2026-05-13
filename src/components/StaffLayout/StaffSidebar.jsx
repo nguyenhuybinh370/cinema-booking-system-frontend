@@ -1,8 +1,13 @@
 import { NavLink } from "react-router-dom";
-import { Ticket, Scan, LogOut } from "lucide-react";
+import { Ticket, Scan, LogOut, LayoutDashboard } from "lucide-react";
 
 const StaffSidebar = () => {
   const menuItems = [
+    {
+      title: "Tổng quan",
+      path: "/staff/dashboard",
+      icon: <LayoutDashboard size={22} />,
+    },
     {
       title: "Bán vé",
       path: "/staff/sell-ticket",
