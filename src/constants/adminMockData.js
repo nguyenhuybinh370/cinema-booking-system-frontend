@@ -11,9 +11,30 @@ export const ROOMS = [
 ];
 
 export const SEAT_MAPS = [
-  { MaSoDoGhe: 'SM01', TenSoDo: 'Sơ đồ 10x10', TongHang: 10, TongCot: 10, KhaDung: 1 },
-  { MaSoDoGhe: 'SM02', TenSoDo: 'Sơ đồ 10x12', TongHang: 10, TongCot: 12, KhaDung: 1 },
-  { MaSoDoGhe: 'SM03', TenSoDo: 'Sơ đồ 10x15', TongHang: 10, TongCot: 15, KhaDung: 1 },
+  { 
+    MaSoDoGhe: 'SM01', 
+    TenSoDo: 'Sơ đồ 10x10', 
+    TongHang: 10, 
+    TongCot: 10, 
+    CauTruc: '{"aisles": {"rows": [], "cols": [3, 8]}}',
+    KhaDung: 1 
+  },
+  { 
+    MaSoDoGhe: 'SM02', 
+    TenSoDo: 'Sơ đồ 10x12', 
+    TongHang: 10, 
+    TongCot: 12, 
+    CauTruc: '{"aisles": {"rows": [], "cols": [4, 9]}}',
+    KhaDung: 1 
+  },
+  { 
+    MaSoDoGhe: 'SM03', 
+    TenSoDo: 'Sơ đồ 10x15', 
+    TongHang: 10, 
+    TongCot: 15, 
+    CauTruc: '{"aisles": {"rows": [], "cols": [5, 11]}}',
+    KhaDung: 1 
+  },
 ];
 
 export const SEAT_TYPES = [
@@ -41,7 +62,7 @@ export const ADMIN_MOVIES = [
     DienVien: 'Trương Minh Cường, Đinh Y Nhung, Quách Ngọc Tuyên', 
     GioiHanTuoi: 'C16', 
     Status: 'Showing',
-    HinhAnh: 'https://image.api.playready.com.vn/api/v2/image/6628b031b268010026e6d338',
+    HinhAnh: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=800',
     NoiDung: 'Câu chuyện về tình cảm gia đình đầy xúc động của bà Hai và 5 người con.',
     trailerUrl: 'https://www.youtube.com/watch?v=kYpS-ZlK-bU',
     KhaDung: 1
@@ -57,7 +78,7 @@ export const ADMIN_MOVIES = [
     DienVien: 'Owen Teague, Freya Allan, Kevin Durand', 
     GioiHanTuoi: 'P', 
     Status: 'Showing',
-    HinhAnh: 'https://image.api.playready.com.vn/api/v2/image/66399f668673a500264024c0',
+    HinhAnh: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=800',
     NoiDung: 'Nhiều năm sau sự trị vì của Caesar, một chú khỉ trẻ dấn thân vào hành trình định đoạt tương lai.',
     trailerUrl: 'https://www.youtube.com/watch?v=Kdr5oedn7q8',
     KhaDung: 1

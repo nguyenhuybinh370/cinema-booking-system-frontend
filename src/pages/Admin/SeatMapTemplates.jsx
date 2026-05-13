@@ -79,9 +79,14 @@ const SeatMapTemplates = () => {
     if (!previewTemplate) return [];
     const { TongHang, TongCot, CauTruc } = previewTemplate;
     let struct = { aisles: { rows: [], cols: [] } };
-    try {
-      struct = typeof CauTruc === 'string' ? JSON.parse(CauTruc) : CauTruc;
-    } catch (e) { console.error("JSON Parse error", e); }
+    
+    if (CauTruc) {
+      try {
+        struct = typeof CauTruc === 'string' ? JSON.parse(CauTruc) : CauTruc;
+      } catch (e) { 
+        console.error("JSON Parse error", e); 
+      }
+    }
 
     const result = [];
     for (let r = 0; r < TongHang; r++) {
@@ -90,7 +95,7 @@ const SeatMapTemplates = () => {
       for (let c = 0; c < TongCot; c++) {
         row.push({
           id: `${rowChar}${c + 1}`,
-          isAisle: struct.aisles?.cols?.includes(c + 1) || struct.aisles?.rows?.includes(r + 1)
+          isAisle: struct?.aisles?.cols?.includes(c + 1) || struct?.aisles?.rows?.includes(r + 1)
         });
       }
       result.push(row);
