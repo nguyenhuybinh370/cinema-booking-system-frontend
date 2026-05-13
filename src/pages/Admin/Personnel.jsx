@@ -1,16 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import Modal from '../../components/Admin/Common/Modal';
 import AdminTable from '../../components/Admin/Common/AdminTable';
 import StatusBadge from '../../components/Admin/Common/StatusBadge';
-import { STAFF } from '../../constants/adminMockData';
+import adminService from '../../services/adminService';
 import { Search, ShieldCheck, UserX, UserCheck, Edit2, X } from 'lucide-react';
 
 const Personnel = () => {
-  const [staff] = useState(STAFF);
+  const [staff, setStaff] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPermPanelOpen, setIsPermPanelOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
+
+  useEffect(() => {
+    let ignore = false;
+    const fetchStaff = async () => {
+      const data = await adminService.getStaff();
+      if (!ignore) {
+        setStaff(data);
+        setLoading(false);
+      }
+    };
+    fetchStaff();
+    return () => { ignore = true; };
+  }, []);
 
   const permissions = [
     'Quản lý phòng chiếu', 'Quản lý phim', 'Cấu hình sơ đồ ghế', 
@@ -41,8 +55,7 @@ const Personnel = () => {
       header: 'Trạng thái',
       render: (person) => (
         <div className="flex items-center gap-2">
-          <div className={`w-1.5 h-1.5 rounded-full ${person.Status === 'Active' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-500'}`}></div>
-          <span className="text-xs font-medium text-slate-300">{person.Status === 'Active' ? 'Hoạt động' : 'Vô hiệu hóa'}</span>
+          <StatusBadge status={person.Status} />
         </div>
       )
     },
@@ -103,7 +116,11 @@ const Personnel = () => {
       </div>
 
       {/* Table */}
-      <AdminTable columns={columns} data={staff} rowKey="MaNhanVien" />
+      {loading ? (
+        <div className="bg-white/5 border border-white/5 rounded-3xl h-64 animate-pulse"></div>
+      ) : (
+        <AdminTable columns={columns} data={staff} rowKey="MaNhanVien" />
+      )}
 
       {/* Permission Panel (Slide-in) */}
       {isPermPanelOpen && (

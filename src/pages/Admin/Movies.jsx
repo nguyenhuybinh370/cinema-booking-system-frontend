@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import Modal from '../../components/Admin/Common/Modal';
-import { ADMIN_MOVIES } from '../../constants/adminMockData';
+import adminService from '../../services/adminService';
 import { Search, MoreVertical, Plus } from 'lucide-react';
 import StatusBadge from '../../components/Admin/Common/StatusBadge';
 
 const Movies = () => {
-  const [movies, setMovies] = useState(ADMIN_MOVIES);
+  const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -25,20 +26,58 @@ const Movies = () => {
     KhaDung: 1
   });
 
+  const loadMovies = async () => {
+    const data = await adminService.getMovies();
+    setMovies(data);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    let ignore = false;
+    const fetchMovies = async () => {
+      const data = await adminService.getMovies();
+      if (!ignore) {
+        setMovies(data);
+        setLoading(false);
+      }
+    };
+    fetchMovies();
+    return () => { ignore = true; };
+  }, []);
+
   const filteredMovies = filter === 'All' 
     ? movies 
     : movies.filter(m => m.Status === filter);
 
-
-  const handleAddMovie = (e) => {
+  const handleAddMovie = async (e) => {
     e.preventDefault();
     const newMovie = {
       MaPhim: `M${String(movies.length + 1).padStart(2, '0')}`,
       ...formData,
       ThoiLuong: parseInt(formData.ThoiLuong)
     };
-    setMovies([...movies, newMovie]);
+    await adminService.addMovie(newMovie);
+    loadMovies();
     setIsModalOpen(false);
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setFormData({
+      TenPhim: '',
+      TheLoai: '',
+      ThoiLuong: '',
+      Status: 'Coming Soon',
+      GioiHanTuoi: 'P',
+      NgayKhoiChieu: '',
+      NgayKetThuc: '',
+      DaoDien: '',
+      DienVien: '',
+      NoiDung: '',
+      HinhAnh: '',
+      trailerUrl: '',
+      KhaDung: 1
+    });
   };
 
   return (
@@ -80,42 +119,50 @@ const Movies = () => {
         </div>
       </div>
 
-      {/* Movie Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredMovies.map((movie) => (
-          <div key={movie.MaPhim} className="group bg-[#0f1117] border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-white/20 transition-all hover:-translate-y-2 shadow-2xl">
-            <div className="relative aspect-video">
-              <img src={movie.HinhAnh} alt={movie.TenPhim} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117] via-transparent to-transparent"></div>
-              <div className="absolute top-4 left-4">
-                <StatusBadge status={movie.Status} />
-              </div>
-              <div className="absolute top-4 right-4">
-                <button className="p-2 bg-black/40 backdrop-blur-md rounded-xl text-white hover:bg-red-500 transition-all">
-                  <MoreVertical size={16} />
-                </button>
-              </div>
-            </div>
-            <div className="p-6">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-bold px-2 py-0.5 border border-slate-700 rounded text-slate-500 uppercase">{movie.GioiHanTuoi}</span>
-                <span className="text-slate-500 text-xs">•</span>
-                <span className="text-slate-500 text-xs font-medium">{movie.ThoiLuong} phút</span>
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2 line-clamp-1 group-hover:text-red-500 transition-colors">{movie.TenPhim}</h3>
-              <p className="text-slate-500 text-sm mb-4 line-clamp-1">{movie.TheLoai}</p>
-              
-              <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                <div className="flex flex-col">
-                  <span className="text-[10px] uppercase text-slate-600 font-bold tracking-widest">Khởi chiếu</span>
-                  <span className="text-sm font-bold text-slate-300">{movie.NgayKhoiChieu}</span>
+      {/* Loading State */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="aspect-video bg-white/5 rounded-[2.5rem] animate-pulse"></div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredMovies.map((movie) => (
+            <div key={movie.MaPhim} className="group bg-[#0f1117] border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-white/20 transition-all hover:-translate-y-2 shadow-2xl">
+              <div className="relative aspect-video">
+                <img src={movie.HinhAnh} alt={movie.TenPhim} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117] via-transparent to-transparent"></div>
+                <div className="absolute top-4 left-4">
+                  <StatusBadge status={movie.Status} />
                 </div>
-                <button className="text-xs font-bold text-red-500 hover:underline">Chi tiết →</button>
+                <div className="absolute top-4 right-4">
+                  <button className="p-2 bg-black/40 backdrop-blur-md rounded-xl text-white hover:bg-red-500 transition-all">
+                    <MoreVertical size={16} />
+                  </button>
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[10px] font-bold px-2 py-0.5 border border-slate-700 rounded text-slate-500 uppercase">{movie.GioiHanTuoi}</span>
+                  <span className="text-slate-500 text-xs">•</span>
+                  <span className="text-slate-500 text-xs font-medium">{movie.ThoiLuong} phút</span>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2 line-clamp-1 group-hover:text-red-500 transition-colors">{movie.TenPhim}</h3>
+                <p className="text-slate-500 text-sm mb-4 line-clamp-1">{movie.TheLoai}</p>
+                
+                <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] uppercase text-slate-600 font-bold tracking-widest">Khởi chiếu</span>
+                    <span className="text-sm font-bold text-slate-300">{movie.NgayKhoiChieu}</span>
+                  </div>
+                  <button className="text-xs font-bold text-red-500 hover:underline">Chi tiết →</button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <Modal 
         isOpen={isModalOpen} 

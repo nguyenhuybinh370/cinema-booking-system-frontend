@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import Modal from '../../components/Admin/Common/Modal';
-import { ADMIN_MOVIES, ROOMS, DAY_TYPES } from '../../constants/adminMockData';
+import adminService from '../../services/adminService';
 import { List, Calendar as CalendarIcon, AlertCircle, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Showtimes = () => {
@@ -9,7 +9,12 @@ const Showtimes = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate] = useState('2024-05-13');
   
-  // Mock showtimes
+  const [movies, setMovies] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [dayTypes, setDayTypes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Mock showtimes (In a real app, this would be in adminService)
   const [showtimes, setShowtimes] = useState([
     { MaSuatChieu: 'ST01', MaPhim: 'M01', MaPhongChieu: 'PC01', NgayChieu: '2024-05-13', GioChieu: '09:00', GioKetThuc: '11:07', MaLoaiNgay: 'LN01', GiaVeCoBan: 85000 },
     { MaSuatChieu: 'ST02', MaPhim: 'M02', MaPhongChieu: 'PC01', NgayChieu: '2024-05-13', GioChieu: '12:00', GioKetThuc: '14:40', MaLoaiNgay: 'LN01', GiaVeCoBan: 85000 },
@@ -25,6 +30,25 @@ const Showtimes = () => {
     MaLoaiNgay: 'LN01',
     GiaVeCoBan: 85000
   });
+
+  useEffect(() => {
+    let ignore = false;
+    const fetchData = async () => {
+      const [moviesData, roomsData, dayTypesData] = await Promise.all([
+        adminService.getMovies(),
+        adminService.getRooms(),
+        adminService.getDayTypes()
+      ]);
+      if (!ignore) {
+        setMovies(moviesData);
+        setRooms(roomsData);
+        setDayTypes(dayTypesData);
+        setLoading(false);
+      }
+    };
+    fetchData();
+    return () => { ignore = true; };
+  }, []);
 
   // Check conflict logic (Derived State)
   const conflict = (() => {
@@ -53,6 +77,17 @@ const Showtimes = () => {
     const min = i % 2 === 0 ? '00' : '30';
     return `${hour.toString().padStart(2, '0')}:${min}`;
   });
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64 text-slate-500">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500 mr-4"></div>
+          Đang tải dữ liệu lịch chiếu...
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -101,7 +136,7 @@ const Showtimes = () => {
             {/* Header Row (Rooms) */}
             <div className="grid grid-cols-12 border-b border-white/5">
               <div className="col-span-1 border-r border-white/5 py-4"></div>
-              {ROOMS.map(room => (
+              {rooms.map(room => (
                 <div key={room.MaPhongChieu} className="col-span-3 text-center py-4 font-bold text-slate-400 text-sm uppercase tracking-widest">{room.TenPhong}</div>
               ))}
             </div>
@@ -116,7 +151,7 @@ const Showtimes = () => {
                ))}
 
                {/* Showtime Blocks */}
-               {ROOMS.map((room, roomIdx) => (
+               {rooms.map((room, roomIdx) => (
                  <div key={room.MaPhongChieu} className="absolute h-full border-r border-white/5" style={{ left: `${(roomIdx * 25) + 8.33}%`, width: '25%' }}>
                    {showtimes.filter(st => st.MaPhongChieu === room.MaPhongChieu && st.NgayChieu === selectedDate).map(st => {
                      const startMins = parseInt(st.GioChieu.split(':')[0]) * 60 + parseInt(st.GioChieu.split(':')[1]);
@@ -124,7 +159,7 @@ const Showtimes = () => {
                      const baseMins = 8 * 60; // 08:00
                      const top = (startMins - baseMins) * (40 / 30);
                      const height = (endMins - startMins) * (40 / 30);
-                     const movie = ADMIN_MOVIES.find(m => m.MaPhim === st.MaPhim);
+                     const movie = movies.find(m => m.MaPhim === st.MaPhim);
 
                      return (
                        <div 
@@ -137,7 +172,7 @@ const Showtimes = () => {
                             <p className="text-[10px] text-red-500 font-bold mt-1">{st.GioChieu} - {st.GioKetThuc}</p>
                          </div>
                          <div className="flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <span className="text-[9px] text-slate-500 font-bold uppercase">{DAY_TYPES.find(d => d.MaLoaiNgay === st.MaLoaiNgay)?.TenLoaiNgay}</span>
+                            <span className="text-[9px] text-slate-500 font-bold uppercase">{dayTypes.find(d => d.MaLoaiNgay === st.MaLoaiNgay)?.TenLoaiNgay}</span>
                          </div>
                        </div>
                      );
@@ -165,12 +200,12 @@ const Showtimes = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-12 rounded bg-slate-800 shrink-0 overflow-hidden">
-                        <img src={ADMIN_MOVIES.find(m => m.MaPhim === st.MaPhim)?.HinhAnh} className="w-full h-full object-cover" />
+                        <img src={movies.find(m => m.MaPhim === st.MaPhim)?.HinhAnh} className="w-full h-full object-cover" alt="Poster" />
                       </div>
-                      <span className="font-bold text-white text-sm">{ADMIN_MOVIES.find(m => m.MaPhim === st.MaPhim)?.TenPhim}</span>
+                      <span className="font-bold text-white text-sm">{movies.find(m => m.MaPhim === st.MaPhim)?.TenPhim}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm font-bold text-slate-400">{ROOMS.find(r => r.MaPhongChieu === st.MaPhongChieu)?.TenPhong}</td>
+                  <td className="px-6 py-4 text-sm font-bold text-slate-400">{rooms.find(r => r.MaPhongChieu === st.MaPhongChieu)?.TenPhong}</td>
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
                       <span className="text-sm font-bold text-white">{st.GioChieu} - {st.GioKetThuc}</span>
@@ -178,7 +213,7 @@ const Showtimes = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="px-2 py-1 bg-white/5 rounded text-[10px] font-bold text-slate-400 uppercase">{DAY_TYPES.find(d => d.MaLoaiNgay === st.MaLoaiNgay)?.TenLoaiNgay}</span>
+                    <span className="px-2 py-1 bg-white/5 rounded text-[10px] font-bold text-slate-400 uppercase">{dayTypes.find(d => d.MaLoaiNgay === st.MaLoaiNgay)?.TenLoaiNgay}</span>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button className="text-xs font-bold text-red-500 hover:underline">Hủy suất</button>
@@ -200,7 +235,7 @@ const Showtimes = () => {
               value={formData.MaPhim}
               onChange={e => setFormData({ ...formData, MaPhim: e.target.value })}
             >
-              {ADMIN_MOVIES.map(movie => <option key={movie.MaPhim} value={movie.MaPhim} className="bg-[#0f1117]">{movie.TenPhim}</option>)}
+              {movies.map(movie => <option key={movie.MaPhim} value={movie.MaPhim} className="bg-[#0f1117]">{movie.TenPhim}</option>)}
             </select>
           </div>
 
@@ -212,7 +247,7 @@ const Showtimes = () => {
                 value={formData.MaPhongChieu}
                 onChange={e => setFormData({ ...formData, MaPhongChieu: e.target.value })}
               >
-                {ROOMS.map(room => <option key={room.MaPhongChieu} value={room.MaPhongChieu} className="bg-[#0f1117]">{room.TenPhong}</option>)}
+                {rooms.map(room => <option key={room.MaPhongChieu} value={room.MaPhongChieu} className="bg-[#0f1117]">{room.TenPhong}</option>)}
               </select>
             </div>
             <div className="space-y-2">
@@ -222,7 +257,7 @@ const Showtimes = () => {
                 value={formData.MaLoaiNgay}
                 onChange={e => setFormData({ ...formData, MaLoaiNgay: e.target.value })}
               >
-                {DAY_TYPES.map(day => <option key={day.MaLoaiNgay} value={day.MaLoaiNgay} className="bg-[#0f1117]">{day.TenLoaiNgay}</option>)}
+                {dayTypes.map(day => <option key={day.MaLoaiNgay} value={day.MaLoaiNgay} className="bg-[#0f1117]">{day.TenLoaiNgay}</option>)}
               </select>
             </div>
           </div>

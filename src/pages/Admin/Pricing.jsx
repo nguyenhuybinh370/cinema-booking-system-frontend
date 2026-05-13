@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
-import { ROOM_TYPES, SEAT_TYPES, DAY_TYPES } from '../../constants/adminMockData';
+import adminService from '../../services/adminService';
 import { Edit2, Plus } from 'lucide-react';
 
 const formatPrice = (price) => {
@@ -43,16 +43,43 @@ const PriceTable = ({ title, data, typeKey, nameKey }) => (
 );
 
 const Pricing = () => {
-  const [roomTypes] = useState(ROOM_TYPES);
-  const [seatTypes] = useState(SEAT_TYPES);
-  const [dayTypes] = useState(DAY_TYPES);
+  const [roomTypes, setRoomTypes] = useState([]);
+  const [seatTypes, setSeatTypes] = useState([]);
+  const [dayTypes, setDayTypes] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [calc, setCalc] = useState({
     basePrice: 85000,
-    roomType: ROOM_TYPES[0].MaLoaiPhong,
-    seatType: SEAT_TYPES[0].MaLoaiGhe,
-    dayType: DAY_TYPES[0].MaLoaiNgay
+    roomType: '',
+    seatType: '',
+    dayType: ''
   });
+
+  useEffect(() => {
+    let ignore = false;
+    const fetchData = async () => {
+      const [rooms, seats, days] = await Promise.all([
+        adminService.getRoomTypes(),
+        adminService.getSeatTypes(),
+        adminService.getDayTypes()
+      ]);
+      if (!ignore) {
+        setRoomTypes(rooms);
+        setSeatTypes(seats);
+        setDayTypes(days);
+        
+        setCalc(prev => ({
+          ...prev,
+          roomType: rooms[0]?.MaLoaiPhong || '',
+          seatType: seats[0]?.MaLoaiGhe || '',
+          dayType: days[0]?.MaLoaiNgay || ''
+        }));
+        setLoading(false);
+      }
+    };
+    fetchData();
+    return () => { ignore = true; };
+  }, []);
 
   const getSurcharge = (list, key, id) => list.find(item => item[key] === id)?.GiaPhuThu || 0;
 
@@ -60,6 +87,16 @@ const Pricing = () => {
                 getSurcharge(roomTypes, 'MaLoaiPhong', calc.roomType) + 
                 getSurcharge(seatTypes, 'MaLoaiGhe', calc.seatType) + 
                 getSurcharge(dayTypes, 'MaLoaiNgay', calc.dayType);
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64 text-slate-500">
+          Đang tải cấu hình bảng giá...
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>

@@ -1,15 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import Modal from '../../components/Admin/Common/Modal';
 import AdminTable from '../../components/Admin/Common/AdminTable';
 import StatusBadge from '../../components/Admin/Common/StatusBadge';
-import { ROOMS, ROOM_TYPES, SEAT_MAPS } from '../../constants/adminMockData';
+import adminService from '../../services/adminService';
 import { LayoutGrid, Plus, MoreVertical } from 'lucide-react';
 
 const Rooms = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [rooms, setRooms] = useState(ROOMS);
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [roomTypes, setRoomTypes] = useState([]);
+  const [seatMaps, setSeatMaps] = useState([]);
   const [formData, setFormData] = useState({
     TenPhong: '',
     MaLoaiPhong: 'LP01',
@@ -17,22 +20,52 @@ const Rooms = () => {
     Status: 'Active'
   });
 
-  const handleToggleStatus = (id) => {
+  const loadData = async () => {
+    const [roomsData, typesData, mapsData] = await Promise.all([
+      adminService.getRooms(),
+      adminService.getRoomTypes(),
+      adminService.getSeatMaps()
+    ]);
+    setRooms(roomsData);
+    setRoomTypes(typesData);
+    setSeatMaps(mapsData);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    let ignore = false;
+    const fetchData = async () => {
+      const [roomsData, typesData, mapsData] = await Promise.all([
+        adminService.getRooms(),
+        adminService.getRoomTypes(),
+        adminService.getSeatMaps()
+      ]);
+      if (!ignore) {
+        setRooms(roomsData);
+        setRoomTypes(typesData);
+        setSeatMaps(mapsData);
+        setLoading(false);
+      }
+    };
+    fetchData();
+    return () => { ignore = true; };
+  }, []);
+
+  const handleToggleStatus = async (id) => {
     if (window.confirm("Các suất chiếu đã lên lịch sẽ không bị ảnh hưởng. Xác nhận?")) {
-      setRooms(rooms.map(room => 
-        room.MaPhongChieu === id 
-          ? { ...room, Status: room.Status === 'Active' ? 'Maintenance' : 'Active' } 
-          : room
-      ));
+      const room = rooms.find(r => r.MaPhongChieu === id);
+      const newStatus = room.Status === 'Active' ? 'Maintenance' : 'Active';
+      await adminService.updateRoom(id, { Status: newStatus });
+      loadData();
     }
   };
 
   const getSeatCount = (seatMapId) => {
-    const map = SEAT_MAPS.find(m => m.MaSoDoGhe === seatMapId);
+    const map = seatMaps.find(m => m.MaSoDoGhe === seatMapId);
     return map ? map.TongHang * map.TongCot : 0;
   };
 
-  const handleAddRoom = (e) => {
+  const handleAddRoom = async (e) => {
     e.preventDefault();
     const newRoom = {
       MaPhongChieu: `PC${String(rooms.length + 1).padStart(2, '0')}`,
@@ -40,6 +73,8 @@ const Rooms = () => {
       SoGhe: getSeatCount(formData.MaSoDoGhe),
       KhaDung: 1
     };
+    // In a real app, we'd call adminService.addRoom
+    // For now, let's just push to rooms and update state
     setRooms([...rooms, newRoom]);
     setIsModalOpen(false);
     setFormData({ TenPhong: '', MaLoaiPhong: 'LP01', MaSoDoGhe: 'SM01', Status: 'Active' });
@@ -60,7 +95,7 @@ const Rooms = () => {
     {
       header: 'Loại phòng',
       render: (room) => {
-        const type = ROOM_TYPES.find(t => t.MaLoaiPhong === room.MaLoaiPhong);
+        const type = roomTypes.find(t => t.MaLoaiPhong === room.MaLoaiPhong);
         return (
           <span className={`px-3 py-1 rounded-lg text-[10px] font-bold border ${
             room.MaLoaiPhong === 'LP03' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 
@@ -77,7 +112,7 @@ const Rooms = () => {
       header: 'Trạng thái',
       render: (room) => (
         <div className="flex items-center gap-2">
-          <StatusBadge status={room.Status === 'Active' ? 1 : 0} />
+          <StatusBadge status={room.Status} />
         </div>
       )
     },
@@ -123,7 +158,11 @@ const Rooms = () => {
         </button>
       </div>
 
-      <AdminTable columns={columns} data={rooms} rowKey="MaPhongChieu" />
+      {loading ? (
+        <div className="bg-white/5 border border-white/5 rounded-3xl h-64 animate-pulse"></div>
+      ) : (
+        <AdminTable columns={columns} data={rooms} rowKey="MaPhongChieu" />
+      )}
 
       <Modal 
         isOpen={isModalOpen} 
@@ -151,7 +190,7 @@ const Rooms = () => {
                 value={formData.MaLoaiPhong}
                 onChange={e => setFormData({ ...formData, MaLoaiPhong: e.target.value })}
               >
-                {ROOM_TYPES.map(type => (
+                {roomTypes.map(type => (
                   <option key={type.MaLoaiPhong} value={type.MaLoaiPhong} className="bg-[#0f1117]">{type.TenLoaiPhong}</option>
                 ))}
               </select>
@@ -163,7 +202,7 @@ const Rooms = () => {
                 value={formData.MaSoDoGhe}
                 onChange={e => setFormData({ ...formData, MaSoDoGhe: e.target.value })}
               >
-                {SEAT_MAPS.map(map => (
+                {seatMaps.map(map => (
                   <option key={map.MaSoDoGhe} value={map.MaSoDoGhe} className="bg-[#0f1117]">{map.MaSoDoGhe} ({map.TongHang}x{map.TongCot})</option>
                 ))}
               </select>
