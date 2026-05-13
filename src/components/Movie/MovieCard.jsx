@@ -4,18 +4,18 @@ import { Link } from 'react-router-dom';
 const MovieCard = ({ movie }) => {
   return (
     <div className="movie-card group">
-      <Link to={`/movie/${movie.id}`} className="block">
+      <Link to={`/movie/${movie.MaPhim}`} className="block">
         <div className="relative aspect-[2/3] overflow-hidden">
           <img 
-            src={movie.image} 
-            alt={movie.title} 
+            src={movie.HinhAnh} 
+            alt={movie.TenPhim} 
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
           />
           
           {/* Rating badge */}
           <div className="absolute top-3 right-3 bg-black/60 px-2 py-1 rounded-lg backdrop-blur-md border border-white/10">
             <span className="text-[var(--btn-neon)] font-bold text-sm flex items-center gap-1">
-              ⭐ {movie.rating}
+              ⭐ {movie.Rating}
             </span>
           </div>
 
@@ -29,13 +29,13 @@ const MovieCard = ({ movie }) => {
 
       {/* Info */}
       <div className="p-4">
-        <Link to={`/movie/${movie.id}`}>
+        <Link to={`/movie/${movie.MaPhim}`}>
           <h3 className="font-bold text-lg mb-1 truncate group-hover:text-[var(--btn-neon)] transition-colors">
-            {movie.title}
+            {movie.TenPhim}
           </h3>
         </Link>
         <div className="flex items-center justify-between text-sm text-slate-400">
-          <span>{movie.tags}</span>
+          <span>{movie.Tags}</span>
           <span className="text-xs uppercase px-2 py-0.5 border border-slate-700 rounded-md bg-slate-800/50">
             Vietsub
           </span>

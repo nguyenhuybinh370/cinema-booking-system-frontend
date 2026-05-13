@@ -5,7 +5,7 @@ import { MOVIES_MOCK } from '../../constants/movies';
 
 const MovieDetail = () => {
   const { id } = useParams();
-  const movie = MOVIES_MOCK.find(m => m.id === parseInt(id)) || MOVIES_MOCK[0];
+  const movie = MOVIES_MOCK.find(m => m.MaPhim === id) || MOVIES_MOCK[0];
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -17,8 +17,8 @@ const MovieDetail = () => {
         {/* Backdrop Hero */}
         <div className="absolute top-0 left-0 w-full h-[60vh] overflow-hidden">
           <img 
-            src={movie.image} 
-            alt={movie.title} 
+            src={movie.HinhAnh} 
+            alt={movie.TenPhim} 
             className="w-full h-full object-cover blur-2xl opacity-20 scale-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-navy-deep via-navy-deep/80 to-transparent"></div>
@@ -29,9 +29,9 @@ const MovieDetail = () => {
             {/* Poster */}
             <div className="w-full md:w-1/3 shrink-0">
               <div className="movie-card aspect-[2/3] sticky top-32">
-                <img src={movie.image} alt={movie.title} className="w-full h-full object-cover" />
+                <img src={movie.HinhAnh} alt={movie.TenPhim} className="w-full h-full object-cover" />
                 <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 flex items-center gap-2">
-                   <span className="text-[var(--btn-neon)] font-bold">⭐ {movie.rating}</span>
+                   <span className="text-[var(--btn-neon)] font-bold">⭐ {movie.Rating}</span>
                 </div>
               </div>
             </div>
@@ -43,19 +43,19 @@ const MovieDetail = () => {
                   Đang Chiếu
                 </span>
                 <span className="text-slate-400 font-bold">•</span>
-                <span className="text-slate-300 font-medium">{movie.tags}</span>
+                <span className="text-slate-300 font-medium">{movie.Tags}</span>
                 <span className="text-slate-400 font-bold">•</span>
-                <span className="text-slate-300 font-medium">{movie.duration}</span>
+                <span className="text-slate-300 font-medium">{movie.ThoiLuong} phút</span>
               </div>
 
               <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight uppercase">
-                {movie.title}
+                {movie.TenPhim}
               </h1>
 
               <div className="flex flex-wrap gap-8 mb-10">
                 <div className="flex flex-col">
                   <span className="text-slate-500 text-xs uppercase tracking-widest font-bold mb-1">Khởi chiếu</span>
-                  <span className="text-white font-bold">26/04/2024</span>
+                  <span className="text-white font-bold">{movie.NgayKhoiChieu}</span>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-slate-500 text-xs uppercase tracking-widest font-bold mb-1">Ngôn ngữ</span>
@@ -63,25 +63,27 @@ const MovieDetail = () => {
                 </div>
                 <div className="flex flex-col">
                   <span className="text-slate-500 text-xs uppercase tracking-widest font-bold mb-1">Thể loại</span>
-                  <span className="text-white font-bold">Hành động, Phiêu lưu</span>
+                  <span className="text-white font-bold">{movie.TheLoai}</span>
                 </div>
               </div>
 
               <div className="mb-12">
                 <h3 className="text-xl font-bold mb-4 border-l-4 border-[var(--btn-neon)] pl-4">Nội Dung Phim</h3>
                 <p className="text-slate-300 leading-relaxed text-lg italic">
-                   "{movie.description}"
+                   "{movie.NoiDung}"
                 </p>
+
                 <p className="mt-4 text-slate-400">
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
                 </p>
               </div>
 
               <div className="flex flex-wrap gap-6">
-                <button className="btn-bright px-12 py-5 text-base flex items-center gap-3">
+                <Link to="/booking/ST01" className="btn-bright px-12 py-5 text-base flex items-center gap-3">
                    Đặt Vé Ngay
                    <span className="animate-pulse">🎟️</span>
-                </button>
+                </Link>
+
                 <button className="glass-effect px-10 py-5 rounded-full font-bold flex items-center gap-3">
                   <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs">▶</span>
                   Xem Trailer
@@ -113,11 +115,16 @@ const MovieDetail = () => {
                       </div>
                       <div className="flex flex-wrap gap-4">
                          {['10:00', '13:30', '16:00', '19:15', '21:30', '23:45'].map(time => (
-                            <button key={time} className="px-6 py-3 bg-navy-deep/50 border border-white/10 rounded-xl hover:border-[var(--btn-neon)] hover:text-[var(--btn-neon)] transition-all font-mono font-bold">
+                            <Link 
+                              key={time} 
+                              to="/booking/ST01"
+                              className="px-6 py-3 bg-navy-deep/50 border border-white/10 rounded-xl hover:border-[var(--btn-neon)] hover:text-[var(--btn-neon)] transition-all font-mono font-bold"
+                            >
                                {time}
-                            </button>
+                            </Link>
                          ))}
                       </div>
+
                    </div>
                 ))}
              </div>

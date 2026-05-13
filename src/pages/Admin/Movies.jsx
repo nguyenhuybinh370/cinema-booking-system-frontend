@@ -9,23 +9,23 @@ const Movies = () => {
   const [filter, setFilter] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
-    title: '',
-    genres: '',
-    duration: '',
-    status: 'Coming Soon',
-    ageRating: 'P',
-    releaseDate: '',
-    endDate: '',
-    director: '',
-    cast: '',
-    description: '',
-    image: '',
+    TenPhim: '',
+    TheLoai: '',
+    ThoiLuong: '',
+    Status: 'Coming Soon',
+    GioiHanTuoi: 'P',
+    NgayKhoiChieu: '',
+    NgayKetThuc: '',
+    DaoDien: '',
+    DienVien: '',
+    NoiDung: '',
+    HinhAnh: '',
     trailerUrl: ''
   });
 
   const filteredMovies = filter === 'All' 
     ? movies 
-    : movies.filter(m => m.status === filter);
+    : movies.filter(m => m.Status === filter);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -39,9 +39,10 @@ const Movies = () => {
   const handleAddMovie = (e) => {
     e.preventDefault();
     const newMovie = {
-      id: `M${String(movies.length + 1).padStart(2, '0')}`,
+      MaPhim: `M${String(movies.length + 1).padStart(2, '0')}`,
       ...formData,
-      duration: parseInt(formData.duration)
+      ThoiLuong: parseInt(formData.ThoiLuong),
+      KhaDung: 1
     };
     setMovies([...movies, newMovie]);
     setIsModalOpen(false);
@@ -89,13 +90,13 @@ const Movies = () => {
       {/* Movie Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredMovies.map((movie) => (
-          <div key={movie.id} className="group bg-[#0f1117] border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-white/20 transition-all hover:-translate-y-2 shadow-2xl">
+          <div key={movie.MaPhim} className="group bg-[#0f1117] border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-white/20 transition-all hover:-translate-y-2 shadow-2xl">
             <div className="relative aspect-video">
-              <img src={movie.image} alt={movie.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+              <img src={movie.HinhAnh} alt={movie.TenPhim} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117] via-transparent to-transparent"></div>
               <div className="absolute top-4 left-4">
-                <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${getStatusColor(movie.status)}`}>
-                  {movie.status}
+                <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${getStatusColor(movie.Status)}`}>
+                  {movie.Status}
                 </span>
               </div>
               <div className="absolute top-4 right-4">
@@ -106,17 +107,17 @@ const Movies = () => {
             </div>
             <div className="p-6">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-bold px-2 py-0.5 border border-slate-700 rounded text-slate-500 uppercase">{movie.ageRating}</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 border border-slate-700 rounded text-slate-500 uppercase">{movie.GioiHanTuoi}</span>
                 <span className="text-slate-500 text-xs">•</span>
-                <span className="text-slate-500 text-xs font-medium">{movie.duration} phút</span>
+                <span className="text-slate-500 text-xs font-medium">{movie.ThoiLuong} phút</span>
               </div>
-              <h3 className="text-xl font-bold text-white mb-2 line-clamp-1 group-hover:text-red-500 transition-colors">{movie.title}</h3>
-              <p className="text-slate-500 text-sm mb-4 line-clamp-1">{movie.genres}</p>
+              <h3 className="text-xl font-bold text-white mb-2 line-clamp-1 group-hover:text-red-500 transition-colors">{movie.TenPhim}</h3>
+              <p className="text-slate-500 text-sm mb-4 line-clamp-1">{movie.TheLoai}</p>
               
               <div className="flex items-center justify-between pt-4 border-t border-white/5">
                 <div className="flex flex-col">
                   <span className="text-[10px] uppercase text-slate-600 font-bold tracking-widest">Khởi chiếu</span>
-                  <span className="text-sm font-bold text-slate-300">{movie.releaseDate}</span>
+                  <span className="text-sm font-bold text-slate-300">{movie.NgayKhoiChieu}</span>
                 </div>
                 <button className="text-xs font-bold text-red-500 hover:underline">Chi tiết →</button>
               </div>
@@ -139,13 +140,13 @@ const Movies = () => {
                 <input 
                   type="text" 
                   className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all"
-                  value={formData.image}
-                  onChange={e => setFormData({ ...formData, image: e.target.value })}
+                  value={formData.HinhAnh}
+                  onChange={e => setFormData({ ...formData, HinhAnh: e.target.value })}
                   placeholder="https://..."
                 />
-                {formData.image && (
+                {formData.HinhAnh && (
                   <div className="mt-4 aspect-[2/3] w-40 rounded-2xl overflow-hidden border border-white/10 mx-auto">
-                    <img src={formData.image} className="w-full h-full object-cover" alt="Preview" />
+                    <img src={formData.HinhAnh} className="w-full h-full object-cover" alt="Preview" />
                   </div>
                 )}
               </div>
@@ -162,8 +163,8 @@ const Movies = () => {
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Trạng thái</label>
                 <select 
                   className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all"
-                  value={formData.status}
-                  onChange={e => setFormData({ ...formData, status: e.target.value })}
+                  value={formData.Status}
+                  onChange={e => setFormData({ ...formData, Status: e.target.value })}
                 >
                   <option value="Coming Soon" className="bg-[#0f1117]">Sắp ra mắt</option>
                   <option value="Showing" className="bg-[#0f1117]">Đang chiếu</option>
@@ -179,8 +180,8 @@ const Movies = () => {
                 <input 
                   type="text" required
                   className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all"
-                  value={formData.title}
-                  onChange={e => setFormData({ ...formData, title: e.target.value })}
+                  value={formData.TenPhim}
+                  onChange={e => setFormData({ ...formData, TenPhim: e.target.value })}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -189,21 +190,21 @@ const Movies = () => {
                   <input 
                     type="number" required
                     className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all"
-                    value={formData.duration}
-                    onChange={e => setFormData({ ...formData, duration: e.target.value })}
+                    value={formData.ThoiLuong}
+                    onChange={e => setFormData({ ...formData, ThoiLuong: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Độ tuổi</label>
                   <select 
                     className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all"
-                    value={formData.ageRating}
-                    onChange={e => setFormData({ ...formData, ageRating: e.target.value })}
+                    value={formData.GioiHanTuoi}
+                    onChange={e => setFormData({ ...formData, GioiHanTuoi: e.target.value })}
                   >
                     <option value="P" className="bg-[#0f1117]">P - Mọi lứa tuổi</option>
-                    <option value="T13" className="bg-[#0f1117]">T13 - Trên 13 tuổi</option>
-                    <option value="T16" className="bg-[#0f1117]">T16 - Trên 16 tuổi</option>
-                    <option value="T18" className="bg-[#0f1117]">T18 - Trên 18 tuổi</option>
+                    <option value="C13" className="bg-[#0f1117]">C13 - Trên 13 tuổi</option>
+                    <option value="C16" className="bg-[#0f1117]">C16 - Trên 16 tuổi</option>
+                    <option value="C18" className="bg-[#0f1117]">C18 - Trên 18 tuổi</option>
                   </select>
                 </div>
               </div>
@@ -213,8 +214,8 @@ const Movies = () => {
                   <input 
                     type="date" required
                     className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm"
-                    value={formData.releaseDate}
-                    onChange={e => setFormData({ ...formData, releaseDate: e.target.value })}
+                    value={formData.NgayKhoiChieu}
+                    onChange={e => setFormData({ ...formData, NgayKhoiChieu: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -222,30 +223,41 @@ const Movies = () => {
                   <input 
                     type="date"
                     className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm"
-                    value={formData.endDate}
-                    onChange={e => setFormData({ ...formData, endDate: e.target.value })}
+                    value={formData.NgayKetThuc}
+                    onChange={e => setFormData({ ...formData, NgayKetThuc: e.target.value })}
                   />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Thể loại</label>
+                <input 
+                  type="text" required
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all"
+                  value={formData.TheLoai}
+                  onChange={e => setFormData({ ...formData, TheLoai: e.target.value })}
+                  placeholder="Hành động, Phiêu lưu..."
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Đạo diễn</label>
                 <input 
                   type="text"
                   className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all"
-                  value={formData.director}
-                  onChange={e => setFormData({ ...formData, director: e.target.value })}
+                  value={formData.DaoDien}
+                  onChange={e => setFormData({ ...formData, DaoDien: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Diễn viên</label>
                 <textarea 
                   className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all h-20 resize-none"
-                  value={formData.cast}
-                  onChange={e => setFormData({ ...formData, cast: e.target.value })}
+                  value={formData.DienVien}
+                  onChange={e => setFormData({ ...formData, DienVien: e.target.value })}
                 ></textarea>
               </div>
             </div>
           </div>
+
 
           <div className="flex gap-4 pt-4">
             <button 

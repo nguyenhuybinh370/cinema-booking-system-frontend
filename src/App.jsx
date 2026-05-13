@@ -1,6 +1,9 @@
 import { Route, Routes, Navigate } from 'react-router-dom'
 import Home from './pages/Client/Home'
 import MovieDetail from './pages/Client/MovieDetail'
+import SeatSelection from './pages/Client/SeatSelection'
+import Checkout from './pages/Client/Checkout'
+
 
 // Admin Pages
 import Rooms from './pages/Admin/Rooms'
@@ -18,6 +21,9 @@ function App() {
         {/* Client Routes */}
         <Route path="/" element={<Home/>} />
         <Route path="/movie/:id" element={<MovieDetail />} />
+        <Route path="/booking/:showtimeId" element={<SeatSelection />} />
+        <Route path="/checkout" element={<Checkout />} />
+
 
         {/* Admin Routes */}
         <Route path="/admin" element={<Navigate to="/admin/rooms" replace />} />

@@ -7,38 +7,38 @@ const Rooms = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [rooms, setRooms] = useState(ROOMS);
   const [formData, setFormData] = useState({
-    name: '',
-    typeId: '2D',
-    seatMapId: 'SM01',
-    status: 'Active'
+    TenPhong: '',
+    MaLoaiPhong: 'LP01',
+    MaSoDoGhe: 'SM01',
+    Status: 'Active'
   });
 
   const handleToggleStatus = (id) => {
     if (window.confirm("Các suất chiếu đã lên lịch sẽ không bị ảnh hưởng. Xác nhận?")) {
       setRooms(rooms.map(room => 
-        room.id === id 
-          ? { ...room, status: room.status === 'Active' ? 'Maintenance' : 'Active' } 
+        room.MaPhongChieu === id 
+          ? { ...room, Status: room.Status === 'Active' ? 'Maintenance' : 'Active' } 
           : room
       ));
     }
   };
 
   const getSeatCount = (seatMapId) => {
-    const map = SEAT_MAPS.find(m => m.id === seatMapId);
-    return map ? map.rows * map.cols : 0;
+    const map = SEAT_MAPS.find(m => m.MaSoDoGhe === seatMapId);
+    return map ? map.TongHang * map.TongCot : 0;
   };
 
   const handleAddRoom = (e) => {
     e.preventDefault();
     const newRoom = {
-      id: `PC${String(rooms.length + 1).padStart(2, '0')}`,
+      MaPhongChieu: `PC${String(rooms.length + 1).padStart(2, '0')}`,
       ...formData,
-      seatCount: getSeatCount(formData.seatMapId),
-      available: true
+      SoGhe: getSeatCount(formData.MaSoDoGhe),
+      KhaDung: 1
     };
     setRooms([...rooms, newRoom]);
     setIsModalOpen(false);
-    setFormData({ name: '', typeId: '2D', seatMapId: 'SM01', status: 'Active' });
+    setFormData({ TenPhong: '', MaLoaiPhong: 'LP01', MaSoDoGhe: 'SM01', Status: 'Active' });
   };
 
   return (
@@ -70,32 +70,32 @@ const Rooms = () => {
           </thead>
           <tbody className="divide-y divide-white/5">
             {rooms.map((room) => (
-              <tr key={room.id} className="hover:bg-white/[0.02] transition-colors">
-                <td className="px-6 py-4 font-bold text-white">{room.name}</td>
+              <tr key={room.MaPhongChieu} className="hover:bg-white/[0.02] transition-colors">
+                <td className="px-6 py-4 font-bold text-white">{room.TenPhong}</td>
                 <td className="px-6 py-4">
                   <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
-                    room.typeId === 'IMAX' ? 'bg-amber-500/10 text-amber-500' : 
-                    room.typeId === '3D' ? 'bg-blue-500/10 text-blue-500' : 'bg-slate-500/10 text-slate-500'
+                    room.MaLoaiPhong === 'LP03' ? 'bg-amber-500/10 text-amber-500' : 
+                    room.MaLoaiPhong === 'LP02' ? 'bg-blue-500/10 text-blue-500' : 'bg-slate-500/10 text-slate-500'
                   }`}>
-                    {room.typeId}
+                    {ROOM_TYPES.find(t => t.MaLoaiPhong === room.MaLoaiPhong)?.TenLoaiPhong}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-slate-400">{room.seatCount} ghế</td>
+                <td className="px-6 py-4 text-slate-400">{room.SoGhe} ghế</td>
                 <td className="px-6 py-4 text-slate-400">
-                  {SEAT_MAPS.find(m => m.id === room.seatMapId)?.name}
+                  {SEAT_MAPS.find(m => m.MaSoDoGhe === room.MaSoDoGhe)?.MaSoDoGhe}
                 </td>
                 <td className="px-6 py-4">
                   <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
-                    room.status === 'Active' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-orange-500/10 text-orange-500'
+                    room.Status === 'Active' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-orange-500/10 text-orange-500'
                   }`}>
-                    {room.status === 'Active' ? 'Đang sử dụng' : 'Đang bảo trì'}
+                    {room.Status === 'Active' ? 'Đang sử dụng' : 'Đang bảo trì'}
                   </span>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex gap-4">
                     <button className="text-sm font-bold text-slate-400 hover:text-white transition-colors">Sửa</button>
                     <button 
-                      onClick={() => handleToggleStatus(room.id)}
+                      onClick={() => handleToggleStatus(room.MaPhongChieu)}
                       className="text-sm font-bold text-slate-400 hover:text-red-500 transition-colors"
                     >
                       Đổi trạng thái
@@ -120,8 +120,8 @@ const Rooms = () => {
               type="text" 
               required
               className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors"
-              value={formData.name}
-              onChange={e => setFormData({ ...formData, name: e.target.value })}
+              value={formData.TenPhong}
+              onChange={e => setFormData({ ...formData, TenPhong: e.target.value })}
               placeholder="VD: Phòng chiếu 01"
             />
           </div>
@@ -131,11 +131,11 @@ const Rooms = () => {
               <label className="text-sm font-bold text-slate-400 uppercase tracking-wider">Loại phòng</label>
               <select 
                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors"
-                value={formData.typeId}
-                onChange={e => setFormData({ ...formData, typeId: e.target.value })}
+                value={formData.MaLoaiPhong}
+                onChange={e => setFormData({ ...formData, MaLoaiPhong: e.target.value })}
               >
                 {ROOM_TYPES.map(type => (
-                  <option key={type.id} value={type.id} className="bg-[#0f1117]">{type.name}</option>
+                  <option key={type.MaLoaiPhong} value={type.MaLoaiPhong} className="bg-[#0f1117]">{type.TenLoaiPhong}</option>
                 ))}
               </select>
             </div>
@@ -143,11 +143,11 @@ const Rooms = () => {
               <label className="text-sm font-bold text-slate-400 uppercase tracking-wider">Sơ đồ ghế</label>
               <select 
                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors"
-                value={formData.seatMapId}
-                onChange={e => setFormData({ ...formData, seatMapId: e.target.value })}
+                value={formData.MaSoDoGhe}
+                onChange={e => setFormData({ ...formData, MaSoDoGhe: e.target.value })}
               >
                 {SEAT_MAPS.map(map => (
-                  <option key={map.id} value={map.id} className="bg-[#0f1117]">{map.name} ({map.rows}x{map.cols})</option>
+                  <option key={map.MaSoDoGhe} value={map.MaSoDoGhe} className="bg-[#0f1117]">{map.MaSoDoGhe} ({map.TongHang}x{map.TongCot})</option>
                 ))}
               </select>
             </div>
@@ -159,7 +159,7 @@ const Rooms = () => {
               type="text" 
               disabled
               className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-slate-500"
-              value={`${getSeatCount(formData.seatMapId)} ghế`}
+              value={`${getSeatCount(formData.MaSoDoGhe)} ghế`}
             />
           </div>
 
@@ -171,8 +171,8 @@ const Rooms = () => {
                   type="radio" 
                   name="status" 
                   className="w-4 h-4 accent-red-500"
-                  checked={formData.status === 'Active'}
-                  onChange={() => setFormData({ ...formData, status: 'Active' })}
+                  checked={formData.Status === 'Active'}
+                  onChange={() => setFormData({ ...formData, Status: 'Active' })}
                 />
                 <span className="text-slate-300 group-hover:text-white transition-colors">Đang sử dụng</span>
               </label>
@@ -181,13 +181,14 @@ const Rooms = () => {
                   type="radio" 
                   name="status" 
                   className="w-4 h-4 accent-red-500"
-                  checked={formData.status === 'Maintenance'}
-                  onChange={() => setFormData({ ...formData, status: 'Maintenance' })}
+                  checked={formData.Status === 'Maintenance'}
+                  onChange={() => setFormData({ ...formData, Status: 'Maintenance' })}
                 />
                 <span className="text-slate-300 group-hover:text-white transition-colors">Đang bảo trì</span>
               </label>
             </div>
           </div>
+
 
           <div className="flex gap-4 pt-4">
             <button 
