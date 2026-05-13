@@ -1,7 +1,13 @@
 export const ROOM_TYPES = [
+<<<<<<< Updated upstream
   { MaLoaiPhong: 'LP01', TenLoaiPhong: '2D', GiaPhuThu: 0, MoTa: 'Phòng chiếu tiêu chuẩn 2D', KhaDung: 1 },
   { MaLoaiPhong: 'LP02', TenLoaiPhong: '3D', GiaPhuThu: 30000, MoTa: 'Phòng chiếu phim 3D hiện đại', KhaDung: 1 },
   { MaLoaiPhong: 'LP03', TenLoaiPhong: 'IMAX', GiaPhuThu: 50000, MoTa: 'Trải nghiệm màn hình cực đại', KhaDung: 1 },
+=======
+  { MaLoaiPhong: 'LP01', TenLoaiPhong: '2D', surcharge: 0, description: 'Phòng chiếu tiêu chuẩn 2D', available: true },
+  { MaLoaiPhong: 'LP02', TenLoaiPhong: '3D', surcharge: 30000, description: 'Phòng chiếu phim 3D hiện đại', available: true },
+  { MaLoaiPhong: 'LP03', TenLoaiPhong: 'IMAX', surcharge: 50000, description: 'Trải nghiệm màn hình cực đại', available: true },
+>>>>>>> Stashed changes
 ];
 
 export const ROOMS = [
@@ -11,6 +17,7 @@ export const ROOMS = [
 ];
 
 export const SEAT_MAPS = [
+<<<<<<< Updated upstream
   { MaSoDoGhe: 'SM01', TongHang: 10, TongCot: 10, CauTruc: '{}', KhaDung: 1 },
   { MaSoDoGhe: 'SM02', TongHang: 10, TongCot: 12, CauTruc: '{}', KhaDung: 1 },
   { MaSoDoGhe: 'SM03', TongHang: 10, TongCot: 15, CauTruc: '{}', KhaDung: 1 },
@@ -27,6 +34,24 @@ export const DAY_TYPES = [
   { MaLoaiNgay: 'LN02', TenLoaiNgay: 'Cuối tuần', GiaPhuThu: 20000, KhaDung: 1 },
   { MaLoaiNgay: 'LN03', TenLoaiNgay: 'Lễ/Tết', GiaPhuThu: 40000, KhaDung: 1 },
   { MaLoaiNgay: 'LN04', TenLoaiNgay: 'Happy Day', GiaPhuThu: -20000, KhaDung: 1 },
+=======
+  { MaSoDoGhe: 'SM01', TenSoDo: 'Sơ đồ 10x10', TongHang: 10, TongCot: 10, KhaDung: 1 },
+  { MaSoDoGhe: 'SM02', TenSoDo: 'Sơ đồ 10x12', TongHang: 10, TongCot: 12, KhaDung: 1 },
+  { MaSoDoGhe: 'SM03', TenSoDo: 'Sơ đồ 10x15', TongHang: 10, TongCot: 15, KhaDung: 1 },
+];
+
+export const SEAT_TYPES = [
+  { MaLoaiGhe: 'LG01', TenLoaiGhe: 'Thường', phuThu: 0 },
+  { MaLoaiGhe: 'LG02', TenLoaiGhe: 'VIP', phuThu: 20000 },
+  { MaLoaiGhe: 'LG03', TenLoaiGhe: 'Sweetbox', phuThu: 50000 },
+];
+
+export const DAY_TYPES = [
+  { MaLoaiNgay: 'LN01', TenLoaiNgay: 'Ngày thường', phuThu: 0 },
+  { MaLoaiNgay: 'LN02', TenLoaiNgay: 'Cuối tuần', phuThu: 20000 },
+  { MaLoaiNgay: 'LN03', TenLoaiNgay: 'Lễ/Tết', phuThu: 40000 },
+  { MaLoaiNgay: 'LN04', TenLoaiNgay: 'Happy Day', phuThu: -20000 },
+>>>>>>> Stashed changes
 ];
 
 export const ADMIN_MOVIES = [
@@ -39,9 +64,17 @@ export const ADMIN_MOVIES = [
     NgayKetThuc: '2024-06-26', 
     DaoDien: 'Lý Hải', 
     DienVien: 'Trương Minh Cường, Đinh Y Nhung, Quách Ngọc Tuyên', 
+<<<<<<< Updated upstream
     GioiHanTuoi: 'T16', 
     Status: 'Showing',
     HinhAnh: 'https://image.api.playready.com.vn/api/v2/image/6628b031b268010026e6d338',
+=======
+    GioiHanTuoi: 'C16', 
+    Status: 'Showing',
+    HinhAnh: 'https://image.api.playready.com.vn/api/v2/image/6628b031b268010026e6d338',
+    NoiDung: 'Câu chuyện về tình cảm gia đình đầy xúc động của bà Hai và 5 người con.',
+    trailerUrl: 'https://www.youtube.com/watch?v=kYpS-ZlK-bU',
+>>>>>>> Stashed changes
     KhaDung: 1
   },
   { 
@@ -56,12 +89,23 @@ export const ADMIN_MOVIES = [
     GioiHanTuoi: 'P', 
     Status: 'Showing',
     HinhAnh: 'https://image.api.playready.com.vn/api/v2/image/66399f668673a500264024c0',
+<<<<<<< Updated upstream
+=======
+    NoiDung: 'Nhiều năm sau sự trị vì của Caesar, một chú khỉ trẻ dấn thân vào hành trình định đoạt tương lai.',
+    trailerUrl: 'https://www.youtube.com/watch?v=Kdr5oedn7q8',
+>>>>>>> Stashed changes
     KhaDung: 1
   },
 ];
 
 export const STAFF = [
+<<<<<<< Updated upstream
   { MaNhanVien: 'NV01', HoTen: 'Nguyễn Huy Bình', Email: 'binh@cinema.com', SoDienThoai: '0987654321', ChucVu: 'Quản lý rạp', Role: 'Admin', Status: 'Active', KhaDung: 1 },
   { MaNhanVien: 'NV02', HoTen: 'Trần Thị Hoa', Email: 'hoa@cinema.com', SoDienThoai: '0123456789', ChucVu: 'Nhân viên bán vé', Role: 'Staff', Status: 'Active', KhaDung: 1 },
   { MaNhanVien: 'NV03', HoTen: 'Lê Văn Tùng', Email: 'tung@cinema.com', SoDienThoai: '0555666777', ChucVu: 'Kỹ thuật viên', Role: 'Manager', Status: 'Inactive', KhaDung: 1 },
+=======
+  { MaNhanVien: 'NV01', HoTen: 'Nguyễn Huy Bình', Email: 'binh@cinema.com', SDT: '0987654321', ChucVu: 'Quản lý rạp', Role: 'Admin', Status: 'Active' },
+  { MaNhanVien: 'NV02', HoTen: 'Trần Thị Hoa', Email: 'hoa@cinema.com', SDT: '0123456789', ChucVu: 'Nhân viên bán vé', Role: 'Staff', Status: 'Active' },
+  { MaNhanVien: 'NV03', HoTen: 'Lê Văn Tùng', Email: 'tung@cinema.com', SDT: '0555666777', ChucVu: 'Kỹ thuật viên', Role: 'Manager', Status: 'Inactive' },
+>>>>>>> Stashed changes
 ];

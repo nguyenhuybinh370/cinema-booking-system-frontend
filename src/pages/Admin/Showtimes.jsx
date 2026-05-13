@@ -11,19 +11,19 @@ const Showtimes = () => {
   
   // Mock showtimes
   const [showtimes, setShowtimes] = useState([
-    { id: 1, movieId: 'M01', roomId: 'PC01', date: '2024-05-13', startTime: '09:00', endTime: '11:07', dayTypeId: 'Weekday', basePrice: 85000 },
-    { id: 2, movieId: 'M02', roomId: 'PC01', date: '2024-05-13', startTime: '12:00', endTime: '14:40', dayTypeId: 'Weekday', basePrice: 85000 },
-    { id: 3, movieId: 'M01', roomId: 'PC02', date: '2024-05-13', startTime: '10:30', endTime: '12:37', dayTypeId: 'Weekday', basePrice: 85000 },
+    { MaSuatChieu: 'ST01', MaPhim: 'M01', MaPhongChieu: 'PC01', NgayChieu: '2024-05-13', GioChieu: '09:00', GioKetThuc: '11:07', MaLoaiNgay: 'LN01', GiaVeCoBan: 85000 },
+    { MaSuatChieu: 'ST02', MaPhim: 'M02', MaPhongChieu: 'PC01', NgayChieu: '2024-05-13', GioChieu: '12:00', GioKetThuc: '14:40', MaLoaiNgay: 'LN01', GiaVeCoBan: 85000 },
+    { MaSuatChieu: 'ST03', MaPhim: 'M01', MaPhongChieu: 'PC02', NgayChieu: '2024-05-13', GioChieu: '10:30', GioKetThuc: '12:37', MaLoaiNgay: 'LN01', GiaVeCoBan: 85000 },
   ]);
 
   const [formData, setFormData] = useState({
-    movieId: 'M01',
-    roomId: 'PC01',
-    date: '2024-05-13',
-    startTime: '15:00',
-    endTime: '17:07',
-    dayTypeId: 'Weekday',
-    basePrice: 85000
+    MaPhim: 'M01',
+    MaPhongChieu: 'PC01',
+    NgayChieu: '2024-05-13',
+    GioChieu: '15:00',
+    GioKetThuc: '17:07',
+    MaLoaiNgay: 'LN01',
+    GiaVeCoBan: 85000
   });
 
   const [conflict, setConflict] = useState(null);
@@ -31,10 +31,10 @@ const Showtimes = () => {
   // Check conflict logic
   useEffect(() => {
     const isConflict = showtimes.some(st => 
-      st.roomId === formData.roomId && 
-      st.date === formData.date && 
-      ((formData.startTime >= st.startTime && formData.startTime < st.endTime) || 
-       (formData.endTime > st.startTime && formData.endTime <= st.endTime))
+      st.MaPhongChieu === formData.MaPhongChieu && 
+      st.NgayChieu === formData.NgayChieu && 
+      ((formData.GioChieu >= st.GioChieu && formData.GioChieu < st.GioKetThuc) || 
+       (formData.GioKetThuc > st.GioChieu && formData.GioKetThuc <= st.GioKetThuc))
     );
     
     if (isConflict) {
@@ -48,7 +48,7 @@ const Showtimes = () => {
     e.preventDefault();
     if (conflict) return;
     const newShowtime = {
-      id: showtimes.length + 1,
+      MaSuatChieu: `ST${String(showtimes.length + 1).padStart(2, '0')}`,
       ...formData
     };
     setShowtimes([...showtimes, newShowtime]);
@@ -109,7 +109,7 @@ const Showtimes = () => {
             <div className="grid grid-cols-12 border-b border-white/5">
               <div className="col-span-1 border-r border-white/5 py-4"></div>
               {ROOMS.map(room => (
-                <div key={room.id} className="col-span-3 text-center py-4 font-bold text-slate-400 text-sm uppercase tracking-widest">{room.name}</div>
+                <div key={room.MaPhongChieu} className="col-span-3 text-center py-4 font-bold text-slate-400 text-sm uppercase tracking-widest">{room.TenPhong}</div>
               ))}
             </div>
 
@@ -124,27 +124,27 @@ const Showtimes = () => {
 
                {/* Showtime Blocks */}
                {ROOMS.map((room, roomIdx) => (
-                 <div key={room.id} className="absolute h-full border-r border-white/5" style={{ left: `${(roomIdx * 25) + 8.33}%`, width: '25%' }}>
-                   {showtimes.filter(st => st.roomId === room.id && st.date === selectedDate).map(st => {
-                     const startMins = parseInt(st.startTime.split(':')[0]) * 60 + parseInt(st.startTime.split(':')[1]);
-                     const endMins = parseInt(st.endTime.split(':')[0]) * 60 + parseInt(st.endTime.split(':')[1]);
+                 <div key={room.MaPhongChieu} className="absolute h-full border-r border-white/5" style={{ left: `${(roomIdx * 25) + 8.33}%`, width: '25%' }}>
+                   {showtimes.filter(st => st.MaPhongChieu === room.MaPhongChieu && st.NgayChieu === selectedDate).map(st => {
+                     const startMins = parseInt(st.GioChieu.split(':')[0]) * 60 + parseInt(st.GioChieu.split(':')[1]);
+                     const endMins = parseInt(st.GioKetThuc.split(':')[0]) * 60 + parseInt(st.GioKetThuc.split(':')[1]);
                      const baseMins = 8 * 60; // 08:00
                      const top = (startMins - baseMins) * (40 / 30);
                      const height = (endMins - startMins) * (40 / 30);
-                     const movie = ADMIN_MOVIES.find(m => m.id === st.movieId);
+                     const movie = ADMIN_MOVIES.find(m => m.MaPhim === st.MaPhim);
 
                      return (
                        <div 
-                        key={st.id} 
+                        key={st.MaSuatChieu} 
                         className="absolute left-4 right-4 bg-red-500/10 border border-red-500/20 rounded-2xl p-3 flex flex-col justify-between group hover:bg-red-500/20 transition-all cursor-pointer overflow-hidden"
                         style={{ top: `${top}px`, height: `${height}px` }}
                        >
                          <div>
-                            <h4 className="text-xs font-black text-white line-clamp-1 uppercase leading-tight">{movie?.title}</h4>
-                            <p className="text-[10px] text-red-500 font-bold mt-1">{st.startTime} - {st.endTime}</p>
+                            <h4 className="text-xs font-black text-white line-clamp-1 uppercase leading-tight">{movie?.TenPhim}</h4>
+                            <p className="text-[10px] text-red-500 font-bold mt-1">{st.GioChieu} - {st.GioKetThuc}</p>
                          </div>
                          <div className="flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <span className="text-[9px] text-slate-500 font-bold uppercase">{st.dayTypeId}</span>
+                            <span className="text-[9px] text-slate-500 font-bold uppercase">{DAY_TYPES.find(d => d.MaLoaiNgay === st.MaLoaiNgay)?.TenLoaiNgay}</span>
                          </div>
                        </div>
                      );
@@ -168,22 +168,24 @@ const Showtimes = () => {
             </thead>
             <tbody className="divide-y divide-white/5">
               {showtimes.map(st => (
-                <tr key={st.id} className="hover:bg-white/[0.02] transition-colors">
+                <tr key={st.MaSuatChieu} className="hover:bg-white/[0.02] transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-12 rounded bg-slate-800 shrink-0"></div>
-                      <span className="font-bold text-white text-sm">{ADMIN_MOVIES.find(m => m.id === st.movieId)?.title}</span>
+                      <div className="w-8 h-12 rounded bg-slate-800 shrink-0 overflow-hidden">
+                        <img src={ADMIN_MOVIES.find(m => m.MaPhim === st.MaPhim)?.HinhAnh} className="w-full h-full object-cover" />
+                      </div>
+                      <span className="font-bold text-white text-sm">{ADMIN_MOVIES.find(m => m.MaPhim === st.MaPhim)?.TenPhim}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm font-bold text-slate-400">{ROOMS.find(r => r.id === st.roomId)?.name}</td>
+                  <td className="px-6 py-4 text-sm font-bold text-slate-400">{ROOMS.find(r => r.MaPhongChieu === st.MaPhongChieu)?.TenPhong}</td>
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
-                      <span className="text-sm font-bold text-white">{st.startTime} - {st.endTime}</span>
-                      <span className="text-xs text-slate-500">{st.date}</span>
+                      <span className="text-sm font-bold text-white">{st.GioChieu} - {st.GioKetThuc}</span>
+                      <span className="text-xs text-slate-500">{st.NgayChieu}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="px-2 py-1 bg-white/5 rounded text-[10px] font-bold text-slate-400 uppercase">{st.dayTypeId}</span>
+                    <span className="px-2 py-1 bg-white/5 rounded text-[10px] font-bold text-slate-400 uppercase">{DAY_TYPES.find(d => d.MaLoaiNgay === st.MaLoaiNgay)?.TenLoaiNgay}</span>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button className="text-xs font-bold text-red-500 hover:underline">Hủy suất</button>
@@ -202,10 +204,10 @@ const Showtimes = () => {
             <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Chọn phim</label>
             <select 
               className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm"
-              value={formData.movieId}
-              onChange={e => setFormData({ ...formData, movieId: e.target.value })}
+              value={formData.MaPhim}
+              onChange={e => setFormData({ ...formData, MaPhim: e.target.value })}
             >
-              {ADMIN_MOVIES.map(movie => <option key={movie.id} value={movie.id} className="bg-[#0f1117]">{movie.title}</option>)}
+              {ADMIN_MOVIES.map(movie => <option key={movie.MaPhim} value={movie.MaPhim} className="bg-[#0f1117]">{movie.TenPhim}</option>)}
             </select>
           </div>
 
@@ -214,20 +216,20 @@ const Showtimes = () => {
               <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Phòng chiếu</label>
               <select 
                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm"
-                value={formData.roomId}
-                onChange={e => setFormData({ ...formData, roomId: e.target.value })}
+                value={formData.MaPhongChieu}
+                onChange={e => setFormData({ ...formData, MaPhongChieu: e.target.value })}
               >
-                {ROOMS.map(room => <option key={room.id} value={room.id} className="bg-[#0f1117]">{room.name}</option>)}
+                {ROOMS.map(room => <option key={room.MaPhongChieu} value={room.MaPhongChieu} className="bg-[#0f1117]">{room.TenPhong}</option>)}
               </select>
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Loại ngày</label>
               <select 
                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm"
-                value={formData.dayTypeId}
-                onChange={e => setFormData({ ...formData, dayTypeId: e.target.value })}
+                value={formData.MaLoaiNgay}
+                onChange={e => setFormData({ ...formData, MaLoaiNgay: e.target.value })}
               >
-                {DAY_TYPES.map(day => <option key={day.id} value={day.id} className="bg-[#0f1117]">{day.name}</option>)}
+                {DAY_TYPES.map(day => <option key={day.MaLoaiNgay} value={day.MaLoaiNgay} className="bg-[#0f1117]">{day.TenLoaiNgay}</option>)}
               </select>
             </div>
           </div>
@@ -238,8 +240,8 @@ const Showtimes = () => {
               <input 
                 type="date" 
                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm"
-                value={formData.date}
-                onChange={e => setFormData({ ...formData, date: e.target.value })}
+                value={formData.NgayChieu}
+                onChange={e => setFormData({ ...formData, NgayChieu: e.target.value })}
               />
             </div>
             <div className="space-y-2">
@@ -247,8 +249,8 @@ const Showtimes = () => {
               <input 
                 type="time" 
                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm"
-                value={formData.startTime}
-                onChange={e => setFormData({ ...formData, startTime: e.target.value })}
+                value={formData.GioChieu}
+                onChange={e => setFormData({ ...formData, GioChieu: e.target.value })}
               />
             </div>
             <div className="space-y-2">
@@ -256,11 +258,12 @@ const Showtimes = () => {
               <input 
                 type="time" 
                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none border-red-500 transition-all text-sm opacity-50"
-                value={formData.endTime}
+                value={formData.GioKetThuc}
                 readOnly
               />
             </div>
           </div>
+
 
           {conflict && (
             <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex gap-3 text-red-500">

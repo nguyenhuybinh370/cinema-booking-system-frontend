@@ -70,28 +70,28 @@ const Personnel = () => {
           </thead>
           <tbody className="divide-y divide-white/5">
             {staff.map((person) => (
-              <tr key={person.id} className={`group hover:bg-white/[0.02] transition-colors ${person.status === 'Inactive' ? 'opacity-50' : ''}`}>
+              <tr key={person.MaNhanVien} className={`group hover:bg-white/[0.02] transition-colors ${person.Status === 'Inactive' ? 'opacity-50' : ''}`}>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white font-bold border border-white/10">
-                      {person.name.charAt(0)}
+                      {person.HoTen.charAt(0)}
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-bold text-white text-sm">{person.name}</span>
-                      <span className="text-xs text-slate-500">{person.email}</span>
+                      <span className="font-bold text-white text-sm">{person.HoTen}</span>
+                      <span className="text-xs text-slate-500">{person.Email}</span>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-sm text-slate-400">{person.position}</td>
+                <td className="px-6 py-4 text-sm text-slate-400">{person.ChucVu}</td>
                 <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold border ${getRoleBadge(person.role)}`}>
-                    {person.role}
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold border ${getRoleBadge(person.Role)}`}>
+                    {person.Role}
                   </span>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
-                    <div className={`w-1.5 h-1.5 rounded-full ${person.status === 'Active' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-500'}`}></div>
-                    <span className="text-xs font-medium text-slate-300">{person.status === 'Active' ? 'Hoạt động' : 'Vô hiệu hóa'}</span>
+                    <div className={`w-1.5 h-1.5 rounded-full ${person.Status === 'Active' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-500'}`}></div>
+                    <span className="text-xs font-medium text-slate-300">{person.Status === 'Active' ? 'Hoạt động' : 'Vô hiệu hóa'}</span>
                   </div>
                 </td>
                 <td className="px-6 py-4">
@@ -107,7 +107,7 @@ const Personnel = () => {
                       <Edit2 size={18} />
                     </button>
                     <button className="p-2 hover:bg-red-500/10 text-slate-500 hover:text-red-500 rounded-xl transition-all" title="Vô hiệu hóa">
-                      {person.status === 'Active' ? <UserX size={18} /> : <UserCheck size={18} />}
+                      {person.Status === 'Active' ? <UserX size={18} /> : <UserCheck size={18} />}
                     </button>
                   </div>
                 </td>
@@ -129,13 +129,14 @@ const Personnel = () => {
             
             <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl mb-8 border border-white/5">
               <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center text-white font-black text-xl">
-                {selectedStaff?.name.charAt(0)}
+                {selectedStaff?.HoTen.charAt(0)}
               </div>
               <div>
-                <h4 className="font-bold text-white">{selectedStaff?.name}</h4>
-                <p className="text-xs text-slate-500">{selectedStaff?.role} • {selectedStaff?.position}</p>
+                <h4 className="font-bold text-white">{selectedStaff?.HoTen}</h4>
+                <p className="text-xs text-slate-500">{selectedStaff?.Role} • {selectedStaff?.ChucVu}</p>
               </div>
             </div>
+
 
             <div className="space-y-4">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 mb-4">Danh sách quyền hạn</p>
