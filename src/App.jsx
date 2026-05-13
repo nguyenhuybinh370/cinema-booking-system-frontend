@@ -1,13 +1,27 @@
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, Navigate } from 'react-router-dom'
 import Home from './pages/Client/Home'
 import MovieDetail from './pages/Client/MovieDetail'
+
+// Admin Pages
+import Rooms from './pages/Admin/Rooms'
 
 function App() {
   return (
     <>
       <Routes>
+        {/* Client Routes */}
         <Route path="/" element={<Home/>} />
         <Route path="/movie/:id" element={<MovieDetail />} />
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={<Navigate to="/admin/rooms" replace />} />
+        <Route path="/admin/rooms" element={<Rooms />} />
+        <Route path="/admin/movies" element={<div className="p-10 text-white">Movies Module Placeholder</div>} />
+        <Route path="/admin/seat-maps" element={<div className="p-10 text-white">Seat Maps Module Placeholder</div>} />
+        <Route path="/admin/pricing" element={<div className="p-10 text-white">Pricing Module Placeholder</div>} />
+        <Route path="/admin/personnel" element={<div className="p-10 text-white">Personnel Module Placeholder</div>} />
+        <Route path="/admin/showtimes" element={<div className="p-10 text-white">Showtimes Module Placeholder</div>} />
+        <Route path="/admin/stats" element={<div className="p-10 text-white">Stats Module Placeholder</div>} />
       </Routes>
     </>
   )
