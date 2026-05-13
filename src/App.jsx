@@ -4,6 +4,7 @@ import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import SellTicketWizard from "./pages/Staff/SellTicket/SellTicketWizard";
 import StaffLayout from "./components/StaffLayout/StaffLayout";
 import Dashboard from "./pages/Staff/dashboard";
+// import CheckIn from "./pages/Staff/Checkin";
 
 function App() {
   return (
@@ -19,16 +20,7 @@ function App() {
             <Route index element={<Navigate to="/staff/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="sell-ticket" element={<SellTicketWizard />} />
-            <Route
-              path="check-in"
-              element={
-                <div className="bg-card p-6 rounded-lg border border-border">
-                  <h2 className="text-xl font-bold">
-                    Màn hình Soát vé (Đang phát triển...)
-                  </h2>
-                </div>
-              }
-            />
+            {/* <Route path="check-in" element={<CheckIn />} /> */}
           </Route>
         </Route>
       </Routes>
