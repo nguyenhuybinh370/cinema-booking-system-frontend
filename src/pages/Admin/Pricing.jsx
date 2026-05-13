@@ -1,65 +1,65 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import { ROOM_TYPES, SEAT_TYPES, DAY_TYPES } from '../../constants/adminMockData';
-import { Edit2, Plus, ArrowRight } from 'lucide-react';
+import { Edit2, Plus } from 'lucide-react';
+
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+};
+
+const PriceTable = ({ title, data, typeKey, nameKey }) => (
+  <div className="bg-[#0f1117] border border-white/5 rounded-3xl overflow-hidden shadow-xl h-full">
+    <div className="px-6 py-4 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+      <h3 className="font-bold text-white uppercase tracking-widest text-xs">{title}</h3>
+      <button className="text-slate-500 hover:text-white transition-colors">
+        <Plus size={16} />
+      </button>
+    </div>
+    <table className="w-full text-left">
+      <thead>
+        <tr className="text-[10px] font-black uppercase tracking-widest text-slate-600 border-b border-white/5">
+          <th className="px-6 py-3">Tên</th>
+          <th className="px-6 py-3">Phụ thu</th>
+          <th className="px-6 py-3 text-right"></th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-white/5">
+        {data.map((item) => (
+          <tr key={item[typeKey]} className="hover:bg-white/[0.02] transition-colors group">
+            <td className="px-6 py-4 text-sm font-bold text-slate-300">{item[nameKey]}</td>
+            <td className="px-6 py-4 text-sm font-mono text-emerald-500">
+              {item.GiaPhuThu > 0 ? `+${formatPrice(item.GiaPhuThu)}` : formatPrice(item.GiaPhuThu)}
+            </td>
+            <td className="px-6 py-4 text-right">
+              <button className="p-2 opacity-0 group-hover:opacity-100 hover:bg-white/5 rounded-lg text-slate-500 hover:text-white transition-all">
+                <Edit2 size={14} />
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
 
 const Pricing = () => {
-  const [roomTypes, setRoomTypes] = useState(ROOM_TYPES);
-  const [seatTypes, setSeatTypes] = useState(SEAT_TYPES);
-  const [dayTypes, setDayTypes] = useState(DAY_TYPES);
+  const [roomTypes] = useState(ROOM_TYPES);
+  const [seatTypes] = useState(SEAT_TYPES);
+  const [dayTypes] = useState(DAY_TYPES);
 
   const [calc, setCalc] = useState({
     basePrice: 85000,
-    roomType: ROOM_TYPES[0].id,
-    seatType: SEAT_TYPES[0].id,
-    dayType: DAY_TYPES[0].id
+    roomType: ROOM_TYPES[0].MaLoaiPhong,
+    seatType: SEAT_TYPES[0].MaLoaiGhe,
+    dayType: DAY_TYPES[0].MaLoaiNgay
   });
 
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
-  };
-
-  const getSurcharge = (list, id) => list.find(item => item.id === id)?.surcharge || 0;
+  const getSurcharge = (list, key, id) => list.find(item => item[key] === id)?.GiaPhuThu || 0;
 
   const total = calc.basePrice + 
-                getSurcharge(roomTypes, calc.roomType) + 
-                getSurcharge(seatTypes, calc.seatType) + 
-                getSurcharge(dayTypes, calc.dayType);
-
-  const PriceTable = ({ title, data, onEdit }) => (
-    <div className="bg-[#0f1117] border border-white/5 rounded-3xl overflow-hidden shadow-xl h-full">
-      <div className="px-6 py-4 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
-        <h3 className="font-bold text-white uppercase tracking-widest text-xs">{title}</h3>
-        <button className="text-slate-500 hover:text-white transition-colors">
-          <Plus size={16} />
-        </button>
-      </div>
-      <table className="w-full text-left">
-        <thead>
-          <tr className="text-[10px] font-black uppercase tracking-widest text-slate-600 border-b border-white/5">
-            <th className="px-6 py-3">Tên</th>
-            <th className="px-6 py-3">Phụ thu</th>
-            <th className="px-6 py-3 text-right"></th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-white/5">
-          {data.map((item) => (
-            <tr key={item.id} className="hover:bg-white/[0.02] transition-colors group">
-              <td className="px-6 py-4 text-sm font-bold text-slate-300">{item.name}</td>
-              <td className="px-6 py-4 text-sm font-mono text-emerald-500">
-                {item.surcharge > 0 ? `+${formatPrice(item.surcharge)}` : formatPrice(item.surcharge)}
-              </td>
-              <td className="px-6 py-4 text-right">
-                <button className="p-2 opacity-0 group-hover:opacity-100 hover:bg-white/5 rounded-lg text-slate-500 hover:text-white transition-all">
-                  <Edit2 size={14} />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+                getSurcharge(roomTypes, 'MaLoaiPhong', calc.roomType) + 
+                getSurcharge(seatTypes, 'MaLoaiGhe', calc.seatType) + 
+                getSurcharge(dayTypes, 'MaLoaiNgay', calc.dayType);
 
   return (
     <AdminLayout>
@@ -69,9 +69,9 @@ const Pricing = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-        <PriceTable title="Phụ thu loại phòng" data={roomTypes} />
-        <PriceTable title="Phụ thu hạng ghế" data={seatTypes} />
-        <PriceTable title="Phụ thu loại ngày" data={dayTypes} />
+        <PriceTable title="Phụ thu loại phòng" data={roomTypes} typeKey="MaLoaiPhong" nameKey="TenLoaiPhong" />
+        <PriceTable title="Phụ thu hạng ghế" data={seatTypes} typeKey="MaLoaiGhe" nameKey="TenLoaiGhe" />
+        <PriceTable title="Phụ thu loại ngày" data={dayTypes} typeKey="MaLoaiNgay" nameKey="TenLoaiNgay" />
       </div>
 
       {/* Price Preview */}
@@ -93,7 +93,7 @@ const Pricing = () => {
                 value={calc.roomType}
                 onChange={e => setCalc({ ...calc, roomType: e.target.value })}
               >
-                {roomTypes.map(t => <option key={t.id} value={t.id} className="bg-[#0f1117]">{t.name}</option>)}
+                {roomTypes.map(t => <option key={t.MaLoaiPhong} value={t.MaLoaiPhong} className="bg-[#0f1117]">{t.TenLoaiPhong}</option>)}
               </select>
             </div>
             <div className="space-y-2">
@@ -103,7 +103,7 @@ const Pricing = () => {
                 value={calc.seatType}
                 onChange={e => setCalc({ ...calc, seatType: e.target.value })}
               >
-                {seatTypes.map(t => <option key={t.id} value={t.id} className="bg-[#0f1117]">{t.name}</option>)}
+                {seatTypes.map(t => <option key={t.MaLoaiGhe} value={t.MaLoaiGhe} className="bg-[#0f1117]">{t.TenLoaiGhe}</option>)}
               </select>
             </div>
             <div className="space-y-2">
@@ -113,7 +113,7 @@ const Pricing = () => {
                 value={calc.dayType}
                 onChange={e => setCalc({ ...calc, dayType: e.target.value })}
               >
-                {dayTypes.map(t => <option key={t.id} value={t.id} className="bg-[#0f1117]">{t.name}</option>)}
+                {dayTypes.map(t => <option key={t.MaLoaiNgay} value={t.MaLoaiNgay} className="bg-[#0f1117]">{t.TenLoaiNgay}</option>)}
               </select>
             </div>
             <div className="space-y-2">
@@ -122,7 +122,7 @@ const Pricing = () => {
                 type="number"
                 className="w-full bg-black/20 border border-white/5 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm"
                 value={calc.basePrice}
-                onChange={e => setCalc({ ...calc, basePrice: parseInt(e.target.value) })}
+                onChange={e => setCalc({ ...calc, basePrice: parseInt(e.target.value) || 0 })}
               />
             </div>
           </div>
@@ -135,16 +135,16 @@ const Pricing = () => {
                 <span>{formatPrice(calc.basePrice)}</span>
               </div>
               <div className="flex justify-between text-slate-400">
-                <span>+ Phụ thu phòng ({roomTypes.find(t => t.id === calc.roomType)?.name}):</span>
-                <span>{formatPrice(getSurcharge(roomTypes, calc.roomType))}</span>
+                <span>+ Phụ thu phòng ({roomTypes.find(t => t.MaLoaiPhong === calc.roomType)?.TenLoaiPhong}):</span>
+                <span>{formatPrice(getSurcharge(roomTypes, 'MaLoaiPhong', calc.roomType))}</span>
               </div>
               <div className="flex justify-between text-slate-400">
-                <span>+ Phụ thu ghế ({seatTypes.find(t => t.id === calc.seatType)?.name}):</span>
-                <span>{formatPrice(getSurcharge(seatTypes, calc.seatType))}</span>
+                <span>+ Phụ thu ghế ({seatTypes.find(t => t.MaLoaiGhe === calc.seatType)?.TenLoaiGhe}):</span>
+                <span>{formatPrice(getSurcharge(seatTypes, 'MaLoaiGhe', calc.seatType))}</span>
               </div>
               <div className="flex justify-between text-slate-400">
-                <span>+ Phụ thu ngày ({dayTypes.find(t => t.id === calc.dayType)?.name}):</span>
-                <span>{formatPrice(getSurcharge(dayTypes, calc.dayType))}</span>
+                <span>+ Phụ thu ngày ({dayTypes.find(t => t.MaLoaiNgay === calc.dayType)?.TenLoaiNgay}):</span>
+                <span>{formatPrice(getSurcharge(dayTypes, 'MaLoaiNgay', calc.dayType))}</span>
               </div>
               <div className="h-[1px] bg-white/10 my-4"></div>
               <div className="flex justify-between text-2xl font-black text-white">

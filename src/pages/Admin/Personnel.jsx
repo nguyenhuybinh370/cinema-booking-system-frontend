@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import Modal from '../../components/Admin/Common/Modal';
 import { STAFF } from '../../constants/adminMockData';
-import { Search, ShieldCheck, UserX, UserCheck, ChevronRight, X } from 'lucide-react';
+import { Search, ShieldCheck, UserX, UserCheck, Edit2, X } from 'lucide-react';
 
 const Personnel = () => {
-  const [staff, setStaff] = useState(STAFF);
+  const [staff] = useState(STAFF);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPermPanelOpen, setIsPermPanelOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
@@ -202,10 +202,5 @@ const Personnel = () => {
     </AdminLayout>
   );
 };
-
-// Placeholder for Edit2 since I forgot to import it
-const Edit2 = ({ size }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-);
 
 export default Personnel;

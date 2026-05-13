@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import { ROOMS, SEAT_TYPES, SEAT_MAPS } from '../../constants/adminMockData';
@@ -12,34 +12,36 @@ const SeatMaps = () => {
   const room = ROOMS.find(r => r.MaPhongChieu === roomId);
   const template = SEAT_MAPS.find(m => m.MaSoDoGhe === room?.MaSoDoGhe);
   
-  const [matrix, setMatrix] = useState([]);
+  const [overrides, setOverrides] = useState({}); // { seatId: { MaLoaiGhe, KhaDung } }
   const [selectedSeats, setSelectedSeats] = useState([]);
 
-  // Mock initial seat data for the room (this would come from CHITIET_SODOGHE)
-  useEffect(() => {
-    if (template) {
-      const rows = template.TongHang;
-      const cols = template.TongCot;
-      const newMatrix = [];
-      
-      for (let r = 0; r < rows; r++) {
-        const row = [];
-        const rowChar = String.fromCharCode(65 + r);
-        for (let c = 0; c < cols; c++) {
-          row.push({
-            MaChiTietSoDo: `${room.MaPhongChieu}-${rowChar}${c + 1}`,
-            MaSoDoGhe: room.MaSoDoGhe,
-            MaLoaiGhe: 'LG01', // Default to Normal
-            Hang: rowChar,
-            Cot: c + 1,
-            KhaDung: 1 // Available
-          });
-        }
-        newMatrix.push(row);
+  // Generate matrix based on template and overrides
+  const matrix = useMemo(() => {
+    if (!template || !room) return [];
+    const rows = template.TongHang;
+    const cols = template.TongCot;
+    const result = [];
+    
+    for (let r = 0; r < rows; r++) {
+      const row = [];
+      const rowChar = String.fromCharCode(65 + r);
+      for (let c = 0; c < cols; c++) {
+        const seatId = `${room.MaPhongChieu}-${rowChar}${c + 1}`;
+        const baseSeat = {
+          MaChiTietSoDo: seatId,
+          MaSoDoGhe: room.MaSoDoGhe,
+          MaLoaiGhe: 'LG01',
+          Hang: rowChar,
+          Cot: c + 1,
+          KhaDung: 1
+        };
+        // Apply overrides
+        row.push({ ...baseSeat, ...(overrides[seatId] || {}) });
       }
-      setMatrix(newMatrix);
+      result.push(row);
     }
-  }, [template, room]);
+    return result;
+  }, [template, room, overrides]);
 
   const handleSeatClick = (seatId, e) => {
     if (e.shiftKey) {
@@ -54,12 +56,11 @@ const SeatMaps = () => {
   };
 
   const updateSelectedSeats = (updates) => {
-    const newMatrix = matrix.map(row => 
-      row.map(seat => 
-        selectedSeats.includes(seat.MaChiTietSoDo) ? { ...seat, ...updates } : seat
-      )
-    );
-    setMatrix(newMatrix);
+    const newOverrides = { ...overrides };
+    selectedSeats.forEach(id => {
+      newOverrides[id] = { ...(newOverrides[id] || {}), ...updates };
+    });
+    setOverrides(newOverrides);
   };
 
   const getSeatColor = (typeId, khaDung) => {

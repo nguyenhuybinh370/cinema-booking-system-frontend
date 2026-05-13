@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import Modal from '../../components/Admin/Common/Modal';
 import { ADMIN_MOVIES, ROOMS, DAY_TYPES } from '../../constants/adminMockData';
-import { List, Calendar as CalendarIcon, Clock, AlertCircle, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { List, Calendar as CalendarIcon, AlertCircle, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Showtimes = () => {
   const [viewMode, setViewMode] = useState('Timeline'); // 'List' or 'Timeline'
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState('2024-05-13');
+  const [selectedDate] = useState('2024-05-13');
   
   // Mock showtimes
   const [showtimes, setShowtimes] = useState([
@@ -26,23 +26,16 @@ const Showtimes = () => {
     GiaVeCoBan: 85000
   });
 
-  const [conflict, setConflict] = useState(null);
-
-  // Check conflict logic
-  useEffect(() => {
+  // Check conflict logic (Derived State)
+  const conflict = (() => {
     const isConflict = showtimes.some(st => 
       st.MaPhongChieu === formData.MaPhongChieu && 
       st.NgayChieu === formData.NgayChieu && 
       ((formData.GioChieu >= st.GioChieu && formData.GioChieu < st.GioKetThuc) || 
        (formData.GioKetThuc > st.GioChieu && formData.GioKetThuc <= st.GioKetThuc))
     );
-    
-    if (isConflict) {
-      setConflict(`Phòng đã có suất chiếu trong khoảng thời gian này.`);
-    } else {
-      setConflict(null);
-    }
-  }, [formData, showtimes]);
+    return isConflict ? `Phòng đã có suất chiếu trong khoảng thời gian này.` : null;
+  })();
 
   const handleAddShowtime = (e) => {
     e.preventDefault();

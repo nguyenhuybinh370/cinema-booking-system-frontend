@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import Modal from '../../components/Admin/Common/Modal';

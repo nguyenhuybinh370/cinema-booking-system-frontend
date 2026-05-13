@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import Modal from '../../components/Admin/Common/Modal';
 import { ADMIN_MOVIES } from '../../constants/adminMockData';
-import { Search, Filter, MoreVertical, Plus } from 'lucide-react';
+import { Search, MoreVertical, Plus } from 'lucide-react';
 
 const Movies = () => {
   const [movies, setMovies] = useState(ADMIN_MOVIES);
