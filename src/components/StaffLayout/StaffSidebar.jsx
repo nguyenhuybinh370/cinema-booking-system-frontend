@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Ticket, Scan, LogOut, LayoutDashboard } from "lucide-react";
+import { Ticket, Scan, LogOut, LayoutDashboard, User } from "lucide-react";
 
 const StaffSidebar = () => {
   const menuItems = [
@@ -17,6 +17,11 @@ const StaffSidebar = () => {
       title: "Soát vé",
       path: "/staff/check-in",
       icon: <Scan size={22} />,
+    },
+    {
+      title: "Cá nhân",
+      path: "/staff/profile",
+      icon: <User size={22} />,
     },
   ];
 

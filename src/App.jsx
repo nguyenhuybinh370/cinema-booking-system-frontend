@@ -4,6 +4,8 @@ import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import SellTicketWizard from "./pages/Staff/SellTicket/SellTicketWizard";
 import StaffLayout from "./components/StaffLayout/StaffLayout";
 import CheckIn from "./pages/Staff/Checkin";
+import Dashboard from "./pages/Staff/dashboard";
+import Profile from "./pages/Staff/Profile/Profile";
 
 function App() {
   return (
@@ -20,6 +22,7 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="sell-ticket" element={<SellTicketWizard />} />
             <Route path="check-in" element={<CheckIn />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
         </Route>
       </Routes>
