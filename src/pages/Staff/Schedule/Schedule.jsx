@@ -3,12 +3,11 @@ import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
-  CheckCircle2,
-  Clock,
-  Users,
 } from "lucide-react";
+import ShiftCard from "./ShiftCard";
+import ShiftActionModal from "./ShiftActionModal";
 
-// 1. Mock Data bảng CALAMVIEC (Các ca mẫu trong ngày)
+// --- MOCK DATA VÀ HELPER ---
 const SHIFT_TEMPLATES = [
   {
     id: "CA_SANG",
@@ -26,21 +25,20 @@ const SHIFT_TEMPLATES = [
   },
 ];
 
-// 2. Helper tạo ra mảng 7 ngày trong tuần (giả lập tuần hiện tại)
 const generateCurrentWeek = () => {
   const week = [];
-  const currentDate = new Date("2026-05-14"); // Fix cứng ngày hiện tại theo bối cảnh để dễ test
+  const currentDate = new Date("2026-05-14");
   const currentDay = currentDate.getDay();
   const firstDay = new Date(currentDate);
   firstDay.setDate(
     currentDate.getDate() - (currentDay === 0 ? 6 : currentDay - 1),
-  ); // Lùi về Thứ 2
+  );
 
   for (let i = 0; i < 7; i++) {
     const date = new Date(firstDay);
     date.setDate(firstDay.getDate() + i);
     week.push({
-      dateString: date.toISOString().split("T")[0], // YYYY-MM-DD
+      dateString: date.toISOString().split("T")[0],
       dayName: i === 6 ? "Chủ Nhật" : `Thứ ${i + 2}`,
       displayDate: `${date.getDate()}/${date.getMonth() + 1}`,
     });
@@ -48,76 +46,63 @@ const generateCurrentWeek = () => {
   return week;
 };
 
-// 3. Mock Data bảng CHITIETCALAMVIEC (Giả lập dữ liệu ca đã đăng ký và số lượng người đang đăng ký)
-const MOCK_SHIFT_DETAILS = {
-  // Key format: YYYY-MM-DD_SHIFT-ID
-  "2026-05-14_CA_SANG": { registeredCount: 5, isMyShift: false }, // Đã đầy
-  "2026-05-14_CA_CHIEU": { registeredCount: 3, isMyShift: true }, // Mình đã đăng ký
-  "2026-05-15_CA_SANG": { registeredCount: 2, isMyShift: false }, // Còn trống
-  "2026-05-16_CA_CHIEU": { registeredCount: 4, isMyShift: true }, // Mình đã đăng ký
-};
-
+// --- COMPONENT CHÍNH ---
 const Schedule = () => {
   const currentWeek = generateCurrentWeek();
 
-  // Hàm render trạng thái của một ca làm việc (Shift Card)
-  const renderShiftCard = (dateString, shiftTemplate) => {
+  const [shiftDetails, setShiftDetails] = useState({
+    "2026-05-14_CA_SANG": { registeredCount: 5, isMyShift: false },
+    "2026-05-14_CA_CHIEU": { registeredCount: 3, isMyShift: true },
+    "2026-05-15_CA_SANG": { registeredCount: 2, isMyShift: false },
+    "2026-05-16_CA_CHIEU": { registeredCount: 4, isMyShift: true },
+  });
+
+  const [selectedShift, setSelectedShift] = useState(null);
+
+  const handleCardClick = (dateString, shiftTemplate) => {
     const shiftKey = `${dateString}_${shiftTemplate.id}`;
-    const shiftData = MOCK_SHIFT_DETAILS[shiftKey] || {
+    const shiftData = shiftDetails[shiftKey] || {
       registeredCount: 0,
       isMyShift: false,
     };
 
-    const isFull = shiftData.registeredCount >= shiftTemplate.maxStaff;
-    const isMyShift = shiftData.isMyShift;
+    setSelectedShift({
+      key: shiftKey,
+      dateString,
+      template: shiftTemplate,
+      data: shiftData,
+    });
+  };
 
-    // Xác định style dựa trên trạng thái
-    let cardStyle =
-      "border-white/10 text-white/50 bg-white/5 hover:border-white/30 hover:bg-white/10"; // Default (Còn trống)
-    if (isMyShift) {
-      cardStyle =
-        "border-[var(--btn-neon)] bg-[var(--btn-neon)]/10 text-[var(--btn-neon)] shadow-[0_0_15px_rgba(253,224,71,0.2)]"; // Mình đã đk
-    } else if (isFull) {
-      cardStyle =
-        "border-red-500/20 bg-red-500/10 text-red-400/50 cursor-not-allowed"; // Đã đầy
-    }
+  const handleToggleRegistration = () => {
+    if (!selectedShift) return;
 
-    return (
-      <div
-        key={shiftTemplate.id}
-        className={`p-4 rounded-xl border transition-all duration-300 relative flex flex-col gap-2 ${cardStyle}`}
-      >
-        <div className="flex justify-between items-start">
-          <span className="font-bold text-sm uppercase tracking-wider">
-            {shiftTemplate.name}
-          </span>
-          {isMyShift && (
-            <CheckCircle2 size={16} className="text-[var(--btn-neon)]" />
-          )}
-        </div>
+    const { key, data } = selectedShift;
+    const isCurrentlyRegistered = data.isMyShift;
 
-        <div className="text-xs space-y-1">
-          <p className="flex items-center gap-1 opacity-80">
-            <Clock size={12} /> {shiftTemplate.startTime} -{" "}
-            {shiftTemplate.endTime}
-          </p>
-          <p className="flex items-center gap-1 opacity-80">
-            <Users size={12} /> {shiftData.registeredCount}/
-            {shiftTemplate.maxStaff} người
-          </p>
-        </div>
+    setShiftDetails((prev) => {
+      const currentCount = prev[key]?.registeredCount || 0;
+      return {
+        ...prev,
+        [key]: {
+          isMyShift: !isCurrentlyRegistered,
+          registeredCount: isCurrentlyRegistered
+            ? currentCount - 1
+            : currentCount + 1,
+        },
+      };
+    });
 
-        {/* Trạng thái text */}
-        <div className="mt-2 text-[10px] font-bold uppercase tracking-widest text-center">
-          {isMyShift ? "Của bạn" : isFull ? "Đã đầy" : "Đăng ký"}
-        </div>
-      </div>
+    alert(
+      isCurrentlyRegistered
+        ? "Đã HỦY ca thành công!"
+        : "Đã ĐĂNG KÝ ca thành công!",
     );
+    setSelectedShift(null);
   };
 
   return (
-    <div className="flex flex-col h-full space-y-8">
-      {/* --- HEADER & ĐIỀU HƯỚNG TUẦN --- */}
+    <div className="flex flex-col h-full space-y-8 relative">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-3xl font-black text-glow uppercase tracking-widest text-[var(--btn-neon)]">
@@ -127,7 +112,6 @@ const Schedule = () => {
             Xem lịch và đăng ký ca làm việc hàng tuần
           </p>
         </div>
-
         <div className="glass-effect rounded-full p-1 flex items-center border border-white/20">
           <button className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white">
             <ChevronLeft size={20} />
@@ -142,29 +126,42 @@ const Schedule = () => {
         </div>
       </div>
 
-      {/* --- LƯỚI LỊCH (GRID CALENDAR) --- */}
       <div className="glass-effect rounded-3xl p-6 flex-1 overflow-x-auto">
         <div className="min-w-[1000px] grid grid-cols-7 gap-4 h-full">
           {currentWeek.map((day) => (
             <div key={day.dateString} className="flex flex-col gap-4">
-              {/* Tiêu đề ngày */}
               <div className="text-center pb-4 border-b border-white/10">
                 <h3 className="font-bold text-lg text-white">{day.dayName}</h3>
                 <p className="text-sm text-[var(--btn-neon)] font-mono mt-1">
                   {day.displayDate}
                 </p>
               </div>
-
-              {/* Danh sách ca trong ngày */}
               <div className="flex flex-col gap-3 flex-1">
-                {SHIFT_TEMPLATES.map((template) =>
-                  renderShiftCard(day.dateString, template),
-                )}
+                {SHIFT_TEMPLATES.map((template) => (
+                  <ShiftCard
+                    key={template.id}
+                    day={day}
+                    shiftTemplate={template}
+                    shiftData={
+                      shiftDetails[`${day.dateString}_${template.id}`] || {
+                        registeredCount: 0,
+                        isMyShift: false,
+                      }
+                    }
+                    onClick={handleCardClick}
+                  />
+                ))}
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      <ShiftActionModal
+        selectedShift={selectedShift}
+        onClose={() => setSelectedShift(null)}
+        onConfirm={handleToggleRegistration}
+      />
     </div>
   );
 };
