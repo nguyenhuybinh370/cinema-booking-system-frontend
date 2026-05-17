@@ -7,7 +7,7 @@ import {
 import ShiftCard from "./ShiftCard";
 import ShiftActionModal from "./ShiftActionModal";
 
-// --- MOCK DATA VÀ HELPER ---
+// --- MOCK DATA ---
 const SHIFT_TEMPLATES = [
   {
     id: "CA_SANG",
@@ -25,13 +25,18 @@ const SHIFT_TEMPLATES = [
   },
 ];
 
-const generateCurrentWeek = () => {
+// --- HELPER: TẠO LỊCH ĐỘNG DỰA VÀO ĐỘ LỆCH TUẦN ---
+const generateWeek = (offset = 0) => {
   const week = [];
-  const currentDate = new Date("2026-05-14");
-  const currentDay = currentDate.getDay();
-  const firstDay = new Date(currentDate);
+  // Lấy mốc chuẩn là giữa tháng 5/2026, cộng trừ số ngày dựa theo offset
+  const baseDate = new Date("2026-05-14T12:00:00");
+  baseDate.setDate(baseDate.getDate() + offset * 7);
+
+  const currentDay = baseDate.getDay();
+  const firstDay = new Date(baseDate);
+  // Lùi về ngày Thứ 2 của tuần đó
   firstDay.setDate(
-    currentDate.getDate() - (currentDay === 0 ? 6 : currentDay - 1),
+    baseDate.getDate() - (currentDay === 0 ? 6 : currentDay - 1),
   );
 
   for (let i = 0; i < 7; i++) {
@@ -40,7 +45,9 @@ const generateCurrentWeek = () => {
     week.push({
       dateString: date.toISOString().split("T")[0],
       dayName: i === 6 ? "Chủ Nhật" : `Thứ ${i + 2}`,
-      displayDate: `${date.getDate()}/${date.getMonth() + 1}`,
+      // Format ngày/tháng thêm số 0 ở trước cho đẹp (VD: 09/05)
+      displayDate: `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}`,
+      year: date.getFullYear(),
     });
   }
   return week;
@@ -48,7 +55,16 @@ const generateCurrentWeek = () => {
 
 // --- COMPONENT CHÍNH ---
 const Schedule = () => {
-  const currentWeek = generateCurrentWeek();
+  // 1. State quản lý việc lùi/tiến tuần
+  const [weekOffset, setWeekOffset] = useState(0);
+
+  // Tạo mảng 7 ngày cho tuần hiện tại (dựa vào offset)
+  const currentWeek = generateWeek(weekOffset);
+
+  // Lấy ra ngày đầu và ngày cuối tuần để in lên cái nút Header
+  const startOfWeek = currentWeek[0];
+  const endOfWeek = currentWeek[6];
+  const weekDisplayTitle = `Tuần: ${startOfWeek.displayDate} - ${endOfWeek.displayDate}/${endOfWeek.year}`;
 
   const [shiftDetails, setShiftDetails] = useState({
     "2026-05-14_CA_SANG": { registeredCount: 5, isMyShift: false },
@@ -93,11 +109,6 @@ const Schedule = () => {
       };
     });
 
-    alert(
-      isCurrentlyRegistered
-        ? "Đã HỦY ca thành công!"
-        : "Đã ĐĂNG KÝ ca thành công!",
-    );
     setSelectedShift(null);
   };
 
@@ -112,21 +123,34 @@ const Schedule = () => {
             Xem lịch và đăng ký ca làm việc hàng tuần
           </p>
         </div>
-        <div className="glass-effect rounded-full p-1 flex items-center border border-white/20">
-          <button className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white">
+
+        {/* --- CỤM ĐIỀU HƯỚNG TUẦN --- */}
+        <div className="staff-card-flat rounded-full p-1 flex items-center">
+          <button
+            onClick={() => setWeekOffset((prev) => prev - 1)}
+            className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white"
+            title="Tuần trước"
+          >
             <ChevronLeft size={20} />
           </button>
-          <div className="px-6 py-2 flex items-center gap-2 font-bold text-sm">
+
+          <div className="px-6 py-2 flex items-center gap-2 font-bold text-sm min-w-[220px] justify-center">
             <CalendarIcon size={16} className="text-[var(--btn-neon)]" />
-            <span>Tuần: 11/05 - 17/05/2026</span>
+            <span>{weekDisplayTitle}</span>
           </div>
-          <button className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white">
+
+          <button
+            onClick={() => setWeekOffset((prev) => prev + 1)}
+            className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white"
+            title="Tuần sau"
+          >
             <ChevronRight size={20} />
           </button>
         </div>
       </div>
 
-      <div className="glass-effect rounded-3xl p-6 flex-1 overflow-x-auto">
+      {/* --- LƯỚI LỊCH (Đã đổi class thành staff-card-flat) --- */}
+      <div className="staff-card-flat rounded-3xl p-6 flex-1 overflow-x-auto">
         <div className="min-w-[1000px] grid grid-cols-7 gap-4 h-full">
           {currentWeek.map((day) => (
             <div key={day.dateString} className="flex flex-col gap-4">
