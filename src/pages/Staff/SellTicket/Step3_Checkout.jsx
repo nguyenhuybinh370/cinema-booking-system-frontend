@@ -74,6 +74,123 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
     }, 2000);
   };
 
+  // Hàm xử lý In Vé (Mô phỏng máy in nhiệt POS)
+  const handlePrintTicket = () => {
+    // 1. Mở một cửa sổ ẩn mới
+    const printWindow = window.open("", "_blank", "width=400,height=600");
+
+    // 2. Lấy ngày giờ hiện tại
+    const now = new Date();
+    const dateStr = `${now.getDate().toString().padStart(2, "0")}/${(now.getMonth() + 1).toString().padStart(2, "0")}/${now.getFullYear()}`;
+    const timeStr = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+
+    // 3. Chuẩn bị danh sách ghế
+    const seatsHtml = bookingData.seats?.join(", ") || "";
+
+    // 4. Đổ mã HTML và CSS (Được style giống bill máy in nhiệt) vào cửa sổ
+    const htmlContent = `
+      <html>
+        <head>
+          <title>In Vé - UIT Cinema</title>
+          <style>
+            body { 
+              font-family: 'Courier New', Courier, monospace; 
+              color: #000; 
+              padding: 20px; 
+              display: flex;
+              justify-content: center;
+            }
+            .ticket { 
+              width: 300px; 
+              border: 1px dashed #000; 
+              padding: 20px; 
+            }
+            .header { 
+              text-align: center; 
+              border-bottom: 2px solid #000; 
+              padding-bottom: 10px; 
+              margin-bottom: 15px; 
+            }
+            .header h2 { margin: 0; font-size: 24px; font-weight: 900; }
+            .header p { margin: 5px 0 0; font-size: 14px; }
+            .movie-title { 
+              font-size: 20px; 
+              font-weight: bold; 
+              text-transform: uppercase; 
+              text-align: center;
+              margin-bottom: 15px; 
+            }
+            .info-row { 
+              display: flex; 
+              justify-content: space-between; 
+              margin-bottom: 8px; 
+              font-size: 14px; 
+            }
+            .seats { 
+              font-size: 18px; 
+              font-weight: bold; 
+              text-align: center;
+              margin: 15px 0; 
+              padding: 10px 0; 
+              border-top: 1px dashed #000; 
+              border-bottom: 1px dashed #000; 
+            }
+            .footer { 
+              text-align: center; 
+              font-size: 12px; 
+              margin-top: 20px; 
+              border-top: 2px solid #000;
+              padding-top: 10px;
+            }
+            .barcode {
+              text-align: center;
+              font-family: 'Libre Barcode 39', cursive; /* Giả lập font mã vạch */
+              font-size: 40px;
+              margin-top: 10px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="ticket">
+            <div class="header">
+              <h2>UIT CINEMA</h2>
+              <p>Hệ Thống Rạp Chiếu Sinh Viên</p>
+            </div>
+            
+            <div class="movie-title">${bookingData.movie?.title || "Tên Phim"}</div>
+            
+            <div class="info-row"><span>Ngày in:</span> <span>${dateStr} ${timeStr}</span></div>
+            <div class="info-row"><span>Suất chiếu:</span> <span><b>${bookingData.showtime?.time || "--:--"}</b></span></div>
+            <div class="info-row"><span>Phòng:</span> <span><b>${bookingData.showtime?.room || "---"}</b></span></div>
+            
+            <div class="seats">GHẾ: ${seatsHtml}</div>
+            
+            <div class="info-row"><span>Tổng tiền:</span> <span><b>${(totalPrice || 0).toLocaleString("vi-VN")} đ</b></span></div>
+            <div class="info-row"><span>Thu ngân:</span> <span>Đạt Phan</span></div>
+            
+            <div class="barcode">||| |||| | ||||| |</div>
+            
+            <div class="footer">
+              Cảm ơn quý khách!<br>
+              Vui lòng đến trước giờ chiếu 10 phút.
+            </div>
+          </div>
+          
+          <script>
+            // Tự động gọi lệnh in khi cửa sổ load xong, và đóng cửa sổ khi in xong/hủy in
+            window.onload = () => {
+              window.print();
+              window.onafterprint = () => window.close();
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
+
   // MÀN HÌNH THÀNH CÔNG
   if (isSuccess) {
     return (
@@ -100,7 +217,10 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
           Hệ thống đã ghi nhận doanh thu và xuất vé.
         </p>
         <div className="flex gap-4">
-          <button className="px-8 py-3 rounded-full font-bold text-slate-900 bg-white hover:bg-white/90 transition-colors uppercase text-sm shadow-lg">
+          <button
+            onClick={handlePrintTicket}
+            className="px-8 py-3 rounded-full font-bold text-slate-900 bg-white hover:bg-white/90 transition-colors uppercase text-sm shadow-lg"
+          >
             🖨 In Vé (PDF)
           </button>
           <button onClick={onReset} className="btn-bright">

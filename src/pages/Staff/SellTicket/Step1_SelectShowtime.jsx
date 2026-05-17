@@ -7,7 +7,8 @@ const MOCK_MOVIES = [
     title: "DUNE: PART TWO",
     genre: "Sci-Fi, Action",
     duration: 166,
-    poster: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2JGjjcJsV.jpg",
+    poster:
+      "https://th.bing.com/th/id/OIP.5UgQQ8aaesrvoPpIVoUc8wHaJQ?w=147&h=184&c=7&r=0&o=7&dpr=2.5&pid=1.7&rm=3",
   },
   {
     id: "M2",
@@ -21,7 +22,8 @@ const MOCK_MOVIES = [
     title: "GODZILLA X KONG",
     genre: "Action, Sci-Fi",
     duration: 115,
-    poster: "https://image.tmdb.org/t/p/w500/tMefBSflR6PGQLvLuPEtHZpALq1.jpg",
+    poster:
+      "https://th.bing.com/th/id/OIP.0swsksupM_GO9tFywO70PQHaLH?w=121&h=182&c=7&r=0&o=7&dpr=2.5&pid=1.7&rm=3",
   },
 ];
 
