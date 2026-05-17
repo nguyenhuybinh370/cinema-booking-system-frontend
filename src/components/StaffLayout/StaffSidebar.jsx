@@ -2,84 +2,73 @@ import { NavLink } from "react-router-dom";
 import {
   Ticket,
   Scan,
-  LogOut,
   LayoutDashboard,
   User,
   Calendar,
+  LogOut,
 } from "lucide-react";
 
-const StaffSidebar = () => {
-  const menuItems = [
-    {
-      title: "Tổng quan",
-      path: "/staff/dashboard",
-      icon: <LayoutDashboard size={22} />,
-    },
-    {
-      title: "Bán vé",
-      path: "/staff/sell-ticket",
-      icon: <Ticket size={22} />,
-    },
-    {
-      title: "Soát vé",
-      path: "/staff/check-in",
-      icon: <Scan size={22} />,
-    },
-    {
-      title: "Lịch làm việc",
-      path: "/staff/schedule",
-      icon: <Calendar size={22} />,
-    },
-    {
-      title: "Cá nhân",
-      path: "/staff/profile",
-      icon: <User size={22} />,
-    },
-  ];
+const menuItems = [
+  {
+    title: "Tổng quan",
+    path: "/staff/dashboard",
+    icon: <LayoutDashboard size={22} />,
+  },
+  { title: "Bán vé", path: "/staff/sell-ticket", icon: <Ticket size={22} /> },
+  { title: "Soát vé", path: "/staff/check-in", icon: <Scan size={22} /> },
+  {
+    title: "Lịch làm việc",
+    path: "/staff/schedule",
+    icon: <Calendar size={22} />,
+  },
+  { title: "Cá nhân", path: "/staff/profile", icon: <User size={22} /> },
+];
 
+const StaffSidebar = () => {
   return (
-    <div className="w-72 h-screen glass-effect border-r border-white/10 flex flex-col z-50">
-      {/* Logo Area */}
-      <div className="p-8 border-b border-white/10">
-        <h1 className="text-2xl font-black tracking-tighter uppercase text-glow italic">
-          Cinema <span className="text-[var(--btn-neon)]">Staff</span>
+    <aside className="w-72 shrink-0 h-full staff-card-flat border-r border-white/5 flex flex-col overflow-hidden scrollbar-hide">
+      <div className="h-28 flex flex-col items-center justify-center border-b border-white/5 shrink-0">
+        <h1 className="text-3xl font-black italic tracking-widest text-white">
+          CINEMA
         </h1>
+        <h2 className="text-xl font-bold tracking-[0.2em] text-[var(--btn-neon)] text-glow">
+          STAFF
+        </h2>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-6 space-y-3">
-        {menuItems.map((item) => (
+      <nav className="flex-1 py-8 px-4 space-y-2 overflow-y-auto overflow-x-hidden scrollbar-hide">
+        {menuItems.map((item, index) => (
           <NavLink
-            key={item.path}
+            key={index}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 group ${
+              `flex items-center gap-4 px-6 py-4 rounded-2xl font-bold uppercase tracking-wider transition-all duration-300 w-full group min-w-0
+              ${
                 isActive
-                  ? "bg-[var(--btn-neon)] text-slate-900 shadow-[0_0_20px_rgba(253,224,71,0.3)] font-bold scale-[1.02]"
-                  : "text-white/70 hover:bg-white/10 hover:text-white"
+                  ? "bg-[var(--btn-neon)]/10 text-[var(--btn-neon)] shadow-[0_0_20px_rgba(253,224,71,0.1)]"
+                  : "text-white/50 hover:bg-white/5 hover:text-white"
               }`
             }
           >
-            <span className="transition-transform group-hover:scale-110">
-              {item.icon}
-            </span>
-            <span className="text-sm uppercase tracking-widest font-semibold">
+            <span className="shrink-0">{item.icon}</span>
+
+            <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-left text-sm">
               {item.title}
             </span>
           </NavLink>
         ))}
       </nav>
 
-      {/* Logout Area */}
-      <div className="p-6 mt-auto border-t border-white/10">
-        <button className="flex items-center gap-4 px-5 py-4 w-full text-white/50 hover:text-red-400 hover:bg-red-500/10 rounded-2xl transition-all duration-300">
-          <LogOut size={22} />
-          <span className="text-sm uppercase tracking-widest font-semibold">
+      <div className="p-4 border-t border-white/5 shrink-0">
+        <button className="flex items-center gap-4 px-6 py-4 w-full rounded-2xl font-bold uppercase tracking-wider text-white/50 hover:bg-red-500/10 hover:text-red-400 transition-colors group min-w-0">
+          <LogOut size={22} className="shrink-0" />
+
+          <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-left text-sm">
             Đăng xuất
           </span>
         </button>
       </div>
-    </div>
+    </aside>
   );
 };
 
