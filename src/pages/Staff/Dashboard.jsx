@@ -252,7 +252,10 @@ const Dashboard = () => {
               </div>
             ))}
           </div>
-          <button className="w-full mt-4 py-3 text-sm font-bold text-white/50 hover:text-white border border-white/10 rounded-xl hover:bg-white/5 transition-colors">
+          <button
+            onClick={() => navigate("/staff/transactions")}
+            className="w-full mt-4 py-3 text-sm font-bold text-white/50 hover:text-white border border-white/10 rounded-xl hover:bg-white/5 transition-colors"
+          >
             Xem tất cả
           </button>
         </div>

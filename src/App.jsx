@@ -7,6 +7,7 @@ import CheckIn from "./pages/Staff/Checkin";
 import Dashboard from "./pages/Staff/dashboard";
 import Profile from "./pages/Staff/Profile/Profile";
 import Schedule from "./pages/Staff/Schedule/Schedule";
+import TransactionHistory from "./pages/Staff/TransactionHistory";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             <Route path="check-in" element={<CheckIn />} />
             <Route path="profile" element={<Profile />} />
             <Route path="schedule" element={<Schedule />} />
+            <Route path="transactions" element={<TransactionHistory />} />
           </Route>
         </Route>
       </Routes>
