@@ -1,16 +1,18 @@
 import { Outlet } from "react-router-dom";
 import StaffSidebar from "./StaffSidebar";
+import "../../styles/staff.css"; // Import file CSS riêng biệt vừa tạo
 
 const StaffLayout = () => {
   return (
-    <div className="flex min-h-screen text-[var(--white-light)]">
+    // staff-container sẽ khóa cứng nền màu tối phẳng (Solid) cho toàn bộ trang của nhân viên
+    <div className="flex min-h-screen text-[var(--white-light)] staff-container">
       {/* Sidebar cố định */}
       <StaffSidebar />
 
       {/* Vùng nội dung chính */}
       <div className="flex-1 flex flex-col relative">
-        {/* Header Glassmorphism */}
-        <header className="h-20 glass-effect sticky top-0 z-40 border-b border-white/10 flex items-center justify-between px-10">
+        {/* Header chuyển sang dùng class staff-card-flat phẳng và rõ nét */}
+        <header className="h-20 staff-card-flat sticky top-0 z-40 flex items-center justify-between px-10">
           <div className="flex flex-col">
             <span className="text-[10px] uppercase tracking-[0.3em] text-[var(--btn-neon)] font-bold">
               Portal Quản Trị
@@ -34,11 +36,6 @@ const StaffLayout = () => {
 
         {/* Nội dung trang con */}
         <main className="flex-1 p-10 overflow-y-auto relative">
-          {/* Một chút trang trí để tạo chiều sâu */}
-          <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden -z-10">
-            <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-[var(--purple-glow)] opacity-10 blur-[120px] rounded-full"></div>
-          </div>
-
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>
