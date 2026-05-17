@@ -31,10 +31,6 @@ const Dashboard = () => {
             </span>
           </p>
         </div>
-        <button className="staff-card-flat px-6 py-3 rounded-full text-sm font-bold hover:bg-white/10 transition-colors border border-white/20 flex items-center gap-2">
-          <TrendingUp size={16} />
-          Chốt Ca & Bàn Giao
-        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
