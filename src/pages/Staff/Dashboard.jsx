@@ -1,123 +1,24 @@
 import { useNavigate } from "react-router-dom";
+import { DollarSign, ScanLine, Clock, Film, TrendingUp } from "lucide-react";
 import {
-  Ticket,
-  DollarSign,
-  ScanLine,
-  Clock,
-  Film,
-  TrendingUp,
-} from "lucide-react";
-
-// Định nghĩa lại cấu trúc Mock Data khớp chính xác với Entity PHIM, SUATCHIEU và hệ thống tính giá đã refactor
-const UPCOMING_SHOWS = [
-  {
-    movie: {
-      id: "M1",
-      title: "DUNE: PART TWO",
-      genre: "Sci-Fi, Action",
-      duration: 166,
-      poster: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2JGjjcJsV.jpg",
-    },
-    showtime: {
-      id: "S2",
-      time: "13:30",
-      room: "Phòng IMAX",
-      basePrice: 60000,
-      roomSurcharge: 30000,
-      daySurcharge: 10000,
-    },
-    booked: 120,
-    total: 150,
-  },
-  {
-    movie: {
-      id: "M2",
-      title: "KUNG FU PANDA 4",
-      genre: "Animation, Comedy",
-      duration: 94,
-      poster: "https://image.tmdb.org/t/p/w500/kDp1vUBnMpe8ak4rjgl3cLELqjU.jpg",
-    },
-    showtime: {
-      id: "S4",
-      time: "14:00",
-      room: "Phòng 3 (Standard)",
-      basePrice: 50000,
-      roomSurcharge: 0,
-      daySurcharge: 0,
-    },
-    booked: 85,
-    total: 100,
-  },
-  {
-    movie: {
-      id: "M3",
-      title: "GODZILLA X KONG",
-      genre: "Action, Sci-Fi",
-      duration: 115,
-      poster: "https://image.tmdb.org/t/p/w500/tMefBSflR6PGQLvLuPEtHZpALq1.jpg",
-    },
-    showtime: {
-      id: "S6",
-      time: "14:45",
-      room: "Phòng IMAX",
-      basePrice: 70000,
-      roomSurcharge: 30000,
-      daySurcharge: 15000,
-    },
-    booked: 40,
-    total: 120,
-  },
-];
-
-const SHIFT_STATS = {
-  revenue: 3450000,
-  ticketsSold: 42,
-  ticketsChecked: 28,
-  shiftName: "Ca Sáng (08:00 - 16:00)",
-};
-
-const RECENT_TRANSACTIONS = [
-  {
-    id: "PDV-8A2B3C4D",
-    time: "11:42",
-    type: "Bán vé tại quầy",
-    amount: 255000,
-    status: "Thành công",
-  },
-  {
-    id: "PDV-9E0F1G2H",
-    time: "11:38",
-    type: "Bán vé tại quầy",
-    amount: 180000,
-    status: "Thành công",
-  },
-  {
-    id: "PDV-3I4J5K6L",
-    time: "11:30",
-    type: "Soát vé cửa rạp",
-    amount: 0,
-    status: "Hợp lệ",
-  },
-];
+  UPCOMING_SHOWS,
+  SHIFT_STATS,
+  RECENT_TRANSACTIONS,
+} from "../../data/mockDashboard";
 
 const Dashboard = () => {
   const navigate = useNavigate();
 
-  // Xử lý click chọn suất chiếu nhanh -> Đẩy dữ liệu qua trang Bán vé bằng Router State
   const handleQuickSell = (show) => {
     navigate("/staff/sell-ticket", {
       state: {
-        preSelected: {
-          movie: show.movie,
-          showtime: show.showtime,
-        },
+        preSelected: { movie: show.movie, showtime: show.showtime },
       },
     });
   };
 
   return (
     <div className="flex flex-col gap-8 h-full">
-      {/* HEADER DASHBOARD */}
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-black text-glow uppercase tracking-widest text-[var(--btn-neon)]">
@@ -136,7 +37,6 @@ const Dashboard = () => {
         </button>
       </div>
 
-      {/* STATS CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="staff-card-flat p-6 rounded-3xl relative overflow-hidden group">
           <p className="text-sm text-white/50 uppercase tracking-wider mb-1">
@@ -146,7 +46,6 @@ const Dashboard = () => {
             {SHIFT_STATS.revenue.toLocaleString("vi-VN")}đ
           </h2>
         </div>
-
         <div className="staff-card-flat p-6 rounded-3xl relative overflow-hidden group">
           <p className="text-sm text-white/50 uppercase tracking-wider mb-1">
             Vé đã bán
@@ -156,7 +55,6 @@ const Dashboard = () => {
             <span className="text-lg text-white/30 font-normal">vé</span>
           </h2>
         </div>
-
         <div className="staff-card-flat p-6 rounded-3xl relative overflow-hidden group">
           <p className="text-sm text-white/50 uppercase tracking-wider mb-1">
             Vé đã soát (Check-in)
@@ -169,7 +67,6 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 flex-1">
-        {/* SUẤT CHIẾU SẮP DIỄN RA */}
         <div className="lg:col-span-2 staff-card-flat p-8 rounded-3xl flex flex-col">
           <h2 className="text-lg font-bold uppercase tracking-widest border-b border-white/10 pb-4 mb-6 flex items-center gap-3">
             <Film className="text-[var(--btn-neon)]" size={20} />
@@ -183,7 +80,6 @@ const Dashboard = () => {
                   key={index}
                   onClick={() => handleQuickSell(show)}
                   className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between hover:border-[var(--btn-neon)] hover:bg-[var(--btn-neon)]/5 transition-all cursor-pointer group"
-                  title="Click để vào màn hình bán vé nhanh cho suất này"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 bg-black/40 rounded-xl flex flex-col items-center justify-center border border-white/5 group-hover:border-[var(--btn-neon)]">
@@ -220,7 +116,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* HOẠT ĐỘNG GẦN ĐÂY */}
         <div className="staff-card-flat p-8 rounded-3xl flex flex-col">
           <h2 className="text-lg font-bold uppercase tracking-widest border-b border-white/10 pb-4 mb-6 flex items-center gap-3">
             <Clock className="text-blue-400" size={20} />
