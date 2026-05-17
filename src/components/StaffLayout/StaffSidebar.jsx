@@ -8,6 +8,8 @@ import {
   LogOut,
 } from "lucide-react";
 
+import LogoImage from "../../assets/UITCinema.png";
+
 const menuItems = [
   {
     title: "Tổng quan",
@@ -27,13 +29,12 @@ const menuItems = [
 const StaffSidebar = () => {
   return (
     <aside className="w-72 shrink-0 h-full staff-card-flat border-r border-white/5 flex flex-col overflow-hidden scrollbar-hide">
-      <div className="h-28 flex flex-col items-center justify-center border-b border-white/5 shrink-0">
-        <h1 className="text-3xl font-black italic tracking-widest text-white">
-          CINEMA
-        </h1>
-        <h2 className="text-xl font-bold tracking-[0.2em] text-[var(--btn-neon)] text-glow">
-          STAFF
-        </h2>
+      <div className="h-36 flex items-center justify-center border-b border-white/5 shrink-0 px-4">
+        <img
+          src={LogoImage}
+          alt="UIT Cinema Logo"
+          className="h-28 w-auto object-contain transition-all duration-300 hover:scale-105"
+        />
       </div>
 
       <nav className="flex-1 py-8 px-4 space-y-2 overflow-y-auto overflow-x-hidden scrollbar-hide">
