@@ -1,7 +1,7 @@
 export const ROOM_TYPES = [
-  { MaLoaiPhong: 'LP01', TenLoaiPhong: '2D', GiaPhuThu: 0, MoTa: 'Phòng chiếu tiêu chuẩn 2D', KhaDung: 1 },
-  { MaLoaiPhong: 'LP02', TenLoaiPhong: '3D', GiaPhuThu: 30000, MoTa: 'Phòng chiếu phim 3D hiện đại', KhaDung: 1 },
-  { MaLoaiPhong: 'LP03', TenLoaiPhong: 'IMAX', GiaPhuThu: 50000, MoTa: 'Trải nghiệm màn hình cực đại', KhaDung: 1 },
+  { MaLoaiPhong: 'LP01', TenLoaiPhong: '2D', GiaPhuThu: 0, MoTa: 'Phòng chiếu tiêu chuẩn 2D', KhaDung: 1, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
+  { MaLoaiPhong: 'LP02', TenLoaiPhong: '3D', GiaPhuThu: 30000, MoTa: 'Phòng chiếu phim 3D hiện đại', KhaDung: 1, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
+  { MaLoaiPhong: 'LP03', TenLoaiPhong: 'IMAX', GiaPhuThu: 50000, MoTa: 'Trải nghiệm màn hình cực đại', KhaDung: 1, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
 ];
 
 export const ROOMS = [
@@ -38,16 +38,16 @@ export const SEAT_MAPS = [
 ];
 
 export const SEAT_TYPES = [
-  { MaLoaiGhe: 'LG01', TenLoaiGhe: 'Thường', GiaPhuThu: 0, KhaDung: 1 },
-  { MaLoaiGhe: 'LG02', TenLoaiGhe: 'VIP', GiaPhuThu: 20000, KhaDung: 1 },
-  { MaLoaiGhe: 'LG03', TenLoaiGhe: 'Sweetbox', GiaPhuThu: 50000, KhaDung: 1 },
+  { MaLoaiGhe: 'LG01', TenLoaiGhe: 'Thường', GiaPhuThu: 0, MoTa: 'Ghế tiêu chuẩn rạp', KhaDung: 1, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
+  { MaLoaiGhe: 'LG02', TenLoaiGhe: 'VIP', GiaPhuThu: 20000, MoTa: 'Ghế VIP êm ái hàng trung tâm', KhaDung: 1, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
+  { MaLoaiGhe: 'LG03', TenLoaiGhe: 'Sweetbox', GiaPhuThu: 50000, MoTa: 'Ghế đôi sweetbox riêng tư cho cặp đôi', KhaDung: 1, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
 ];
 
 export const DAY_TYPES = [
-  { MaLoaiNgay: 'LN01', TenLoaiNgay: 'Ngày thường', GiaPhuThu: 0, KhaDung: 1 },
-  { MaLoaiNgay: 'LN02', TenLoaiNgay: 'Cuối tuần', GiaPhuThu: 20000, KhaDung: 1 },
-  { MaLoaiNgay: 'LN03', TenLoaiNgay: 'Lễ/Tết', GiaPhuThu: 40000, KhaDung: 1 },
-  { MaLoaiNgay: 'LN04', TenLoaiNgay: 'Happy Day', GiaPhuThu: -20000, KhaDung: 1 },
+  { MaLoaiNgay: 'LN01', TenLoaiNgay: 'Ngày thường', GiaPhuThu: 0, MoTa: 'Ngày trong tuần từ thứ 2 đến thứ 5', KhaDung: 1, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
+  { MaLoaiNgay: 'LN02', TenLoaiNgay: 'Cuối tuần', GiaPhuThu: 20000, MoTa: 'Ngày cuối tuần từ thứ 6 đến Chủ Nhật', KhaDung: 1, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
+  { MaLoaiNgay: 'LN03', TenLoaiNgay: 'Lễ/Tết', GiaPhuThu: 40000, MoTa: 'Các ngày nghỉ lễ Tết theo quy định', KhaDung: 1, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
+  { MaLoaiNgay: 'LN04', TenLoaiNgay: 'Happy Day', GiaPhuThu: -20000, MoTa: 'Ngày ưu đãi đồng giá vé thứ 4 hàng tuần', KhaDung: 1, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
 ];
 
 export const ADMIN_MOVIES = [

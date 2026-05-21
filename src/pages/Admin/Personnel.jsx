@@ -9,14 +9,14 @@ import { Search, ShieldCheck, UserX, UserCheck, Edit2, X } from 'lucide-react';
 const Personnel = () => {
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Modals / Panels state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPermPanelOpen, setIsPermPanelOpen] = useState(false);
-  
+
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [editingStaff, setEditingStaff] = useState(null);
-  
+
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('All');
@@ -34,8 +34,8 @@ const Personnel = () => {
   const [staffPermissions, setStaffPermissions] = useState([]);
 
   const permissionsList = [
-    'Quản lý phòng chiếu', 'Quản lý phim', 'Cấu hình sơ đồ ghế', 
-    'Cấu hình bảng giá', 'Quản lý nhân sự', 'Quản lý suất chiếu', 'Xem thống kê'
+    'Quản lý phòng chiếu', 'Quản lý phim', 'Cấu hình sơ đồ ghế',
+    'Cấu hình bảng giá', 'Quản lý Nhân viên', 'Quản lý suất chiếu', 'Xem thống kê'
   ];
 
   const loadStaff = async () => {
@@ -126,9 +126,9 @@ const Personnel = () => {
   const handleOpenPermissions = (person) => {
     setSelectedStaff(person);
     // Mock user permissions - say they have the first 3 if they are Staff, or all if Admin
-    const initialPerms = person.Role === 'Admin' 
-      ? [...permissionsList] 
-      : person.Role === 'Manager' 
+    const initialPerms = person.Role === 'Admin'
+      ? [...permissionsList]
+      : person.Role === 'Manager'
         ? [permissionsList[0], permissionsList[1], permissionsList[2], permissionsList[5], permissionsList[6]]
         : [permissionsList[0], permissionsList[1]];
     setStaffPermissions(initialPerms);
@@ -162,13 +162,13 @@ const Personnel = () => {
 
   // Filter staff list
   const filteredStaff = staff.filter(person => {
-    const matchesSearch = 
+    const matchesSearch =
       person.HoTen.toLowerCase().includes(searchQuery.toLowerCase()) ||
       person.Email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       person.SoDienThoai.includes(searchQuery);
-      
+
     const matchesRole = roleFilter === 'All' || person.Role === roleFilter;
-    
+
     return matchesSearch && matchesRole && person.KhaDung !== 0;
   });
 
@@ -201,27 +201,26 @@ const Personnel = () => {
       className: 'text-right',
       render: (person) => (
         <div className="flex justify-end gap-2">
-          <button 
+          <button
             onClick={() => handleOpenPermissions(person)}
             className="p-2 hover:bg-emerald-500/10 text-slate-500 hover:text-emerald-500 rounded-xl transition-all cursor-pointer"
             title="Phân quyền"
           >
             <ShieldCheck size={18} />
           </button>
-          <button 
+          <button
             onClick={() => handleOpenEdit(person)}
-            className="p-2 hover:bg-white/5 text-slate-500 hover:text-white rounded-xl transition-all cursor-pointer" 
+            className="p-2 hover:bg-white/5 text-slate-500 hover:text-white rounded-xl transition-all cursor-pointer"
             title="Sửa"
           >
             <Edit2 size={18} />
           </button>
-          <button 
+          <button
             onClick={() => handleToggleStatus(person)}
-            className={`p-2 rounded-xl transition-all cursor-pointer ${
-              person.Status === 'Active' 
-                ? 'hover:bg-red-500/10 text-slate-500 hover:text-red-500' 
+            className={`p-2 rounded-xl transition-all cursor-pointer ${person.Status === 'Active'
+                ? 'hover:bg-red-500/10 text-slate-500 hover:text-red-500'
                 : 'hover:bg-emerald-500/10 text-slate-500 hover:text-emerald-500'
-            }`} 
+              }`}
             title={person.Status === 'Active' ? 'Vô hiệu hóa' : 'Kích hoạt'}
           >
             {person.Status === 'Active' ? <UserX size={18} /> : <UserCheck size={18} />}
@@ -235,10 +234,10 @@ const Personnel = () => {
     <AdminLayout>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white text-glow">Quản lý nhân sự</h1>
+          <h1 className="text-3xl font-bold text-white text-glow">Quản lý Nhân viên</h1>
           <p className="text-slate-500">Quản lý hồ sơ và phân quyền truy cập cho nhân viên.</p>
         </div>
-        <button 
+        <button
           onClick={handleOpenAdd}
           className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 flex items-center gap-2 cursor-pointer"
         >
@@ -250,15 +249,15 @@ const Personnel = () => {
       <div className="flex gap-4 mb-8">
         <div className="flex-grow flex items-center gap-3 bg-white/5 border border-white/5 rounded-2xl px-4 py-3">
           <Search size={20} className="text-slate-500" />
-          <input 
-            type="text" 
-            placeholder="Tìm theo tên, email hoặc số điện thoại..." 
+          <input
+            type="text"
+            placeholder="Tìm theo tên, email hoặc số điện thoại..."
             className="bg-transparent border-none focus:outline-none text-sm text-white w-full"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
         </div>
-        <select 
+        <select
           className="bg-white/5 border border-white/5 rounded-2xl px-6 py-3 text-sm font-bold text-slate-300 focus:outline-none focus:border-red-500 transition-all cursor-pointer"
           value={roleFilter}
           onChange={e => setRoleFilter(e.target.value)}
@@ -286,7 +285,7 @@ const Personnel = () => {
               <h3 className="text-xl font-bold text-white">Phân quyền hệ thống</h3>
               <button onClick={() => setIsPermPanelOpen(false)} className="p-2 hover:bg-white/5 rounded-xl cursor-pointer"><X size={20} /></button>
             </div>
-            
+
             <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl mb-8 border border-white/5">
               <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center text-white font-black text-xl">
                 {selectedStaff?.HoTen.charAt(0)}
@@ -302,9 +301,9 @@ const Personnel = () => {
               {permissionsList.map((perm, idx) => (
                 <label key={idx} className="flex items-center justify-between p-4 rounded-xl hover:bg-white/[0.02] cursor-pointer border border-transparent hover:border-white/5 transition-all group">
                   <span className="text-sm text-slate-300 group-hover:text-white">{perm}</span>
-                  <input 
-                    type="checkbox" 
-                    className="w-5 h-5 rounded border-white/10 bg-white/5 accent-red-500 cursor-pointer" 
+                  <input
+                    type="checkbox"
+                    className="w-5 h-5 rounded border-white/10 bg-white/5 accent-red-500 cursor-pointer"
                     checked={staffPermissions.includes(perm)}
                     onChange={() => handleTogglePermissionCheckbox(perm)}
                   />
@@ -313,7 +312,7 @@ const Personnel = () => {
             </div>
 
             <div className="pt-6 border-t border-white/5 mt-4">
-              <button 
+              <button
                 onClick={handleSavePermissions}
                 className="w-full py-4 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold shadow-lg shadow-red-500/20 transition-all uppercase tracking-widest text-xs cursor-pointer"
               >
@@ -325,32 +324,32 @@ const Personnel = () => {
       )}
 
       {/* Add/Edit Staff Modal */}
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         title={editingStaff ? "Cập nhật hồ sơ nhân viên" : "Thêm nhân viên mới"}
       >
         <form onSubmit={handleFormSubmit} className="space-y-6">
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Họ tên</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 name="HoTen"
                 required
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-white font-bold" 
-                placeholder="Nguyễn Văn A" 
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-white font-bold"
+                placeholder="Nguyễn Văn A"
                 value={formData.HoTen}
                 onChange={handleInputChange}
               />
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Số điện thoại</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 name="SoDienThoai"
                 required
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-white font-mono" 
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-white font-mono"
                 placeholder="0987654321"
                 value={formData.SoDienThoai}
                 onChange={handleInputChange}
@@ -359,12 +358,12 @@ const Personnel = () => {
           </div>
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Email đăng nhập</label>
-            <input 
-              type="email" 
+            <input
+              type="email"
               name="Email"
               required
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-white" 
-              placeholder="email@cinema.com" 
+              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-white"
+              placeholder="email@cinema.com"
               value={formData.Email}
               onChange={handleInputChange}
             />
@@ -372,11 +371,11 @@ const Personnel = () => {
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Chức vụ</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 name="ChucVu"
                 required
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-white" 
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-white"
                 placeholder="VD: Quản lý ca"
                 value={formData.ChucVu}
                 onChange={handleInputChange}
@@ -384,7 +383,7 @@ const Personnel = () => {
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Vai trò hệ thống</label>
-              <select 
+              <select
                 name="Role"
                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-slate-300 text-sm"
                 value={formData.Role}
@@ -406,15 +405,15 @@ const Personnel = () => {
           )}
 
           <div className="flex gap-4 pt-4 border-t border-white/5">
-            <button 
-              type="button" 
-              onClick={() => setIsModalOpen(false)} 
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(false)}
               className="flex-grow py-4 rounded-2xl font-bold border border-white/10 hover:bg-white/5 transition-all text-xs uppercase tracking-widest cursor-pointer text-slate-400"
             >
               Hủy
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="flex-grow py-4 rounded-2xl font-bold bg-red-500 hover:bg-red-600 text-white transition-all shadow-lg shadow-red-500/20 text-xs uppercase tracking-widest cursor-pointer"
             >
               Lưu hồ sơ

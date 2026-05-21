@@ -8,49 +8,80 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 };
 
+const getNextId = (list, prefix) => {
+  const nums = list
+    .map(item => {
+      const id = item.MaLoaiPhong || item.MaLoaiGhe || item.MaLoaiNgay;
+      if (id && id.startsWith(prefix)) {
+        const numPart = parseInt(id.substring(prefix.length), 10);
+        return isNaN(numPart) ? 0 : numPart;
+      }
+      return 0;
+    });
+  const max = nums.length > 0 ? Math.max(...nums) : 0;
+  return `${prefix}${String(max + 1).padStart(2, '0')}`;
+};
+
 const PriceTable = ({ title, data, typeKey, nameKey, onAdd, onEdit, onDelete }) => (
-  <div className="bg-[#0f1117] border border-white/5 rounded-3xl overflow-hidden shadow-xl h-full flex flex-col">
+  <div className="bg-[#0f1117] border border-white/5 rounded-3xl overflow-hidden shadow-xl flex flex-col w-full">
     <div className="px-6 py-4 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
       <h3 className="font-bold text-white uppercase tracking-widest text-xs">{title}</h3>
       <button 
         onClick={onAdd}
-        className="text-slate-500 hover:text-white transition-colors cursor-pointer p-1 hover:bg-white/5 rounded-lg"
+        className="bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-all cursor-pointer px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 text-[10px] uppercase tracking-widest border border-white/5"
       >
-        <Plus size={16} />
+        <Plus size={12} /> Thêm mới
       </button>
     </div>
-    <div className="flex-grow overflow-x-auto">
-      <table className="w-full text-left">
+    <div className="overflow-x-auto no-scrollbar">
+      <table className="w-full text-left border-collapse">
         <thead>
-          <tr className="text-[10px] font-black uppercase tracking-widest text-slate-600 border-b border-white/5">
-            <th className="px-6 py-3">Tên</th>
-            <th className="px-6 py-3">Phụ thu</th>
-            <th className="px-6 py-3 text-right"></th>
+          <tr className="text-[10px] font-black uppercase tracking-widest text-slate-500 border-b border-white/5 bg-white/[0.01]">
+            <th className="px-6 py-4 w-[12%]">Mã cấu hình</th>
+            <th className="px-6 py-4 w-[18%]">Tên hiển thị</th>
+            <th className="px-6 py-4 w-[15%]">Giá phụ thu</th>
+            <th className="px-6 py-4 w-[20%]">Mô tả</th>
+            <th className="px-6 py-4 w-[15%]">Trạng thái</th>
+            <th className="px-6 py-4 w-[10%]">Ngày tạo</th>
+            <th className="px-6 py-4 w-[10%]">Cập nhật</th>
+            <th className="px-6 py-4 w-[5%] text-right"></th>
           </tr>
         </thead>
         <tbody className="divide-y divide-white/5">
           {data.map((item) => (
-            <tr key={item[typeKey]} className="hover:bg-white/[0.02] transition-colors group">
-              <td className="px-6 py-4 text-sm font-bold text-slate-300">
-                <div>
-                  <div>{item[nameKey]}</div>
-                  {item.MoTa && <div className="text-[10px] text-slate-500 font-normal mt-0.5">{item.MoTa}</div>}
-                </div>
-              </td>
-              <td className="px-6 py-4 text-sm font-mono text-emerald-500">
+            <tr key={item[typeKey]} className="hover:bg-white/[0.01] transition-colors group">
+              <td className="px-6 py-4 text-xs font-mono font-bold text-slate-500">{item[typeKey]}</td>
+              <td className="px-6 py-4 text-sm font-bold text-white">{item[nameKey]}</td>
+              <td className="px-6 py-4 text-sm font-mono text-emerald-500 font-bold">
                 {item.GiaPhuThu > 0 ? `+${formatPrice(item.GiaPhuThu)}` : formatPrice(item.GiaPhuThu)}
               </td>
+              <td className="px-6 py-4 text-xs text-slate-400 max-w-[200px] truncate" title={item.MoTa || 'Không có mô tả'}>
+                {item.MoTa || <span className="text-slate-600 italic">Không có mô tả</span>}
+              </td>
+              <td className="px-6 py-4">
+                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black border ${
+                  item.KhaDung === 0 
+                    ? 'bg-red-500/10 text-red-400 border-red-500/20' 
+                    : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                }`}>
+                  {item.KhaDung === 0 ? '0 (Chưa khả dụng)' : '1 (Khả dụng)'}
+                </span>
+              </td>
+              <td className="px-6 py-4 text-xs font-mono text-slate-500">{item.NgayTao || '--:--'}</td>
+              <td className="px-6 py-4 text-xs font-mono text-slate-500">{item.NgayCapNhat || <span className="text-slate-700 italic">Chưa có</span>}</td>
               <td className="px-6 py-4 text-right">
                 <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button 
                     onClick={() => onEdit(item)}
-                    className="p-2 hover:bg-white/5 rounded-lg text-slate-500 hover:text-white transition-all cursor-pointer"
+                    className="p-2 hover:bg-white/5 rounded-xl text-slate-400 hover:text-white transition-all cursor-pointer"
+                    title="Sửa"
                   >
                     <Edit2 size={14} />
                   </button>
                   <button 
                     onClick={() => onDelete(item[typeKey])}
-                    className="p-2 hover:bg-white/5 rounded-lg text-red-500 hover:text-red-400 transition-all cursor-pointer"
+                    className="p-2 hover:bg-white/5 rounded-xl text-red-400 hover:text-white transition-all cursor-pointer"
+                    title="Xóa"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -77,7 +108,8 @@ const Pricing = () => {
   const [formData, setFormData] = useState({
     name: '',
     surcharge: 0,
-    description: ''
+    description: '',
+    KhaDung: 1
   });
 
   const [calc, setCalc] = useState({
@@ -132,7 +164,8 @@ const Pricing = () => {
     setFormData({
       name: '',
       surcharge: 0,
-      description: ''
+      description: '',
+      KhaDung: 1
     });
     setIsModalOpen(true);
   };
@@ -140,30 +173,17 @@ const Pricing = () => {
   const handleOpenEdit = (category, item) => {
     setModalCategory(category);
     setEditingItem(item);
-    if (category === 'room') {
-      setFormData({
-        name: item.TenLoaiPhong,
-        surcharge: item.GiaPhuThu,
-        description: item.MoTa || ''
-      });
-    } else if (category === 'seat') {
-      setFormData({
-        name: item.TenLoaiGhe,
-        surcharge: item.GiaPhuThu,
-        description: item.MoTa || ''
-      });
-    } else {
-      setFormData({
-        name: item.TenLoaiNgay,
-        surcharge: item.GiaPhuThu,
-        description: item.MoTa || ''
-      });
-    }
+    setFormData({
+      name: item.TenLoaiPhong || item.TenLoaiGhe || item.TenLoaiNgay || '',
+      surcharge: item.GiaPhuThu || 0,
+      description: item.MoTa || '',
+      KhaDung: item.KhaDung !== undefined ? item.KhaDung : 1
+    });
     setIsModalOpen(true);
   };
 
   const handleDelete = async (category, id) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa mục này?")) return;
+    if (!window.confirm("Bạn có chắc chắn muốn xóa mục này khỏi cơ sở dữ liệu?")) return;
     setLoading(true);
     try {
       if (category === 'room') {
@@ -173,6 +193,7 @@ const Pricing = () => {
       } else {
         await adminService.deleteDayType(id);
       }
+      alert("Xóa cấu hình khỏi cơ sở dữ liệu thành công!");
       await loadData();
     } catch (e) {
       alert("Lỗi khi xóa: " + e.message);
@@ -185,55 +206,62 @@ const Pricing = () => {
     e.preventDefault();
     setLoading(true);
     try {
+      const processedData = {
+        GiaPhuThu: parseFloat(formData.surcharge) || 0,
+        MoTa: formData.description && formData.description.trim() !== '' ? formData.description : null,
+        KhaDung: parseInt(formData.KhaDung, 10),
+      };
+
       if (editingItem) {
         // Edit Mode
         if (modalCategory === 'room') {
           await adminService.updateRoomType(editingItem.MaLoaiPhong, {
             TenLoaiPhong: formData.name,
-            GiaPhuThu: parseFloat(formData.surcharge) || 0,
-            MoTa: formData.description
+            ...processedData
           });
         } else if (modalCategory === 'seat') {
           await adminService.updateSeatType(editingItem.MaLoaiGhe, {
             TenLoaiGhe: formData.name,
-            GiaPhuThu: parseFloat(formData.surcharge) || 0,
-            MoTa: formData.description
+            ...processedData
           });
         } else {
           await adminService.updateDayType(editingItem.MaLoaiNgay, {
             TenLoaiNgay: formData.name,
-            GiaPhuThu: parseFloat(formData.surcharge) || 0,
-            MoTa: formData.description
+            ...processedData
           });
         }
+        alert("Cập nhật cấu hình thành công!");
       } else {
         // Add Mode
-        const code = Math.floor(1000 + Math.random() * 9000);
         if (modalCategory === 'room') {
+          const newId = getNextId(roomTypes, 'LP');
           await adminService.addRoomType({
-            MaLoaiPhong: `LP-${code}`,
+            MaLoaiPhong: newId,
             TenLoaiPhong: formData.name,
-            GiaPhuThu: parseFloat(formData.surcharge) || 0,
-            MoTa: formData.description,
-            KhaDung: 1
+            ...processedData,
+            NgayTao: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            NgayCapNhat: null
           });
         } else if (modalCategory === 'seat') {
+          const newId = getNextId(seatTypes, 'LG');
           await adminService.addSeatType({
-            MaLoaiGhe: `LG-${code}`,
+            MaLoaiGhe: newId,
             TenLoaiGhe: formData.name,
-            GiaPhuThu: parseFloat(formData.surcharge) || 0,
-            MoTa: formData.description,
-            KhaDung: 1
+            ...processedData,
+            NgayTao: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            NgayCapNhat: null
           });
         } else {
+          const newId = getNextId(dayTypes, 'LN');
           await adminService.addDayType({
-            MaLoaiNgay: `LN-${code}`,
+            MaLoaiNgay: newId,
             TenLoaiNgay: formData.name,
-            GiaPhuThu: parseFloat(formData.surcharge) || 0,
-            MoTa: formData.description,
-            KhaDung: 1
+            ...processedData,
+            NgayTao: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            NgayCapNhat: null
           });
         }
+        alert("Thêm cấu hình mới thành công!");
       }
       await loadData();
       setIsModalOpen(false);
@@ -267,7 +295,7 @@ const Pricing = () => {
         <p className="text-slate-500">Định nghĩa chính sách Dynamic Pricing cho hệ thống rạp.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+      <div className="space-y-8 mb-12">
         <PriceTable 
           title="Phụ thu loại phòng" 
           data={roomTypes} 
@@ -345,7 +373,7 @@ const Pricing = () => {
                 type="number"
                 className="w-full bg-black/20 border border-white/5 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm text-white font-bold"
                 value={calc.basePrice}
-                onChange={e => setCalc({ ...calc, basePrice: parseInt(e.target.value) || 0 })}
+                onChange={e => setCalc({ ...calc, basePrice: parseInt(e.target.value, 10) || 0 })}
               />
             </div>
           </div>
@@ -386,12 +414,24 @@ const Pricing = () => {
         title={editingItem ? `Chỉnh sửa ${getCategoryTitle()}` : `Thêm ${getCategoryTitle()} mới`}
       >
         <form onSubmit={handleFormSubmit} className="space-y-6">
+          {editingItem && (
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Mã cấu hình (Không thể sửa)</label>
+              <input 
+                type="text"
+                disabled
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-slate-500 font-bold font-mono text-sm"
+                value={editingItem.MaLoaiPhong || editingItem.MaLoaiGhe || editingItem.MaLoaiNgay}
+              />
+            </div>
+          )}
+
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Tên hiển thị</label>
             <input 
               type="text"
               required
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-white font-bold"
+              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-white font-bold text-sm"
               value={formData.name}
               onChange={e => setFormData({ ...formData, name: e.target.value })}
               placeholder={modalCategory === 'room' ? 'VD: IMAX' : modalCategory === 'seat' ? 'VD: VIP' : 'VD: Ngày cuối tuần'}
@@ -403,22 +443,39 @@ const Pricing = () => {
             <input 
               type="number"
               required
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-white font-bold"
+              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-white font-bold text-sm font-mono"
               value={formData.surcharge}
               onChange={e => setFormData({ ...formData, surcharge: e.target.value })}
               placeholder="Nhập số tiền phụ thu..."
             />
           </div>
 
-          {modalCategory !== 'seat' && (
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Mô tả</label>
-              <textarea 
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-slate-300 text-sm min-h-[80px]"
-                value={formData.description}
-                onChange={e => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Nhập mô tả..."
-              />
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Mô tả</label>
+            <textarea 
+              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-slate-300 text-sm min-h-[80px]"
+              value={formData.description}
+              onChange={e => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Nhập mô tả..."
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Trạng thái khả dụng (KhaDung)</label>
+            <select 
+              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-slate-300 text-sm"
+              value={formData.KhaDung}
+              onChange={e => setFormData({ ...formData, KhaDung: parseInt(e.target.value, 10) })}
+            >
+              <option value={1} className="bg-[#0f1117]">1 (Khả dụng)</option>
+              <option value={0} className="bg-[#0f1117]">0 (Chưa khả dụng)</option>
+            </select>
+          </div>
+
+          {editingItem && (
+            <div className="grid grid-cols-2 gap-6 text-[10px] text-slate-500 font-mono bg-white/[0.01] p-3 rounded-lg border border-white/5">
+              <div>Ngày tạo: {editingItem.NgayTao || '--:--'}</div>
+              <div>Ngày cập nhật: {editingItem.NgayCapNhat || 'Chưa cập nhật'}</div>
             </div>
           )}
 
