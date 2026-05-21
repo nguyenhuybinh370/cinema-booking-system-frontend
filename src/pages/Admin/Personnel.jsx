@@ -214,6 +214,11 @@ const Personnel = () => {
       className: 'text-xs font-mono font-bold text-slate-500'
     },
     {
+      header: 'Mã Tài Khoản',
+      accessor: 'MaTaiKhoan',
+      className: 'text-xs font-mono font-bold text-slate-500'
+    },
+    {
       header: 'Nhân viên',
       render: (person) => (
         <div className="flex items-center gap-3">
@@ -399,14 +404,25 @@ const Personnel = () => {
       >
         <form onSubmit={handleFormSubmit} className="space-y-6">
           {editingStaff && (
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Mã nhân viên (Không thể sửa)</label>
-              <input
-                type="text"
-                disabled
-                className="w-full bg-white/5 border border-white/5 rounded-xl py-3 px-4 text-slate-500 font-mono text-sm font-bold"
-                value={editingStaff.MaNhanVien}
-              />
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Mã nhân viên (Không thể sửa)</label>
+                <input
+                  type="text"
+                  disabled
+                  className="w-full bg-white/5 border border-white/5 rounded-xl py-3 px-4 text-slate-500 font-mono text-sm font-bold"
+                  value={editingStaff.MaNhanVien}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Mã tài khoản (Không thể sửa)</label>
+                <input
+                  type="text"
+                  disabled
+                  className="w-full bg-white/5 border border-white/5 rounded-xl py-3 px-4 text-slate-500 font-mono text-sm font-bold"
+                  value={editingStaff.MaTaiKhoan || 'Chưa liên kết'}
+                />
+              </div>
             </div>
           )}
 

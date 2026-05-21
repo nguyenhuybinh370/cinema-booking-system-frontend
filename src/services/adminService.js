@@ -2,6 +2,7 @@ import {
   ADMIN_MOVIES, 
   ROOMS, 
   STAFF, 
+  ACCOUNTS,
   SEAT_MAPS, 
   ROOM_TYPES, 
   SEAT_TYPES, 
@@ -172,7 +173,14 @@ const adminService = {
   // Personnel
   getStaff: async () => {
     await delay();
-    return [...STAFF];
+    return STAFF.map(s => {
+      const account = ACCOUNTS.find(a => a.MaTaiKhoan === s.MaTaiKhoan);
+      return {
+        ...account,
+        ...s,
+        KhaDung: s.KhaDung
+      };
+    });
   },
   addStaff: async (person) => {
     await delay();
@@ -198,25 +206,56 @@ const adminService = {
       throw new Error('Thông tin không hợp lệ: Mật khẩu không được để trống!');
     }
 
-    const emailExists = STAFF.some(s => s.Email.toLowerCase() === person.Email.toLowerCase() && s.KhaDung !== 0);
+    const emailExists = ACCOUNTS.some(a => a.Email.toLowerCase() === person.Email.toLowerCase() && a.KhaDung !== 0);
     if (emailExists) {
-      throw new Error('Lỗi: Email đã được đăng ký bởi nhân viên khác!');
+      throw new Error('Lỗi: Email đã được đăng ký bởi tài khoản khác!');
     }
 
-    const phoneExists = STAFF.some(s => s.SoDienThoai === person.SoDienThoai && s.KhaDung !== 0);
+    const phoneExists = ACCOUNTS.some(a => a.SoDienThoai === person.SoDienThoai && a.KhaDung !== 0);
     if (phoneExists) {
-      throw new Error('Lỗi: Số điện thoại đã được đăng ký bởi nhân viên khác!');
+      throw new Error('Lỗi: Số điện thoại đã được đăng ký bởi tài khoản khác!');
     }
 
-    STAFF.push(person);
-    return person;
+    // Auto-generate MaTaiKhoan
+    const nextAccId = `TK${String(ACCOUNTS.length + 1).padStart(2, '0')}`;
+    
+    // Create new account
+    const newAccount = {
+      MaTaiKhoan: nextAccId,
+      HoTen: person.HoTen,
+      Email: person.Email,
+      SoDienThoai: person.SoDienThoai,
+      MatKhau: person.MatKhau,
+      NgaySinh: person.NgaySinh,
+      GioiTinh: person.GioiTinh,
+      Role: person.Role || 'Staff',
+      KhaDung: 1,
+      NgayTao: person.NgayTao || new Date().toISOString().replace('T', ' ').substring(0, 19),
+      NgayCapNhat: null
+    };
+    ACCOUNTS.push(newAccount);
+
+    // Create new staff record
+    const newStaff = {
+      MaNhanVien: person.MaNhanVien,
+      MaTaiKhoan: nextAccId,
+      ChucVu: person.ChucVu,
+      KhaDung: person.KhaDung !== undefined ? person.KhaDung : 1,
+      NgayTao: person.NgayTao || new Date().toISOString().replace('T', ' ').substring(0, 19),
+      NgayCapNhat: null
+    };
+    STAFF.push(newStaff);
+
+    return { ...newAccount, ...newStaff };
   },
   updateStaff: async (maNhanVien, updates) => {
     await delay();
-    const index = STAFF.findIndex(s => s.MaNhanVien === maNhanVien);
-    if (index === -1) {
+    const sIndex = STAFF.findIndex(s => s.MaNhanVien === maNhanVien);
+    if (sIndex === -1) {
       throw new Error('Không tìm thấy nhân viên');
     }
+    const staffItem = STAFF[sIndex];
+    const aIndex = ACCOUNTS.findIndex(a => a.MaTaiKhoan === staffItem.MaTaiKhoan);
 
     if (updates.HoTen !== undefined && (!updates.HoTen || updates.HoTen.trim() === '')) {
       throw new Error('Thông tin không hợp lệ: Họ tên không được để trống!');
@@ -237,26 +276,50 @@ const adminService = {
       throw new Error('Thông tin không hợp lệ: Chức vụ không được để trống!');
     }
 
-    if (updates.Email) {
-      const emailExists = STAFF.some(s => s.MaNhanVien !== maNhanVien && s.Email.toLowerCase() === updates.Email.toLowerCase() && s.KhaDung !== 0);
+    if (updates.Email && aIndex !== -1) {
+      const emailExists = ACCOUNTS.some(a => a.MaTaiKhoan !== staffItem.MaTaiKhoan && a.Email.toLowerCase() === updates.Email.toLowerCase() && a.KhaDung !== 0);
       if (emailExists) {
-        throw new Error('Lỗi: Email đã được đăng ký bởi nhân viên khác!');
+        throw new Error('Lỗi: Email đã được đăng ký bởi tài khoản khác!');
       }
     }
 
-    if (updates.SoDienThoai) {
-      const phoneExists = STAFF.some(s => s.MaNhanVien !== maNhanVien && s.SoDienThoai === updates.SoDienThoai && s.KhaDung !== 0);
+    if (updates.SoDienThoai && aIndex !== -1) {
+      const phoneExists = ACCOUNTS.some(a => a.MaTaiKhoan !== staffItem.MaTaiKhoan && a.SoDienThoai === updates.SoDienThoai && a.KhaDung !== 0);
       if (phoneExists) {
-        throw new Error('Lỗi: Số điện thoại đã được đăng ký bởi nhân viên khác!');
+        throw new Error('Lỗi: Số điện thoại đã được đăng ký bởi tài khoản khác!');
       }
     }
 
-    STAFF[index] = { 
-      ...STAFF[index], 
-      ...updates,
-      NgayCapNhat: new Date().toISOString().replace('T', ' ').substring(0, 19)
+    const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+    // Update staff fields
+    STAFF[sIndex] = {
+      ...STAFF[sIndex],
+      ChucVu: updates.ChucVu !== undefined ? updates.ChucVu : STAFF[sIndex].ChucVu,
+      KhaDung: updates.KhaDung !== undefined ? updates.KhaDung : STAFF[sIndex].KhaDung,
+      NgayCapNhat: nowStr
     };
-    return STAFF[index];
+
+    // Update account fields
+    if (aIndex !== -1) {
+      ACCOUNTS[aIndex] = {
+        ...ACCOUNTS[aIndex],
+        HoTen: updates.HoTen !== undefined ? updates.HoTen : ACCOUNTS[aIndex].HoTen,
+        Email: updates.Email !== undefined ? updates.Email : ACCOUNTS[aIndex].Email,
+        SoDienThoai: updates.SoDienThoai !== undefined ? updates.SoDienThoai : ACCOUNTS[aIndex].SoDienThoai,
+        NgaySinh: updates.NgaySinh !== undefined ? updates.NgaySinh : ACCOUNTS[aIndex].NgaySinh,
+        GioiTinh: updates.GioiTinh !== undefined ? updates.GioiTinh : ACCOUNTS[aIndex].GioiTinh,
+        MatKhau: updates.MatKhau !== undefined ? updates.MatKhau : ACCOUNTS[aIndex].MatKhau,
+        Role: updates.Role !== undefined ? updates.Role : ACCOUNTS[aIndex].Role,
+        NgayCapNhat: nowStr
+      };
+    }
+
+    return {
+      ...(aIndex !== -1 ? ACCOUNTS[aIndex] : {}),
+      ...STAFF[sIndex],
+      KhaDung: STAFF[sIndex].KhaDung
+    };
   },
 
   // Metadata/Constants
