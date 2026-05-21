@@ -1,39 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import Modal from '../../components/Admin/Common/Modal';
 import AdminTable from '../../components/Admin/Common/AdminTable';
 import StatusBadge from '../../components/Admin/Common/StatusBadge';
-import { Search, UserX, UserCheck, Key, History, X, CheckSquare, AlertTriangle } from 'lucide-react';
-
-const mockCustomers = [
-  { MaKhachHang: 'KH001', HoTen: 'Phạm Minh Hoàng', Email: 'hoang.pham@gmail.com', SoDienThoai: '0912345678', DiemTichLuy: 120, TrangThai: 'Active' },
-  { MaKhachHang: 'KH002', HoTen: 'Nguyễn Diệp Chi', Email: 'chi.nd@gmail.com', SoDienThoai: '0987654321', DiemTichLuy: 450, TrangThai: 'Active' },
-  { MaKhachHang: 'KH003', HoTen: 'Lê Anh Đức', Email: 'duc.la@gmail.com', SoDienThoai: '0901234567', DiemTichLuy: 0, TrangThai: 'Banned' },
-  { MaKhachHang: 'KH004', HoTen: 'Vũ Hoài Nam', Email: 'nam.vh@gmail.com', SoDienThoai: '0934567890', DiemTichLuy: 95, TrangThai: 'Active' },
-  { MaKhachHang: 'KH005', HoTen: 'Đỗ Thùy Linh', Email: 'linh.dt@gmail.com', SoDienThoai: '0978901234', DiemTichLuy: 880, TrangThai: 'Active' }
-];
-
-const mockCustomerTransactions = {
-  'KH001': [
-    { MaDatVe: 'BK9021', NgayDat: '2026-05-18 19:30', Phim: 'Lật Mặt 7: Một Điều Ước', Ghe: 'F08, F09', TongTien: 210000, PTThanhToan: 'VNPay', TrangThai: 'Thành công' },
-    { MaDatVe: 'BK8902', NgayDat: '2026-05-10 14:00', Phim: 'Hành Tinh Khỉ: Vương Quốc Mới', Ghe: 'G03', TongTien: 115000, PTThanhToan: 'MoMo', TrangThai: 'Thành công' }
-  ],
-  'KH002': [
-    { MaDatVe: 'BK9102', NgayDat: '2026-05-20 20:15', Phim: 'Dune: Hành Tinh Cát 2', Ghe: 'H10, H11', TongTien: 290000, PTThanhToan: 'Card', TrangThai: 'Thành công' },
-    { MaDatVe: 'BK8810', NgayDat: '2026-05-05 18:00', Phim: 'Vây Hãm: Kẻ Trừng Phạt', Ghe: 'E05', TongTien: 95000, PTThanhToan: 'MoMo', TrangThai: 'Đã hoàn tiền' }
-  ],
-  'KH003': [],
-  'KH004': [
-    { MaDatVe: 'BK9045', NgayDat: '2026-05-19 17:30', Phim: 'Kung Fu Panda 4', Ghe: 'D01, D02', TongTien: 170000, PTThanhToan: 'VNPay', TrangThai: 'Thành công' }
-  ],
-  'KH005': [
-    { MaDatVe: 'BK9111', NgayDat: '2026-05-21 09:30', Phim: 'Lật Mặt 7: Một Điều Ước', Ghe: 'VIP F01, VIP F02', TongTien: 240000, PTThanhToan: 'VNPay', TrangThai: 'Thành công' },
-    { MaDatVe: 'BK9001', NgayDat: '2026-05-15 21:00', Phim: 'Dune: Hành Tinh Cát 2', Ghe: 'I12, I13', TongTien: 310000, PTThanhToan: 'Card', TrangThai: 'Thành công' }
-  ]
-};
+import adminService from '../../services/adminService';
+import { Search, UserX, UserCheck, Key, History, X, CheckSquare, AlertTriangle, Mail } from 'lucide-react';
 
 const Customers = () => {
-  const [customers, setCustomers] = useState(mockCustomers);
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   
@@ -42,6 +17,25 @@ const Customers = () => {
   const [isLockModalOpen, setIsLockModalOpen] = useState(false);
   const [selectedCust, setSelectedCust] = useState(null);
   const [lockReason, setLockReason] = useState('');
+
+  // Transactions state
+  const [transactions, setTransactions] = useState([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
+
+  const loadCustomers = async () => {
+    try {
+      const data = await adminService.getCustomers();
+      setCustomers(data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Failed to load customers:", error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCustomers();
+  }, []);
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -52,39 +46,55 @@ const Customers = () => {
     alert(`Đã đặt lại mật khẩu thành công cho ${cust.HoTen}!\nMật khẩu mới tạm thời là: ${tempPass}\n(Thông báo đã được gửi đến email ${cust.Email})`);
   };
 
-  const handleToggleLockStatus = () => {
-    if (!selectedCust) return;
-    const newStatus = selectedCust.TrangThai === 'Active' ? 'Banned' : 'Active';
-    
-    setCustomers(prev => prev.map(c => 
-      c.MaKhachHang === selectedCust.MaKhachHang ? { ...c, TrangThai: newStatus } : c
-    ));
-    
-    setIsLockModalOpen(false);
-    setLockReason('');
-    
-    alert(`Đã ${newStatus === 'Banned' ? 'khóa' : 'mở khóa'} tài khoản của ${selectedCust.HoTen} thành công.`);
+  const handleToggleLockStatus = async () => {
+    if (!selectedCust || !lockReason.trim()) return;
+    try {
+      const result = await adminService.lockCustomerAccount(selectedCust.MaKhachHang, lockReason);
+      await loadCustomers();
+      
+      setIsLockModalOpen(false);
+      setLockReason('');
+      
+      alert(
+        `KHÓA TÀI KHOẢN THÀNH CÔNG!\n\n` +
+        `1. [CSDL - KHACHHANG]: Đã cập nhật KhaDung = 0 và lưu LyDoKhoa: "${result.reason}".\n` +
+        `2. [HỆ THỐNG EMAIL]: Đã gửi thư thông báo chi tiết lý do khóa đến khách hàng tại địa chỉ email: ${result.email}.`
+      );
+    } catch (error) {
+      alert("Lỗi khi khóa tài khoản: " + error.message);
+    }
   };
 
-  const openLockModal = (cust) => {
+  const openLockModal = async (cust) => {
     setSelectedCust(cust);
     if (cust.TrangThai === 'Active') {
       setLockReason('');
       setIsLockModalOpen(true);
     } else {
-      // Unban directly or via alert confirmation
       if (window.confirm(`Bạn có chắc chắn muốn mở khóa tài khoản cho ${cust.HoTen}?`)) {
-        setCustomers(prev => prev.map(c => 
-          c.MaKhachHang === cust.MaKhachHang ? { ...c, TrangThai: 'Active' } : c
-        ));
-        alert(`Đã mở khóa tài khoản của ${cust.HoTen} thành công.`);
+        try {
+          await adminService.unlockCustomerAccount(cust.MaKhachHang);
+          await loadCustomers();
+          alert(`Đã mở khóa tài khoản của ${cust.HoTen} thành công. Trạng thái đã chuyển sang Đang hoạt động (KhaDung = 1).`);
+        } catch (error) {
+          alert("Lỗi khi mở khóa tài khoản: " + error.message);
+        }
       }
     }
   };
 
-  const openHistoryDrawer = (cust) => {
+  const openHistoryDrawer = async (cust) => {
     setSelectedCust(cust);
     setIsHistoryOpen(true);
+    setLoadingTransactions(true);
+    try {
+      const trans = await adminService.getCustomerTransactions(cust.MaKhachHang);
+      setTransactions(trans);
+    } catch (error) {
+      alert("Lỗi tải lịch sử giao dịch: " + error.message);
+    } finally {
+      setLoadingTransactions(false);
+    }
   };
 
   // Filter customers
@@ -158,6 +168,17 @@ const Customers = () => {
     }
   ];
 
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64 text-slate-500">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500 mr-4"></div>
+          Đang tải danh sách khách hàng...
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
       <div className="mb-8">
@@ -205,13 +226,18 @@ const Customers = () => {
             </div>
 
             <div className="flex-grow overflow-y-auto space-y-4 pr-1 no-scrollbar">
-              {mockCustomerTransactions[selectedCust?.MaKhachHang]?.length === 0 ? (
+              {loadingTransactions ? (
+                <div className="h-64 flex justify-center items-center text-slate-500">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500 mr-3"></div>
+                  Đang tải giao dịch...
+                </div>
+              ) : transactions.length === 0 ? (
                 <div className="h-64 flex flex-col justify-center items-center text-slate-600 border border-dashed border-white/5 rounded-3xl">
                   <CheckSquare size={32} className="mb-2" />
                   <span>Chưa có giao dịch nào được thực hiện.</span>
                 </div>
               ) : (
-                mockCustomerTransactions[selectedCust?.MaKhachHang]?.map((t) => (
+                transactions.map((t) => (
                   <div key={t.MaDatVe} className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-all">
                     <div className="flex justify-between items-start mb-3">
                       <div>
@@ -219,7 +245,7 @@ const Customers = () => {
                         <h4 className="font-bold text-white text-sm mt-1">{t.Phim}</h4>
                       </div>
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        t.TrangThai === 'Thành công' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-white/5 text-slate-500'
+                        t.TrangThai === 'Thành công' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-white/5 text-slate-500 border border-white/5'
                       }`}>
                         {t.TrangThai}
                       </span>
@@ -252,11 +278,11 @@ const Customers = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Lý do khóa tài khoản</label>
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Lý do khóa tài khoản (Bắt buộc)</label>
             <textarea 
               required
               className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-slate-300 text-sm min-h-[100px]"
-              placeholder="VD: Nghi ngờ giao dịch gian lận, vi phạm điều khoản dịch vụ..."
+              placeholder="Nhập lý do chi tiết..."
               value={lockReason}
               onChange={e => setLockReason(e.target.value)}
             />
@@ -272,9 +298,9 @@ const Customers = () => {
             </button>
             <button 
               type="button"
-              disabled={!lockReason}
+              disabled={!lockReason.trim()}
               onClick={handleToggleLockStatus}
-              className="flex-grow py-3 rounded-xl font-bold bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:hover:bg-red-500 text-white transition-all shadow-lg shadow-red-500/20 text-xs uppercase tracking-widest cursor-pointer"
+              className="flex-grow py-3 rounded-xl font-bold bg-red-500 hover:bg-red-600 disabled:bg-slate-800 disabled:text-slate-600 disabled:opacity-50 text-white transition-all shadow-lg shadow-red-500/20 text-xs uppercase tracking-widest cursor-pointer"
             >
               Xác nhận Khóa
             </button>
