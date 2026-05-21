@@ -99,3 +99,15 @@ export const STAFF = [
   { MaNhanVien: 'NV03', MaTaiKhoan: 'TK03', ChucVu: 'Kỹ thuật viên', KhaDung: 0, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
 ];
 
+export const SHIFTS = [
+  { MaCaLamViec: 'C01', TenCa: 'Ca Sáng', GioBatDau: '08:00:00', GioKetThuc: '14:00:00', SoNguoiToiDa: 5, KhaDung: 1, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
+  { MaCaLamViec: 'C02', TenCa: 'Ca Chiều', GioBatDau: '14:00:00', GioKetThuc: '20:00:00', SoNguoiToiDa: 5, KhaDung: 1, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
+  { MaCaLamViec: 'C03', TenCa: 'Ca Tối', GioBatDau: '20:00:00', GioKetThuc: '02:00:00', SoNguoiToiDa: 3, KhaDung: 1, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
+];
+
+export const SHIFT_DETAILS = [
+  { MaChiTietCa: 'CTC01', MaNhanVien: 'NV01', MaCaLamViec: 'C01', NgayLam: '2026-05-21', GhiChu: 'Trực quầy chính', KhaDung: 1, NgayLap: null, KieuLap: null, NgayTao: '2026-05-20 10:00:00', NgayCapNhat: null },
+  { MaChiTietCa: 'CTC02', MaNhanVien: 'NV02', MaCaLamViec: 'C02', NgayLam: '2026-05-21', GhiChu: 'Bán vé + bắp nước', KhaDung: 1, NgayLap: null, KieuLap: null, NgayTao: '2026-05-20 11:00:00', NgayCapNhat: null },
+  { MaChiTietCa: 'CTC03', MaNhanVien: 'NV02', MaCaLamViec: 'C03', NgayLam: '2026-05-22', GhiChu: 'Ca tối tăng cường', KhaDung: 0, NgayLap: null, KieuLap: null, NgayTao: '2026-05-21 08:30:00', NgayCapNhat: '2026-05-21 15:00:00' },
+];
+
