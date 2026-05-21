@@ -156,7 +156,7 @@ const Rooms = () => {
         <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${
           room.KhaDung === 1 ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'
         }`}>
-          {room.KhaDung === 1 ? '1 (Khả dụng)' : '0 (Không khả dụng)'}
+          {room.KhaDung === 1 ? '1 (Khả dụng)' : '0 (Chưa khả dụng)'}
         </span>
       )
     },
@@ -223,7 +223,7 @@ const Rooms = () => {
       {loading ? (
         <div className="bg-white/5 border border-white/5 rounded-3xl h-64 animate-pulse"></div>
       ) : (
-        <AdminTable columns={columns} data={rooms.filter(r => r.KhaDung !== 0)} rowKey="MaPhongChieu" />
+        <AdminTable columns={columns} data={rooms} rowKey="MaPhongChieu" />
       )}
 
       <Modal 
@@ -304,7 +304,7 @@ const Rooms = () => {
                 onChange={handleChange}
               >
                 <option value={1} className="bg-[#0f1117]">1 (Khả dụng)</option>
-                <option value={0} className="bg-[#0f1117]">0 (Không khả dụng)</option>
+                <option value={0} className="bg-[#0f1117]">0 (Chưa khả dụng)</option>
               </select>
             </div>
           </div>
