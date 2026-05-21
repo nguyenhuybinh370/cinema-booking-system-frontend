@@ -111,3 +111,14 @@ export const SHIFT_DETAILS = [
   { MaChiTietCa: 'CTC03', MaNhanVien: 'NV02', MaCaLamViec: 'C03', NgayLam: '2026-05-22', GhiChu: 'Ca tối tăng cường', KhaDung: 0, NgayLap: null, KieuLap: null, NgayTao: '2026-05-21 08:30:00', NgayCapNhat: '2026-05-21 15:00:00' },
 ];
 
+export const SHOWTIMES = [
+  { MaSuatChieu: 'ST01', MaPhim: 'M01', MaPhongChieu: 'PC01', NgayChieu: '2026-05-22', GioChieu: '09:00:00', GioKetThuc: '10:52:00', MaLoaiNgay: 'LN01', GiaVeCoBan: 85000, KhaDung: 1, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
+  { MaSuatChieu: 'ST02', MaPhim: 'M02', MaPhongChieu: 'PC01', NgayChieu: '2026-05-22', GioChieu: '12:00:00', GioKetThuc: '14:25:00', MaLoaiNgay: 'LN01', GiaVeCoBan: 85000, KhaDung: 1, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
+  { MaSuatChieu: 'ST03', MaPhim: 'M01', MaPhongChieu: 'PC02', NgayChieu: '2026-05-22', GioChieu: '10:30:00', GioKetThuc: '12:22:00', MaLoaiNgay: 'LN01', GiaVeCoBan: 85000, KhaDung: 1, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
+];
+
+export const SHOWTIME_SEATS = [
+  { MaGheSuatChieu: 'GSC_ST02_A1', MaSuatChieu: 'ST02', MaGhe: 'PC01-A1', TrangThai: 1, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
+  { MaGheSuatChieu: 'GSC_ST02_A2', MaSuatChieu: 'ST02', MaGhe: 'PC01-A2', TrangThai: 2, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
+];
+
