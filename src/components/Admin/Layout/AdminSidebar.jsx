@@ -8,7 +8,10 @@ import {
   CalendarDays, 
   BarChart3,
   LogOut,
-  Grid3X3
+  Grid3X3,
+  Clock,
+  UserCheck,
+  Receipt
 } from 'lucide-react';
 
 const AdminSidebar = () => {
@@ -18,7 +21,10 @@ const AdminSidebar = () => {
     { name: 'Phim', icon: Film, path: '/admin/movies' },
     { name: 'Bảng giá', icon: BadgeDollarSign, path: '/admin/pricing' },
     { name: 'Nhân sự', icon: Users, path: '/admin/personnel' },
+    { name: 'Ca làm việc', icon: Clock, path: '/admin/shifts' },
     { name: 'Suất chiếu', icon: CalendarDays, path: '/admin/showtimes' },
+    { name: 'Khách hàng', icon: UserCheck, path: '/admin/customers' },
+    { name: 'Giao dịch', icon: Receipt, path: '/admin/transactions' },
     { name: 'Thống kê', icon: BarChart3, path: '/admin/stats' },
   ];
 

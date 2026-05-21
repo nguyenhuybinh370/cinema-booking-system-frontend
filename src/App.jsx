@@ -14,6 +14,9 @@ import Personnel from './pages/Admin/Personnel'
 import Showtimes from './pages/Admin/Showtimes'
 import Stats from './pages/Admin/Stats'
 import SeatMapTemplates from './pages/Admin/SeatMapTemplates'
+import Shifts from './pages/Admin/Shifts'
+import Customers from './pages/Admin/Customers'
+import Transactions from './pages/Admin/Transactions'
 
 function App() {
   return (
@@ -35,7 +38,10 @@ function App() {
 
         <Route path="/admin/pricing" element={<Pricing />} />
         <Route path="/admin/personnel" element={<Personnel />} />
+        <Route path="/admin/shifts" element={<Shifts />} />
         <Route path="/admin/showtimes" element={<Showtimes />} />
+        <Route path="/admin/customers" element={<Customers />} />
+        <Route path="/admin/transactions" element={<Transactions />} />
         <Route path="/admin/stats" element={<Stats />} />
       </Routes>
 
