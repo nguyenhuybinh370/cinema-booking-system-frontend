@@ -1,10 +1,10 @@
 
 const AdminTable = ({ columns, data, rowKey, onRowClick }) => {
   return (
-    <div className="bg-[#0f1117] border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
-      <table className="w-full text-left">
+    <div className="bg-[#0f1117] border border-white/5 rounded-3xl overflow-x-auto custom-scrollbar shadow-2xl">
+      <table className="w-full text-left border-collapse min-w-max">
         <thead>
-          <tr className="bg-white/5 border-b border-white/5">
+          <tr className="bg-white/5 border-b border-white/5 whitespace-nowrap">
             {columns.map((col, idx) => (
               <th 
                 key={idx} 
@@ -20,7 +20,7 @@ const AdminTable = ({ columns, data, rowKey, onRowClick }) => {
             <tr 
               key={row[rowKey]} 
               onClick={() => onRowClick && onRowClick(row)}
-              className={`group hover:bg-white/[0.02] transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
+              className={`group hover:bg-white/[0.02] transition-colors whitespace-nowrap ${onRowClick ? 'cursor-pointer' : ''}`}
             >
               {columns.map((col, idx) => (
                 <td key={idx} className={`px-6 py-4 ${col.className || ''}`}>
