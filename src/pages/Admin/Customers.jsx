@@ -4,7 +4,7 @@ import Modal from '../../components/Admin/Common/Modal';
 import AdminTable from '../../components/Admin/Common/AdminTable';
 import StatusBadge from '../../components/Admin/Common/StatusBadge';
 import adminService from '../../services/adminService';
-import { Search, UserX, UserCheck, Key, History, X, CheckSquare, AlertTriangle, Mail } from 'lucide-react';
+import { Search, UserX, UserCheck, History, X, CheckSquare, AlertTriangle } from 'lucide-react';
 
 const Customers = () => {
   const [customers, setCustomers] = useState([]);
@@ -41,10 +41,7 @@ const Customers = () => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   };
 
-  const handleResetPassword = (cust) => {
-    const tempPass = Math.random().toString(36).slice(-8);
-    alert(`Đã đặt lại mật khẩu thành công cho ${cust.HoTen}!\nMật khẩu mới tạm thời là: ${tempPass}\n(Thông báo đã được gửi đến email ${cust.Email})`);
-  };
+
 
   const handleToggleLockStatus = async () => {
     if (!selectedCust || !lockReason.trim()) return;
@@ -144,13 +141,6 @@ const Customers = () => {
             title="Lịch sử mua vé"
           >
             <History size={18} />
-          </button>
-          <button 
-            onClick={() => handleResetPassword(c)}
-            className="p-2 hover:bg-white/5 text-slate-500 hover:text-white rounded-xl transition-all cursor-pointer"
-            title="Reset mật khẩu"
-          >
-            <Key size={18} />
           </button>
           <button 
             onClick={() => openLockModal(c)}
