@@ -1,11 +1,11 @@
-import { 
-  ADMIN_MOVIES, 
-  ROOMS, 
-  STAFF, 
+import {
+  ADMIN_MOVIES,
+  ROOMS,
+  STAFF,
   ACCOUNTS,
-  SEAT_MAPS, 
-  ROOM_TYPES, 
-  SEAT_TYPES, 
+  SEAT_MAPS,
+  ROOM_TYPES,
+  SEAT_TYPES,
   DAY_TYPES,
   SHIFTS,
   SHIFT_DETAILS,
@@ -13,7 +13,8 @@ import {
   SHOWTIME_SEATS,
   CUSTOMERS,
   TICKET_RECEIPTS,
-  TICKET_DETAILS
+  TICKET_DETAILS,
+  TRANSACTIONS
 } from '../constants/adminMockData';
 
 // Helper to simulate API delay
@@ -93,8 +94,8 @@ const adminService = {
       }
     }
 
-    ADMIN_MOVIES[index] = { 
-      ...ADMIN_MOVIES[index], 
+    ADMIN_MOVIES[index] = {
+      ...ADMIN_MOVIES[index],
       ...updates,
       KhaDung: updates.KhaDung !== undefined ? parseInt(updates.KhaDung, 10) : ADMIN_MOVIES[index].KhaDung,
       NgayCapNhat: new Date().toISOString().replace('T', ' ').substring(0, 19)
@@ -154,9 +155,9 @@ const adminService = {
     if (exists) {
       throw new Error('Lỗi: Tên phòng chiếu đã tồn tại!');
     }
-    
-    ROOMS[index] = { 
-      ...ROOMS[index], 
+
+    ROOMS[index] = {
+      ...ROOMS[index],
       ...updates,
       NgayCapNhat: new Date().toISOString().replace('T', ' ').substring(0, 19)
     };
@@ -225,7 +226,7 @@ const adminService = {
 
     // Auto-generate MaTaiKhoan
     const nextAccId = `TK${String(ACCOUNTS.length + 1).padStart(2, '0')}`;
-    
+
     // Create new account
     const newAccount = {
       MaTaiKhoan: nextAccId,
@@ -361,8 +362,8 @@ const adminService = {
         throw new Error('Lỗi: Tên loại phòng đã tồn tại trong hệ thống!');
       }
     }
-    ROOM_TYPES[index] = { 
-      ...ROOM_TYPES[index], 
+    ROOM_TYPES[index] = {
+      ...ROOM_TYPES[index],
       ...updates,
       NgayCapNhat: new Date().toISOString().replace('T', ' ').substring(0, 19)
     };
@@ -414,8 +415,8 @@ const adminService = {
         throw new Error('Lỗi: Tên loại ghế đã tồn tại trong hệ thống!');
       }
     }
-    SEAT_TYPES[index] = { 
-      ...SEAT_TYPES[index], 
+    SEAT_TYPES[index] = {
+      ...SEAT_TYPES[index],
       ...updates,
       NgayCapNhat: new Date().toISOString().replace('T', ' ').substring(0, 19)
     };
@@ -466,8 +467,8 @@ const adminService = {
         throw new Error('Lỗi: Tên loại ngày đã tồn tại trong hệ thống!');
       }
     }
-    DAY_TYPES[index] = { 
-      ...DAY_TYPES[index], 
+    DAY_TYPES[index] = {
+      ...DAY_TYPES[index],
       ...updates,
       NgayCapNhat: new Date().toISOString().replace('T', ' ').substring(0, 19)
     };
@@ -607,10 +608,10 @@ const adminService = {
     }
 
     // Check duplicate active assignment
-    const isDuplicate = SHIFT_DETAILS.some(sd => 
-      sd.MaNhanVien === detail.MaNhanVien && 
-      sd.MaCaLamViec === detail.MaCaLamViec && 
-      sd.NgayLam === detail.NgayLam && 
+    const isDuplicate = SHIFT_DETAILS.some(sd =>
+      sd.MaNhanVien === detail.MaNhanVien &&
+      sd.MaCaLamViec === detail.MaCaLamViec &&
+      sd.NgayLam === detail.NgayLam &&
       sd.KhaDung === 1
     );
     if (isDuplicate) {
@@ -618,9 +619,9 @@ const adminService = {
     }
 
     // Check shift capacity limit
-    const activeCount = SHIFT_DETAILS.filter(sd => 
-      sd.MaCaLamViec === detail.MaCaLamViec && 
-      sd.NgayLam === detail.NgayLam && 
+    const activeCount = SHIFT_DETAILS.filter(sd =>
+      sd.MaCaLamViec === detail.MaCaLamViec &&
+      sd.NgayLam === detail.NgayLam &&
       sd.KhaDung === 1
     ).length;
 
@@ -667,9 +668,9 @@ const adminService = {
         throw new Error('Lỗi: Ca làm việc không tồn tại!');
       }
 
-      const activeCount = SHIFT_DETAILS.filter(sd => 
-        sd.MaCaLamViec === registration.MaCaLamViec && 
-        sd.NgayLam === registration.NgayLam && 
+      const activeCount = SHIFT_DETAILS.filter(sd =>
+        sd.MaCaLamViec === registration.MaCaLamViec &&
+        sd.NgayLam === registration.NgayLam &&
         sd.KhaDung === 1
       ).length;
 
@@ -698,7 +699,7 @@ const adminService = {
   // Showtimes CRUD (SUATCHIEU & GHE_SUATCHIEU)
   getShowtimes: async () => {
     await delay();
-    
+
     // Ensure all seed showtimes have seats initialized
     SHOWTIMES.forEach(st => {
       // Internal call to seed seats if they don't exist
@@ -716,7 +717,7 @@ const adminService = {
               for (let c = 0; c < cols; c++) {
                 const seatId = `${room.MaPhongChieu}-${rowChar}${c + 1}`;
                 const seatOverride = overrides[seatId] || {};
-                
+
                 // If it is ST02, we seeded A1 and A2 with status in mock file, so check if already present
                 const exists = SHOWTIME_SEATS.some(s => s.MaSuatChieu === st.MaSuatChieu && s.MaGhe === seatId);
                 if (!exists) {
@@ -741,7 +742,7 @@ const adminService = {
       const movie = ADMIN_MOVIES.find(m => m.MaPhim === st.MaPhim);
       const room = ROOMS.find(r => r.MaPhongChieu === st.MaPhongChieu);
       const dayType = DAY_TYPES.find(d => d.MaLoaiNgay === st.MaLoaiNgay);
-      
+
       const seats = SHOWTIME_SEATS.filter(s => s.MaSuatChieu === st.MaSuatChieu);
       const bookedCount = seats.filter(s => s.TrangThai === 1 || s.TrangThai === 2).length;
 
@@ -773,7 +774,7 @@ const adminService = {
     const tEnd = showtime.GioKetThuc.length === 5 ? `${showtime.GioKetThuc}:00` : showtime.GioKetThuc;
 
     // Check time overlap conflict
-    const conflicts = SHOWTIMES.filter(st => 
+    const conflicts = SHOWTIMES.filter(st =>
       st.MaPhongChieu === showtime.MaPhongChieu &&
       st.NgayChieu === showtime.NgayChieu &&
       st.KhaDung === 1 &&
@@ -822,7 +823,7 @@ const adminService = {
           for (let c = 0; c < cols; c++) {
             const seatId = `${room.MaPhongChieu}-${rowChar}${c + 1}`;
             const seatOverride = overrides[seatId] || {};
-            
+
             SHOWTIME_SEATS.push({
               MaGheSuatChieu: `GSC_${nextId}_${rowChar}${c + 1}`,
               MaSuatChieu: nextId,
@@ -852,11 +853,11 @@ const adminService = {
       throw new Error('Lỗi ràng buộc: Không thể chỉnh sửa suất chiếu này vì đã có vé bán ra hoặc khách hàng đang giữ ghế (Kiểm tra trong bảng GHE_SUATCHIEU)!');
     }
 
-    const tStart = updates.GioChieu !== undefined 
-      ? (updates.GioChieu.length === 5 ? `${updates.GioChieu}:00` : updates.GioChieu) 
+    const tStart = updates.GioChieu !== undefined
+      ? (updates.GioChieu.length === 5 ? `${updates.GioChieu}:00` : updates.GioChieu)
       : showtime.GioChieu;
-    const tEnd = updates.GioKetThuc !== undefined 
-      ? (updates.GioKetThuc.length === 5 ? `${updates.GioKetThuc}:00` : updates.GioKetThuc) 
+    const tEnd = updates.GioKetThuc !== undefined
+      ? (updates.GioKetThuc.length === 5 ? `${updates.GioKetThuc}:00` : updates.GioKetThuc)
       : showtime.GioKetThuc;
     const room = updates.MaPhongChieu !== undefined ? updates.MaPhongChieu : showtime.MaPhongChieu;
     const date = updates.NgayChieu !== undefined ? updates.NgayChieu : showtime.NgayChieu;
@@ -864,7 +865,7 @@ const adminService = {
 
     // Check overlap conflict against other showtimes
     if (khaDung === 1) {
-      const conflicts = SHOWTIMES.filter(st => 
+      const conflicts = SHOWTIMES.filter(st =>
         st.MaSuatChieu !== id &&
         st.MaPhongChieu === room &&
         st.NgayChieu === date &&
@@ -904,7 +905,7 @@ const adminService = {
             for (let c = 0; c < cols; c++) {
               const seatId = `${newRoom.MaPhongChieu}-${rowChar}${c + 1}`;
               const seatOverride = overrides[seatId] || {};
-              
+
               SHOWTIME_SEATS.push({
                 MaGheSuatChieu: `GSC_${id}_${rowChar}${c + 1}`,
                 MaSuatChieu: id,
@@ -1038,6 +1039,53 @@ const adminService = {
         TongTien: parseFloat(r.TongTien),
         PTThanhToan: 'VNPay',
         TrangThai: r.TrangThai === 'Đã TT' ? 'Thành công' : r.TrangThai === 'Đã hủy' ? 'Đã hủy' : r.TrangThai
+      };
+    });
+  },
+
+  getTransactions: async () => {
+    await delay();
+    return TRANSACTIONS.map(tx => {
+      const receipt = TICKET_RECEIPTS.find(r => r.MaPhieuDatVe === tx.MaPhieuDatVe);
+      let customerName = 'N/A';
+      let movieName = 'N/A';
+      let seatsList = [];
+
+      if (receipt) {
+        const customer = CUSTOMERS.find(c => c.MaKhachHang === receipt.MaKhachHang);
+        if (customer) {
+          const account = ACCOUNTS.find(acc => acc.MaTaiKhoan === customer.MaTaiKhoan);
+          if (account) {
+            customerName = account.HoTen;
+          }
+        }
+
+        const details = TICKET_DETAILS.filter(d => d.MaPhieuDatVe === receipt.MaPhieuDatVe);
+        details.forEach(det => {
+          const showtimeSeat = SHOWTIME_SEATS.find(s => s.MaGheSuatChieu === det.MaGheSuatChieu);
+          if (showtimeSeat) {
+            const label = showtimeSeat.MaGhe.split('-')[1] || showtimeSeat.MaGhe;
+            seatsList.push(label);
+
+            if (movieName === 'N/A') {
+              const showtime = SHOWTIMES.find(st => st.MaSuatChieu === showtimeSeat.MaSuatChieu);
+              if (showtime) {
+                const movie = ADMIN_MOVIES.find(m => m.MaPhim === showtime.MaPhim);
+                if (movie) {
+                  movieName = movie.TenPhim;
+                }
+              }
+            }
+          }
+        });
+      }
+
+      return {
+        ...tx,
+        KhachHang: customerName,
+        Phim: movieName,
+        Ghe: seatsList.join(', ') || 'N/A',
+        SoTien: parseFloat(tx.SoTien)
       };
     });
   },
