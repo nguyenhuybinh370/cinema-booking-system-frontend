@@ -204,7 +204,7 @@ const Customers = () => {
               <button onClick={() => setIsHistoryOpen(false)} className="p-2 hover:bg-white/5 rounded-xl cursor-pointer"><X size={20} /></button>
             </div>
 
-            <div className="flex-grow overflow-y-auto space-y-4 pr-1">
+            <div className="flex-grow overflow-y-auto space-y-4 pr-1 no-scrollbar">
               {mockCustomerTransactions[selectedCust?.MaKhachHang]?.length === 0 ? (
                 <div className="h-64 flex flex-col justify-center items-center text-slate-600 border border-dashed border-white/5 rounded-3xl">
                   <CheckSquare size={32} className="mb-2" />

@@ -311,7 +311,7 @@ const Movies = () => {
         }}
         title={editingMovie ? "Cập nhật phim" : "Thêm phim mới"}
       >
-        <form onSubmit={handleSubmit} className="space-y-6 max-h-[75vh] overflow-y-auto pr-2 custom-scrollbar">
+        <form onSubmit={handleSubmit} className="space-y-6 max-h-[75vh] overflow-y-auto pr-2 no-scrollbar">
           {errors.submit && (
             <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-4 rounded-xl flex items-center gap-2">
               <AlertCircle size={16} className="shrink-0" />

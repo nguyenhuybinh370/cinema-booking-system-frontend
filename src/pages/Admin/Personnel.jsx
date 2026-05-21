@@ -297,7 +297,7 @@ const Personnel = () => {
               </div>
             </div>
 
-            <div className="space-y-4 flex-grow overflow-y-auto pr-1">
+            <div className="space-y-4 flex-grow overflow-y-auto pr-1 no-scrollbar">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 mb-4">Danh sách quyền hạn</p>
               {permissionsList.map((perm, idx) => (
                 <label key={idx} className="flex items-center justify-between p-4 rounded-xl hover:bg-white/[0.02] cursor-pointer border border-transparent hover:border-white/5 transition-all group">
