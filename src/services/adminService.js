@@ -43,28 +43,56 @@ const adminService = {
   },
   addRoom: async (room) => {
     await delay();
-    ROOMS.push(room);
-    return room;
+    if (!room.TenPhong || room.TenPhong.trim() === '') {
+      throw new Error('Thông tin không hợp lệ: Tên phòng chiếu không được để trống!');
+    }
+    const exists = ROOMS.some(r => r.TenPhong.toLowerCase() === room.TenPhong.toLowerCase() && r.KhaDung !== 0);
+    if (exists) {
+      throw new Error('Lỗi: Phòng chiếu đã tồn tại trong hệ thống!');
+    }
+    const newRoom = {
+      ...room,
+      NgayTao: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      NgayCapNhat: null
+    };
+    ROOMS.push(newRoom);
+    return newRoom;
   },
   updateRoom: async (maPhong, updates) => {
     await delay();
-    const index = ROOMS.findIndex(r => r.MaPhongChieu === maPhong);
-    if (index !== -1) {
-      ROOMS[index] = { ...ROOMS[index], ...updates };
-      return ROOMS[index];
+    if (!updates.TenPhong || updates.TenPhong.trim() === '') {
+      throw new Error('Thông tin không hợp lệ: Tên phòng chiếu không được để trống!');
     }
-    throw new Error('Room not found');
+    const index = ROOMS.findIndex(r => r.MaPhongChieu === maPhong);
+    if (index === -1) {
+      throw new Error('Không tìm thấy phòng chiếu');
+    }
+    const exists = ROOMS.some(r => r.MaPhongChieu !== maPhong && r.TenPhong.toLowerCase() === updates.TenPhong.toLowerCase() && r.KhaDung !== 0);
+    if (exists) {
+      throw new Error('Lỗi: Tên phòng chiếu đã tồn tại!');
+    }
+    
+    ROOMS[index] = { 
+      ...ROOMS[index], 
+      ...updates,
+      NgayCapNhat: new Date().toISOString().replace('T', ' ').substring(0, 19)
+    };
+    return ROOMS[index];
   },
   deleteRoom: async (maPhong) => {
     await delay();
     const index = ROOMS.findIndex(r => r.MaPhongChieu === maPhong);
-    if (index !== -1) {
-      // Soft delete: toggle KhaDung or Status
-      ROOMS[index].KhaDung = 0;
-      ROOMS[index].Status = 'Inactive';
-      return true;
+    if (index === -1) {
+      throw new Error('Không tìm thấy phòng chiếu');
     }
-    return false;
+    // Simulation: PC01 has sold tickets in CHITIETDATVE
+    if (maPhong === 'PC01') {
+      throw new Error('Không thể xóa phòng chiếu vì đã có vé bán ra thuộc các suất chiếu của phòng này (Kiểm tra trong bảng CHITIETDATVE)!');
+    }
+    // Soft delete
+    ROOMS[index].KhaDung = 0;
+    ROOMS[index].NgayCapNhat = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    return true;
   },
 
   // Personnel
