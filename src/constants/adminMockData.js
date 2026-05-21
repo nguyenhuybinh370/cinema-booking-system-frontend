@@ -88,7 +88,7 @@ export const ADMIN_MOVIES = [
 ];
 
 export const STAFF = [
-  { MaNhanVien: 'NV01', HoTen: 'Nguyễn Huy Bình', Email: 'binh@cinema.com', SoDienThoai: '0987654321', ChucVu: 'Quản lý rạp', Role: 'Admin', Status: 'Active', KhaDung: 1 },
-  { MaNhanVien: 'NV02', HoTen: 'Trần Thị Hoa', Email: 'hoa@cinema.com', SoDienThoai: '0123456789', ChucVu: 'Nhân viên bán vé', Role: 'Staff', Status: 'Active', KhaDung: 1 },
-  { MaNhanVien: 'NV03', HoTen: 'Lê Văn Tùng', Email: 'tung@cinema.com', SoDienThoai: '0555666777', ChucVu: 'Kỹ thuật viên', Role: 'Manager', Status: 'Inactive', KhaDung: 1 },
+  { MaNhanVien: 'NV01', HoTen: 'Nguyễn Huy Bình', Email: 'binh@cinema.com', SoDienThoai: '0987654321', MatKhau: 'CinemaPlus@2026', NgaySinh: '1995-04-12', GioiTinh: 1, ChucVu: 'Quản lý rạp', Role: 'Admin', Status: 'Active', KhaDung: 1, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
+  { MaNhanVien: 'NV02', HoTen: 'Trần Thị Hoa', Email: 'hoa@cinema.com', SoDienThoai: '0123456789', MatKhau: 'CinemaPlus@2026', NgaySinh: '1998-08-25', GioiTinh: 0, ChucVu: 'Nhân viên bán vé', Role: 'Staff', Status: 'Active', KhaDung: 1, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
+  { MaNhanVien: 'NV03', HoTen: 'Lê Văn Tùng', Email: 'tung@cinema.com', SoDienThoai: '0555666777', MatKhau: 'CinemaPlus@2026', NgaySinh: '1990-11-05', GioiTinh: 1, ChucVu: 'Kỹ thuật viên', Role: 'Manager', Status: 'Inactive', KhaDung: 0, NgayTao: '2026-05-01 09:00:00', NgayCapNhat: null },
 ];

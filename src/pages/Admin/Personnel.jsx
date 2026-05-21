@@ -2,9 +2,22 @@ import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import Modal from '../../components/Admin/Common/Modal';
 import AdminTable from '../../components/Admin/Common/AdminTable';
-import StatusBadge from '../../components/Admin/Common/StatusBadge';
 import adminService from '../../services/adminService';
 import { Search, ShieldCheck, UserX, UserCheck, Edit2, X } from 'lucide-react';
+
+const getNextId = (list, prefix) => {
+  const nums = list
+    .map(item => {
+      const id = item.MaNhanVien;
+      if (id && id.startsWith(prefix)) {
+        const numPart = parseInt(id.substring(prefix.length), 10);
+        return isNaN(numPart) ? 0 : numPart;
+      }
+      return 0;
+    });
+  const max = nums.length > 0 ? Math.max(...nums) : 0;
+  return `${prefix}${String(max + 1).padStart(2, '0')}`;
+};
 
 const Personnel = () => {
   const [staff, setStaff] = useState([]);
@@ -28,7 +41,10 @@ const Personnel = () => {
     Email: '',
     ChucVu: '',
     Role: 'Staff',
-    Status: 'Active'
+    KhaDung: 1,
+    NgaySinh: '',
+    GioiTinh: 1, // 1: Nam, 0: Nữ
+    MatKhau: 'CinemaPlus@2026'
   });
 
   const [staffPermissions, setStaffPermissions] = useState([]);
@@ -58,7 +74,10 @@ const Personnel = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ 
+      ...prev, 
+      [name]: name === 'GioiTinh' || name === 'KhaDung' ? parseInt(value, 10) : value 
+    }));
   };
 
   const handleOpenAdd = () => {
@@ -69,7 +88,10 @@ const Personnel = () => {
       Email: '',
       ChucVu: '',
       Role: 'Staff',
-      Status: 'Active'
+      KhaDung: 1,
+      NgaySinh: '',
+      GioiTinh: 1,
+      MatKhau: 'CinemaPlus@2026'
     });
     setIsModalOpen(true);
   };
@@ -77,22 +99,31 @@ const Personnel = () => {
   const handleOpenEdit = (person) => {
     setEditingStaff(person);
     setFormData({
-      HoTen: person.HoTen,
-      SoDienThoai: person.SoDienThoai,
-      Email: person.Email,
-      ChucVu: person.ChucVu,
-      Role: person.Role,
-      Status: person.Status
+      HoTen: person.HoTen || '',
+      SoDienThoai: person.SoDienThoai || '',
+      Email: person.Email || '',
+      ChucVu: person.ChucVu || '',
+      Role: person.Role || 'Staff',
+      KhaDung: person.KhaDung !== undefined ? person.KhaDung : 1,
+      NgaySinh: person.NgaySinh || '',
+      GioiTinh: person.GioiTinh !== undefined ? person.GioiTinh : 1,
+      MatKhau: person.MatKhau || 'CinemaPlus@2026'
     });
     setIsModalOpen(true);
   };
 
   const handleToggleStatus = async (person) => {
-    const newStatus = person.Status === 'Active' ? 'Inactive' : 'Active';
+    const newKhaDung = person.KhaDung === 1 ? 0 : 1;
+    const actionName = newKhaDung === 0 ? "Vô hiệu hóa" : "Kích hoạt";
+    if (!window.confirm(`Bạn có chắc chắn muốn ${actionName.toLowerCase()} nhân viên ${person.HoTen}?`)) return;
     setLoading(true);
     try {
-      await adminService.updateStaff(person.MaNhanVien, { Status: newStatus });
+      await adminService.updateStaff(person.MaNhanVien, { 
+        KhaDung: newKhaDung,
+        Status: newKhaDung === 1 ? 'Active' : 'Inactive' // Compatibility mapping
+      });
       await loadStaff();
+      alert(`${actionName} nhân viên thành công!`);
     } catch (e) {
       alert("Lỗi: " + e.message);
     } finally {
@@ -105,14 +136,21 @@ const Personnel = () => {
     setLoading(true);
     try {
       if (editingStaff) {
-        await adminService.updateStaff(editingStaff.MaNhanVien, formData);
-      } else {
-        const newCode = Math.floor(1000 + Math.random() * 9000);
-        await adminService.addStaff({
-          MaNhanVien: `NV-${newCode}`,
+        await adminService.updateStaff(editingStaff.MaNhanVien, {
           ...formData,
-          KhaDung: 1
+          Status: formData.KhaDung === 1 ? 'Active' : 'Inactive' // compatibility mapping
         });
+        alert("Cập nhật hồ sơ nhân viên thành công!");
+      } else {
+        const newId = getNextId(staff, 'NV');
+        await adminService.addStaff({
+          MaNhanVien: newId,
+          ...formData,
+          Status: formData.KhaDung === 1 ? 'Active' : 'Inactive', // compatibility mapping
+          NgayTao: new Date().toISOString().replace('T', ' ').substring(0, 19),
+          NgayCapNhat: null
+        });
+        alert("Thêm nhân viên mới thành công!");
       }
       await loadStaff();
       setIsModalOpen(false);
@@ -125,7 +163,6 @@ const Personnel = () => {
 
   const handleOpenPermissions = (person) => {
     setSelectedStaff(person);
-    // Mock user permissions - say they have the first 3 if they are Staff, or all if Admin
     const initialPerms = person.Role === 'Admin'
       ? [...permissionsList]
       : person.Role === 'Manager'
@@ -147,7 +184,6 @@ const Personnel = () => {
     if (!selectedStaff) return;
     setLoading(true);
     try {
-      // In a real app, save permissions mapping. For now, show alert.
       await adminService.updateStaff(selectedStaff.MaNhanVien, {
         Permissions: staffPermissions
       });
@@ -160,7 +196,6 @@ const Personnel = () => {
     }
   };
 
-  // Filter staff list
   const filteredStaff = staff.filter(person => {
     const matchesSearch =
       person.HoTen.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -169,32 +204,63 @@ const Personnel = () => {
 
     const matchesRole = roleFilter === 'All' || person.Role === roleFilter;
 
-    return matchesSearch && matchesRole && person.KhaDung !== 0;
+    return matchesSearch && matchesRole;
   });
 
   const columns = [
     {
+      header: 'Mã NV',
+      accessor: 'MaNhanVien',
+      className: 'text-xs font-mono font-bold text-slate-500'
+    },
+    {
       header: 'Nhân viên',
       render: (person) => (
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white font-bold border border-white/10">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white font-bold border border-white/10 shrink-0">
             {person.HoTen.charAt(0)}
           </div>
           <div className="flex flex-col">
             <span className="font-bold text-white text-sm">{person.HoTen}</span>
-            <span className="text-xs text-slate-500">{person.Email}</span>
+            <span className="text-xs text-slate-500 font-mono">{person.Email}</span>
           </div>
         </div>
+      )
+    },
+    { header: 'Số điện thoại', accessor: 'SoDienThoai', className: 'text-sm text-slate-400 font-mono' },
+    { header: 'Ngày sinh', accessor: 'NgaySinh', className: 'text-sm text-slate-400 font-mono' },
+    {
+      header: 'Giới tính',
+      render: (person) => (
+        <span className="text-sm text-slate-400">
+          {person.GioiTinh === 1 ? 'Nam' : 'Nữ'}
+        </span>
       )
     },
     { header: 'Chức vụ', accessor: 'ChucVu', className: 'text-sm text-slate-400 font-medium' },
     {
       header: 'Vai trò',
-      render: (person) => <StatusBadge status={person.Role} />
+      render: (person) => (
+        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
+          person.Role === 'Admin' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
+          person.Role === 'Manager' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+          'bg-slate-500/10 text-slate-400 border border-white/5'
+        }`}>
+          {person.Role}
+        </span>
+      )
     },
     {
       header: 'Trạng thái',
-      render: (person) => <StatusBadge status={person.Status} />
+      render: (person) => (
+        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black border ${
+          person.KhaDung === 0 
+            ? 'bg-red-500/10 text-red-400 border-red-500/20' 
+            : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+        }`}>
+          {person.KhaDung === 0 ? '0 (Khóa)' : '1 (Khả dụng)'}
+        </span>
+      )
     },
     {
       header: 'Hành động',
@@ -217,13 +283,13 @@ const Personnel = () => {
           </button>
           <button
             onClick={() => handleToggleStatus(person)}
-            className={`p-2 rounded-xl transition-all cursor-pointer ${person.Status === 'Active'
+            className={`p-2 rounded-xl transition-all cursor-pointer ${person.KhaDung === 1
                 ? 'hover:bg-red-500/10 text-slate-500 hover:text-red-500'
                 : 'hover:bg-emerald-500/10 text-slate-500 hover:text-emerald-500'
               }`}
-            title={person.Status === 'Active' ? 'Vô hiệu hóa' : 'Kích hoạt'}
+            title={person.KhaDung === 1 ? 'Vô hiệu hóa' : 'Kích hoạt'}
           >
-            {person.Status === 'Active' ? <UserX size={18} /> : <UserCheck size={18} />}
+            {person.KhaDung === 1 ? <UserX size={18} /> : <UserCheck size={18} />}
           </button>
         </div>
       )
@@ -273,7 +339,9 @@ const Personnel = () => {
       {loading && staff.length === 0 ? (
         <div className="bg-white/5 border border-white/5 rounded-3xl h-64 animate-pulse"></div>
       ) : (
-        <AdminTable columns={columns} data={filteredStaff} rowKey="MaNhanVien" />
+        <div className="overflow-x-auto no-scrollbar">
+          <AdminTable columns={columns} data={filteredStaff} rowKey="MaNhanVien" />
+        </div>
       )}
 
       {/* Permission Panel (Slide-in) */}
@@ -330,6 +398,18 @@ const Personnel = () => {
         title={editingStaff ? "Cập nhật hồ sơ nhân viên" : "Thêm nhân viên mới"}
       >
         <form onSubmit={handleFormSubmit} className="space-y-6">
+          {editingStaff && (
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Mã nhân viên (Không thể sửa)</label>
+              <input
+                type="text"
+                disabled
+                className="w-full bg-white/5 border border-white/5 rounded-xl py-3 px-4 text-slate-500 font-mono text-sm font-bold"
+                value={editingStaff.MaNhanVien}
+              />
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Họ tên</label>
@@ -337,7 +417,7 @@ const Personnel = () => {
                 type="text"
                 name="HoTen"
                 required
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-white font-bold"
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-white font-bold text-sm"
                 placeholder="Nguyễn Văn A"
                 value={formData.HoTen}
                 onChange={handleInputChange}
@@ -349,25 +429,67 @@ const Personnel = () => {
                 type="text"
                 name="SoDienThoai"
                 required
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-white font-mono"
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-white font-mono text-sm"
                 placeholder="0987654321"
                 value={formData.SoDienThoai}
                 onChange={handleInputChange}
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Email đăng nhập</label>
-            <input
-              type="email"
-              name="Email"
-              required
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-white"
-              placeholder="email@cinema.com"
-              value={formData.Email}
-              onChange={handleInputChange}
-            />
+
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Email đăng nhập</label>
+              <input
+                type="email"
+                name="Email"
+                required
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-white text-sm font-mono"
+                placeholder="email@cinema.com"
+                value={formData.Email}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Mật khẩu</label>
+              <input
+                type="password"
+                name="MatKhau"
+                required
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-white text-sm"
+                placeholder="CinemaPlus@2026"
+                value={formData.MatKhau}
+                onChange={handleInputChange}
+              />
+            </div>
           </div>
+
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Ngày sinh</label>
+              <input
+                type="date"
+                name="NgaySinh"
+                required
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-slate-300 text-sm font-mono"
+                value={formData.NgaySinh}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Giới tính</label>
+              <select
+                name="GioiTinh"
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-slate-300 text-sm"
+                value={formData.GioiTinh}
+                onChange={handleInputChange}
+              >
+                <option className="bg-[#0f1117]" value={1}>Nam</option>
+                <option className="bg-[#0f1117]" value={0}>Nữ</option>
+              </select>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Chức vụ</label>
@@ -375,7 +497,7 @@ const Personnel = () => {
                 type="text"
                 name="ChucVu"
                 required
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-white"
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-white text-sm font-medium"
                 placeholder="VD: Quản lý ca"
                 value={formData.ChucVu}
                 onChange={handleInputChange}
@@ -396,11 +518,23 @@ const Personnel = () => {
             </div>
           </div>
 
-          {!editingStaff && (
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Mật khẩu ban đầu</label>
-              <input type="password" disabled className="w-full bg-white/5 border border-white/5 rounded-xl py-3 px-4 text-slate-500" value="CinemaPlus@2026" />
-              <p className="text-[10px] text-slate-600 italic">Mật khẩu mặc định sẽ được gửi qua email nhân viên.</p>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Trạng thái khả dụng (KhaDung)</label>
+            <select
+              name="KhaDung"
+              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-slate-300 text-sm"
+              value={formData.KhaDung}
+              onChange={handleInputChange}
+            >
+              <option className="bg-[#0f1117]" value={1}>1 (Khả dụng)</option>
+              <option className="bg-[#0f1117]" value={0}>0 (Chưa khả dụng)</option>
+            </select>
+          </div>
+
+          {editingStaff && (
+            <div className="grid grid-cols-2 gap-6 text-[10px] text-slate-500 font-mono bg-white/[0.01] p-3 rounded-lg border border-white/5">
+              <div>Ngày tạo: {editingStaff.NgayTao || '--:--'}</div>
+              <div>Ngày cập nhật: {editingStaff.NgayCapNhat || 'Chưa cập nhật'}</div>
             </div>
           )}
 

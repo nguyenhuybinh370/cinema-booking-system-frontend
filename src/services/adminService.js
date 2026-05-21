@@ -176,17 +176,87 @@ const adminService = {
   },
   addStaff: async (person) => {
     await delay();
+    if (!person.HoTen || person.HoTen.trim() === '') {
+      throw new Error('Thông tin không hợp lệ: Họ tên không được để trống!');
+    }
+    if (!person.Email || person.Email.trim() === '') {
+      throw new Error('Thông tin không hợp lệ: Email không được để trống!');
+    }
+    if (!person.SoDienThoai || person.SoDienThoai.trim() === '') {
+      throw new Error('Thông tin không hợp lệ: Số điện thoại không được để trống!');
+    }
+    if (!person.NgaySinh || person.NgaySinh.trim() === '') {
+      throw new Error('Thông tin không hợp lệ: Ngày sinh không được để trống!');
+    }
+    if (person.GioiTinh !== 0 && person.GioiTinh !== 1) {
+      throw new Error('Thông tin không hợp lệ: Giới tính không hợp lệ!');
+    }
+    if (!person.ChucVu || person.ChucVu.trim() === '') {
+      throw new Error('Thông tin không hợp lệ: Chức vụ không được để trống!');
+    }
+    if (!person.MatKhau || person.MatKhau.trim() === '') {
+      throw new Error('Thông tin không hợp lệ: Mật khẩu không được để trống!');
+    }
+
+    const emailExists = STAFF.some(s => s.Email.toLowerCase() === person.Email.toLowerCase() && s.KhaDung !== 0);
+    if (emailExists) {
+      throw new Error('Lỗi: Email đã được đăng ký bởi nhân viên khác!');
+    }
+
+    const phoneExists = STAFF.some(s => s.SoDienThoai === person.SoDienThoai && s.KhaDung !== 0);
+    if (phoneExists) {
+      throw new Error('Lỗi: Số điện thoại đã được đăng ký bởi nhân viên khác!');
+    }
+
     STAFF.push(person);
     return person;
   },
   updateStaff: async (maNhanVien, updates) => {
     await delay();
     const index = STAFF.findIndex(s => s.MaNhanVien === maNhanVien);
-    if (index !== -1) {
-      STAFF[index] = { ...STAFF[index], ...updates };
-      return STAFF[index];
+    if (index === -1) {
+      throw new Error('Không tìm thấy nhân viên');
     }
-    throw new Error('Staff not found');
+
+    if (updates.HoTen !== undefined && (!updates.HoTen || updates.HoTen.trim() === '')) {
+      throw new Error('Thông tin không hợp lệ: Họ tên không được để trống!');
+    }
+    if (updates.Email !== undefined && (!updates.Email || updates.Email.trim() === '')) {
+      throw new Error('Thông tin không hợp lệ: Email không được để trống!');
+    }
+    if (updates.SoDienThoai !== undefined && (!updates.SoDienThoai || updates.SoDienThoai.trim() === '')) {
+      throw new Error('Thông tin không hợp lệ: Số điện thoại không được để trống!');
+    }
+    if (updates.NgaySinh !== undefined && (!updates.NgaySinh || updates.NgaySinh.trim() === '')) {
+      throw new Error('Thông tin không hợp lệ: Ngày sinh không được để trống!');
+    }
+    if (updates.GioiTinh !== undefined && updates.GioiTinh !== 0 && updates.GioiTinh !== 1) {
+      throw new Error('Thông tin không hợp lệ: Giới tính không hợp lệ!');
+    }
+    if (updates.ChucVu !== undefined && (!updates.ChucVu || updates.ChucVu.trim() === '')) {
+      throw new Error('Thông tin không hợp lệ: Chức vụ không được để trống!');
+    }
+
+    if (updates.Email) {
+      const emailExists = STAFF.some(s => s.MaNhanVien !== maNhanVien && s.Email.toLowerCase() === updates.Email.toLowerCase() && s.KhaDung !== 0);
+      if (emailExists) {
+        throw new Error('Lỗi: Email đã được đăng ký bởi nhân viên khác!');
+      }
+    }
+
+    if (updates.SoDienThoai) {
+      const phoneExists = STAFF.some(s => s.MaNhanVien !== maNhanVien && s.SoDienThoai === updates.SoDienThoai && s.KhaDung !== 0);
+      if (phoneExists) {
+        throw new Error('Lỗi: Số điện thoại đã được đăng ký bởi nhân viên khác!');
+      }
+    }
+
+    STAFF[index] = { 
+      ...STAFF[index], 
+      ...updates,
+      NgayCapNhat: new Date().toISOString().replace('T', ' ').substring(0, 19)
+    };
+    return STAFF[index];
   },
 
   // Metadata/Constants
