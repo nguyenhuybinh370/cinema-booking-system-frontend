@@ -61,11 +61,12 @@ export const ADMIN_MOVIES = [
     DaoDien: 'Lý Hải', 
     DienVien: 'Trương Minh Cường, Đinh Y Nhung, Quách Ngọc Tuyên', 
     GioiHanTuoi: 'C16', 
-    Status: 'Showing',
     HinhAnh: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=800',
     NoiDung: 'Câu chuyện về tình cảm gia đình đầy xúc động của bà Hai và 5 người con.',
-    trailerUrl: 'https://www.youtube.com/watch?v=kYpS-ZlK-bU',
-    KhaDung: 1
+    Trailer: 'https://www.youtube.com/watch?v=kYpS-ZlK-bU',
+    KhaDung: 1,
+    NgayTao: '2026-05-01 10:00:00',
+    NgayCapNhat: null
   },
   { 
     MaPhim: 'M02', 
@@ -77,11 +78,12 @@ export const ADMIN_MOVIES = [
     DaoDien: 'Wes Ball', 
     DienVien: 'Owen Teague, Freya Allan, Kevin Durand', 
     GioiHanTuoi: 'P', 
-    Status: 'Showing',
     HinhAnh: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=800',
     NoiDung: 'Nhiều năm sau sự trị vì của Caesar, một chú khỉ trẻ dấn thân vào hành trình định đoạt tương lai.',
-    trailerUrl: 'https://www.youtube.com/watch?v=Kdr5oedn7q8',
-    KhaDung: 1
+    Trailer: 'https://www.youtube.com/watch?v=Kdr5oedn7q8',
+    KhaDung: 1,
+    NgayTao: '2026-05-02 11:30:00',
+    NgayCapNhat: null
   },
 ];
 
