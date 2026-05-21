@@ -1,4 +1,5 @@
 
+import logo from '../../../assets/logo.png';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -32,10 +33,10 @@ const AdminSidebar = () => {
     <aside className="w-64 bg-[#0f1117] border-r border-white/5 flex flex-col h-screen sticky top-0 shrink-0">
       <div className="p-6">
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-black">C+</span>
-          </div>
-          <span className="text-xl font-bold tracking-tight text-white">Admin Panel</span>
+          <img src={logo} alt="UIT Cinema Logo" className="h-12 w-auto object-contain" />
+          <span className="text-lg font-black tracking-widest text-white uppercase bg-gradient-to-r from-red-500 to-amber-500 bg-clip-text text-transparent">
+            UIT Cinema
+          </span>
         </div>
 
         <nav className="space-y-1">
