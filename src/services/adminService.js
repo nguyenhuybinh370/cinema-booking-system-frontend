@@ -72,11 +72,108 @@ const adminService = {
     await delay();
     return [...STAFF];
   },
+  addStaff: async (person) => {
+    await delay();
+    STAFF.push(person);
+    return person;
+  },
+  updateStaff: async (maNhanVien, updates) => {
+    await delay();
+    const index = STAFF.findIndex(s => s.MaNhanVien === maNhanVien);
+    if (index !== -1) {
+      STAFF[index] = { ...STAFF[index], ...updates };
+      return STAFF[index];
+    }
+    throw new Error('Staff not found');
+  },
 
   // Metadata/Constants
-  getRoomTypes: async () => ROOM_TYPES,
-  getSeatTypes: async () => SEAT_TYPES,
-  getDayTypes: async () => DAY_TYPES,
+  getRoomTypes: async () => {
+    await delay();
+    return [...ROOM_TYPES];
+  },
+  addRoomType: async (item) => {
+    await delay();
+    ROOM_TYPES.push(item);
+    return item;
+  },
+  updateRoomType: async (id, updates) => {
+    await delay();
+    const index = ROOM_TYPES.findIndex(t => t.MaLoaiPhong === id);
+    if (index !== -1) {
+      ROOM_TYPES[index] = { ...ROOM_TYPES[index], ...updates };
+      return ROOM_TYPES[index];
+    }
+    throw new Error('Room type not found');
+  },
+  deleteRoomType: async (id) => {
+    await delay();
+    const index = ROOM_TYPES.findIndex(t => t.MaLoaiPhong === id);
+    if (index !== -1) {
+      ROOM_TYPES.splice(index, 1);
+      return true;
+    }
+    return false;
+  },
+
+  // Seat Types CRUD
+  getSeatTypes: async () => {
+    await delay();
+    return [...SEAT_TYPES];
+  },
+  addSeatType: async (item) => {
+    await delay();
+    SEAT_TYPES.push(item);
+    return item;
+  },
+  updateSeatType: async (id, updates) => {
+    await delay();
+    const index = SEAT_TYPES.findIndex(t => t.MaLoaiGhe === id);
+    if (index !== -1) {
+      SEAT_TYPES[index] = { ...SEAT_TYPES[index], ...updates };
+      return SEAT_TYPES[index];
+    }
+    throw new Error('Seat type not found');
+  },
+  deleteSeatType: async (id) => {
+    await delay();
+    const index = SEAT_TYPES.findIndex(t => t.MaLoaiGhe === id);
+    if (index !== -1) {
+      SEAT_TYPES.splice(index, 1);
+      return true;
+    }
+    return false;
+  },
+
+  // Day Types CRUD
+  getDayTypes: async () => {
+    await delay();
+    return [...DAY_TYPES];
+  },
+  addDayType: async (item) => {
+    await delay();
+    DAY_TYPES.push(item);
+    return item;
+  },
+  updateDayType: async (id, updates) => {
+    await delay();
+    const index = DAY_TYPES.findIndex(t => t.MaLoaiNgay === id);
+    if (index !== -1) {
+      DAY_TYPES[index] = { ...DAY_TYPES[index], ...updates };
+      return DAY_TYPES[index];
+    }
+    throw new Error('Day type not found');
+  },
+  deleteDayType: async (id) => {
+    await delay();
+    const index = DAY_TYPES.findIndex(t => t.MaLoaiNgay === id);
+    if (index !== -1) {
+      DAY_TYPES.splice(index, 1);
+      return true;
+    }
+    return false;
+  },
+
   getSeatMaps: async () => SEAT_MAPS,
 
   // Seat Configuration
