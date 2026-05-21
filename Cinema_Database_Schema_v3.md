@@ -309,3 +309,30 @@ _Bảng 3.16 Bảng LICHSUHOANTIEN_
 | KhaDung | TINYINT(1) | Not null, Default 1 | Trạng thái khả dụng |
 | NgayTao | DATETIME | Not null | Ngày tạo bản ghi |
 | NgayCapNhat | DATETIME | Null | Ngày cập nhật gần nhất |
+
+Cú pháp JSON trong trường CauTruc mà tôi đang thiết lập được thiết kế để tối giản nhưng vẫn linh hoạt cho việc định hình khung sơ đồ.
+
+Cấu trúc hiện tại như sau:
+
+json
+{
+  "aisles": {
+    "rows": [5], 
+    "cols": [3, 8]
+  }
+}
+Giải thích chi tiết:
+aisles (Lối đi): Đây là đối tượng chứa thông tin về các vị trí mà hệ thống sẽ không đặt ghế, dùng làm đường đi cho khách.
+rows (Hàng là lối đi):
+Ví dụ: [5] nghĩa là toàn bộ hàng thứ 5 sẽ là lối đi ngang (thường dùng trong các rạp lớn có lối đi giữa các dãy ghế).
+cols (Cột là lối đi):
+Ví dụ: [3, 8] nghĩa là toàn bộ cột số 3 và cột số 8 sẽ là lối đi dọc (chia sơ đồ thành 3 cụm ghế: trái, giữa, phải).
+Tại sao lại dùng cách này thay vì lưu ma trận 0-1?
+Dễ quản lý: Với rạp chiếu phim, lối đi thường là các đường thẳng dọc hoặc ngang. Chỉ cần lưu số thứ tự hàng/cột là đủ, thay vì lưu hàng nghìn ô 0/1.
+Dễ thay đổi: Nếu bro muốn mở rộng rạp từ 10 cột lên 20 cột, bro chỉ cần sửa số TongCot mà không cần phải vẽ lại toàn bộ ma trận JSON.
+Tính mở rộng: Sau này nếu có các vị trí trống đặc biệt (không phải cả hàng/cột), ta có thể bổ sung thêm trường "blocks": [{"r": 2, "c": 4}] vào JSON này rất dễ dàng.
+Cách nó hoạt động trong code (Logic hiển thị):
+Khi vẽ sơ đồ, hệ thống sẽ chạy vòng lặp qua từng ô (hàng r, cột c):
+
+Nếu c nằm trong danh sách aisles.cols HOẶC r nằm trong aisles.rows -> Ô đó là Lối đi.
+Ngược lại -> Ô đó là Ghế.
