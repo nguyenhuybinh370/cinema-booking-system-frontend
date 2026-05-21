@@ -120,5 +120,22 @@ export const SHOWTIMES = [
 export const SHOWTIME_SEATS = [
   { MaGheSuatChieu: 'GSC_ST02_A1', MaSuatChieu: 'ST02', MaGhe: 'PC01-A1', TrangThai: 1, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
   { MaGheSuatChieu: 'GSC_ST02_A2', MaSuatChieu: 'ST02', MaGhe: 'PC01-A2', TrangThai: 2, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
+  { MaGheSuatChieu: 'GSC_ST02_D4', MaSuatChieu: 'ST02', MaGhe: 'PC01-D4', TrangThai: 1, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
+  { MaGheSuatChieu: 'GSC_ST02_D5', MaSuatChieu: 'ST02', MaGhe: 'PC01-D5', TrangThai: 1, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
+  { MaGheSuatChieu: 'GSC_ST02_D6', MaSuatChieu: 'ST02', MaGhe: 'PC01-D6', TrangThai: 2, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
+  { MaGheSuatChieu: 'GSC_ST02_E4', MaSuatChieu: 'ST02', MaGhe: 'PC01-E4', TrangThai: 1, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
+  { MaGheSuatChieu: 'GSC_ST02_E5', MaSuatChieu: 'ST02', MaGhe: 'PC01-E5', TrangThai: 1, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
+  { MaGheSuatChieu: 'GSC_ST02_E6', MaSuatChieu: 'ST02', MaGhe: 'PC01-E6', TrangThai: 1, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
+  { MaGheSuatChieu: 'GSC_ST02_E7', MaSuatChieu: 'ST02', MaGhe: 'PC01-E7', TrangThai: 2, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
+  { MaGheSuatChieu: 'GSC_ST02_F3', MaSuatChieu: 'ST02', MaGhe: 'PC01-F3', TrangThai: 1, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
+  { MaGheSuatChieu: 'GSC_ST02_F4', MaSuatChieu: 'ST02', MaGhe: 'PC01-F4', TrangThai: 1, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
+  { MaGheSuatChieu: 'GSC_ST02_F5', MaSuatChieu: 'ST02', MaGhe: 'PC01-F5', TrangThai: 2, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
+  { MaGheSuatChieu: 'GSC_ST02_F6', MaSuatChieu: 'ST02', MaGhe: 'PC01-F6', TrangThai: 1, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
+  { MaGheSuatChieu: 'GSC_ST02_F7', MaSuatChieu: 'ST02', MaGhe: 'PC01-F7', TrangThai: 1, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
+  { MaGheSuatChieu: 'GSC_ST02_F8', MaSuatChieu: 'ST02', MaGhe: 'PC01-F8', TrangThai: 2, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
+  { MaGheSuatChieu: 'GSC_ST02_G4', MaSuatChieu: 'ST02', MaGhe: 'PC01-G4', TrangThai: 1, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
+  { MaGheSuatChieu: 'GSC_ST02_G5', MaSuatChieu: 'ST02', MaGhe: 'PC01-G5', TrangThai: 1, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
+  { MaGheSuatChieu: 'GSC_ST02_H5', MaSuatChieu: 'ST02', MaGhe: 'PC01-H5', TrangThai: 1, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
+  { MaGheSuatChieu: 'GSC_ST02_H6', MaSuatChieu: 'ST02', MaGhe: 'PC01-H6', TrangThai: 1, KhaDung: 1, NgayTao: '2026-05-20 09:00:00', NgayCapNhat: null },
 ];
 
