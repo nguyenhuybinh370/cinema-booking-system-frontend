@@ -14,7 +14,8 @@ import {
   CUSTOMERS,
   TICKET_RECEIPTS,
   TICKET_DETAILS,
-  TRANSACTIONS
+  TRANSACTIONS,
+  LICHSUHOANTIEN
 } from '../constants/adminMockData';
 
 // Helper to simulate API delay
@@ -1338,7 +1339,22 @@ const adminService = {
       });
     }
 
-    return tx;
+    // Insert to LICHSUHOANTIEN table
+    const refundRecord = {
+      MaLichSuHoanTien: `HT_${Math.floor(100000 + Math.random() * 900000)}`,
+      MaGiaoDich: tx.MaGiaoDich,
+      MaPhieuDatVe: tx.MaPhieuDatVe,
+      SoTienHoan: tx.SoTien,
+      LyDoHoan: reason,
+      TrangThai: 'Success',
+      NgayYeuCau: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      NgayHoan: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      NgayTao: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      NgayCapNhat: null
+    };
+    LICHSUHOANTIEN.push(refundRecord);
+
+    return { tx, refundRecord };
   },
 
   getSeatMaps: async () => SEAT_MAPS,

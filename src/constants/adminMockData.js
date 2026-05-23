@@ -184,3 +184,18 @@ export const TRANSACTIONS = [
   { MaGiaoDich: 'TX10085', MaPhieuDatVe: 'PDV07', MaThamChieuDoiTac: 'MOMO_20260501_1120', SoTien: 170000, PhuongThucThanhToan: 'MoMo', TrangThai: 'Failed', NgayGiaoDich: '2026-05-01 11:20:00', GhiChu: 'Lỗi giao dịch từ ví MoMo (Số dư không đủ)', KhaDung: 1, NgayTao: '2026-05-01 11:20:00', NgayCapNhat: null }
 ];
 
+export const LICHSUHOANTIEN = [
+  {
+    MaLichSuHoanTien: 'HT_UUID_001',
+    MaGiaoDich: 'TX10086',
+    MaPhieuDatVe: 'PDV04',
+    SoTienHoan: 85000,
+    LyDoHoan: 'Khách hàng hoàn vé sớm',
+    TrangThai: 'Success',
+    NgayYeuCau: '2026-05-05 18:10:00',
+    NgayHoan: '2026-05-05 18:15:00',
+    NgayTao: '2026-05-05 18:10:00',
+    NgayCapNhat: '2026-05-05 18:15:00'
+  }
+];
+

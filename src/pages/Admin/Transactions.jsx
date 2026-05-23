@@ -238,40 +238,80 @@ const Transactions = () => {
             <p>Hành động này sẽ hoàn trả lại tiền thông qua cổng thanh toán, đồng thời hủy bỏ vé và giải phóng ghế trống về suất chiếu.</p>
           </div>
 
-          <div className="bg-white/5 rounded-2xl p-5 space-y-3 font-mono text-xs text-slate-400">
-            <div className="flex justify-between">
-              <span>Mã giao dịch:</span>
-              <span className="text-white font-bold">{selectedTx?.MaGiaoDich}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Mã đặt vé:</span>
-              <span className="text-white font-bold">{selectedTx?.MaPhieuDatVe}</span>
-            </div>
+          {/* Customer / Ticket context */}
+          <div className="bg-white/5 rounded-2xl p-4 space-y-2 text-xs text-slate-400">
             <div className="flex justify-between">
               <span>Khách hàng:</span>
               <span className="text-white font-bold">{selectedTx?.KhachHang}</span>
             </div>
             <div className="flex justify-between">
-              <span>Phim chiếu:</span>
-              <span className="text-white font-bold max-w-[250px] text-right truncate" title={selectedTx?.Phim}>{selectedTx?.Phim}</span>
+              <span>Nội dung vé:</span>
+              <span className="text-white font-bold text-right truncate max-w-[200px]" title={selectedTx?.Phim}>{selectedTx?.Phim}</span>
             </div>
             <div className="flex justify-between">
-              <span>Ghế đặt:</span>
+              <span>Ghế đã chọn:</span>
               <span className="text-white font-bold">{selectedTx?.Ghe}</span>
             </div>
-            <div className="h-[1px] bg-white/5 my-2"></div>
-            <div className="flex justify-between text-sm">
-              <span>Số tiền hoàn trả:</span>
-              <span className="text-red-500 font-bold">{selectedTx && formatPrice(selectedTx.SoTien)}</span>
+          </div>
+
+          {/* LICHSUHOANTIEN Record Preview */}
+          <div className="border border-white/5 rounded-2xl p-5 bg-[#0a0c10] space-y-3 font-mono text-xs text-slate-400">
+            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-white/5 pb-2 mb-2 flex justify-between">
+              <span>Bảng CSDL: LICHSUHOANTIEN</span>
+              <span className="text-red-500 font-semibold lowercase">preview</span>
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex justify-between">
+                <span>MaLichSuHoanTien:</span>
+                <span className="text-slate-500 font-bold italic">HT_XXXXXX (Tự động)</span>
+              </div>
+              <div className="flex justify-between">
+                <span>MaGiaoDich:</span>
+                <span className="text-white font-bold">{selectedTx?.MaGiaoDich}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>MaPhieuDatVe:</span>
+                <span className="text-white font-bold">{selectedTx?.MaPhieuDatVe}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>SoTienHoan:</span>
+                <span className="text-red-500 font-bold">{selectedTx && formatPrice(selectedTx.SoTien)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>LyDoHoan:</span>
+                <span className="text-amber-500 font-bold truncate max-w-[200px]" title={refundReason || 'Chưa nhập'}>
+                  {refundReason || '(Yêu cầu nhập lý do)'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>TrangThai:</span>
+                <span className="text-emerald-500 font-bold">Success</span>
+              </div>
+              <div className="flex justify-between">
+                <span>NgayYeuCau:</span>
+                <span className="text-white font-bold">{new Date().toISOString().replace('T', ' ').substring(0, 19)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>NgayHoan:</span>
+                <span className="text-white font-bold">{new Date().toISOString().replace('T', ' ').substring(0, 19)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>NgayTao:</span>
+                <span className="text-white font-bold">{new Date().toISOString().replace('T', ' ').substring(0, 19)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>NgayCapNhat:</span>
+                <span className="text-slate-600 font-bold">null</span>
+              </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Lý do hoàn tiền</label>
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Nhập lý do hoàn trả (LyDoHoan)</label>
             <textarea 
               required
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-slate-300 text-sm min-h-[100px]"
-              placeholder="Nhập lý do hoàn trả (VD: Khách yêu cầu đổi suất chiếu khác, sự cố rạp chiếu...)"
+              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-slate-300 text-sm min-h-[80px]"
+              placeholder="Nhập lý do hoàn tiền..."
               value={refundReason}
               onChange={e => setRefundReason(e.target.value)}
             />
