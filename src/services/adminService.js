@@ -1314,6 +1314,33 @@ const adminService = {
     };
   },
 
+  refundTransaction: async (maGiaoDich, reason) => {
+    await delay();
+    const tx = TRANSACTIONS.find(t => t.MaGiaoDich === maGiaoDich);
+    if (!tx) throw new Error('Không tìm thấy giao dịch!');
+
+    tx.TrangThai = 'Refunded';
+    tx.GhiChu = reason;
+    tx.NgayCapNhat = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+    const receipt = TICKET_RECEIPTS.find(r => r.MaPhieuDatVe === tx.MaPhieuDatVe);
+    if (receipt) {
+      receipt.TrangThai = 'Đã hủy';
+      receipt.NgayCapNhat = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+      const details = TICKET_DETAILS.filter(d => d.MaPhieuDatVe === receipt.MaPhieuDatVe);
+      details.forEach(det => {
+        const showtimeSeat = SHOWTIME_SEATS.find(s => s.MaGheSuatChieu === det.MaGheSuatChieu);
+        if (showtimeSeat) {
+          showtimeSeat.TrangThai = 0;
+          showtimeSeat.NgayCapNhat = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        }
+      });
+    }
+
+    return tx;
+  },
+
   getSeatMaps: async () => SEAT_MAPS,
 
   // Seat Configuration

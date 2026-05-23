@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
+import Modal from '../../components/Admin/Common/Modal';
 import AdminTable from '../../components/Admin/Common/AdminTable';
 import StatusBadge from '../../components/Admin/Common/StatusBadge';
 import adminService from '../../services/adminService';
-import { Search, Landmark, CreditCard, DollarSign } from 'lucide-react';
+import { Search, Landmark, CreditCard, DollarSign, RotateCcw, AlertTriangle } from 'lucide-react';
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState([]);
@@ -11,6 +12,11 @@ const Transactions = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [methodFilter, setMethodFilter] = useState('All');
+
+  // Refund states
+  const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
+  const [selectedTx, setSelectedTx] = useState(null);
+  const [refundReason, setRefundReason] = useState('');
 
   const loadTransactions = async () => {
     try {
@@ -29,6 +35,30 @@ const Transactions = () => {
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+  };
+
+  const handleOpenRefund = (tx) => {
+    setSelectedTx(tx);
+    setRefundReason('');
+    setIsRefundModalOpen(true);
+  };
+
+  const handleRefundSubmit = async () => {
+    if (!selectedTx || !refundReason.trim()) return;
+    try {
+      await adminService.refundTransaction(selectedTx.MaGiaoDich, refundReason);
+      await loadTransactions();
+      setIsRefundModalOpen(false);
+      alert(
+        `HOÀN TIỀN THÀNH CÔNG!\n\n` +
+        `1. [CSDL - GIAODICH]: Đã chuyển trạng thái sang "Refunded" và cập nhật Ghi chú: "${refundReason}".\n` +
+        `2. [CSDL - PHIEUDATVE]: Đã chuyển trạng thái hóa đơn liên quan sang "Đã hủy".\n` +
+        `3. [CSDL - GHE_SUATCHIEU]: Đã tự động giải phóng tất cả ghế trong suất chiếu của hóa đơn này về trạng thái Trống (0).`
+      );
+    } catch (error) {
+      console.error("Failed to refund transaction:", error);
+      alert("Đã xảy ra lỗi khi hoàn tiền giao dịch!");
+    }
   };
 
   // Filter Transactions
@@ -115,6 +145,26 @@ const Transactions = () => {
     {
       header: 'Ngày cập nhật',
       render: (t) => <span className="text-xs text-slate-500 font-mono">{t.NgayCapNhat || '--'}</span>
+    },
+    {
+      header: 'Hành động',
+      className: 'text-right',
+      render: (t) => (
+        <div className="flex justify-end">
+          {t.TrangThai === 'Success' ? (
+            <button 
+              onClick={() => handleOpenRefund(t)}
+              className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border border-red-500/20 text-xs font-bold"
+              title="Hủy vé & Hoàn tiền"
+            >
+              <RotateCcw size={14} />
+              <span>Hoàn tiền</span>
+            </button>
+          ) : (
+            <span className="text-xs text-slate-600 font-semibold px-2 py-1 select-none">--</span>
+          )}
+        </div>
+      )
     }
   ];
 
@@ -175,6 +225,77 @@ const Transactions = () => {
       <div className="overflow-x-auto w-full custom-scrollbar">
         <AdminTable columns={columns} data={filteredTransactions} rowKey="MaGiaoDich" />
       </div>
+
+      {/* Refund Confirmation Modal */}
+      <Modal 
+        isOpen={isRefundModalOpen} 
+        onClose={() => setIsRefundModalOpen(false)} 
+        title="Yêu cầu Hủy đặt vé & Hoàn tiền"
+      >
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 bg-red-500/5 border border-red-500/15 rounded-2xl p-4 text-red-400 text-sm">
+            <AlertTriangle size={24} className="shrink-0" />
+            <p>Hành động này sẽ hoàn trả lại tiền thông qua cổng thanh toán, đồng thời hủy bỏ vé và giải phóng ghế trống về suất chiếu.</p>
+          </div>
+
+          <div className="bg-white/5 rounded-2xl p-5 space-y-3 font-mono text-xs text-slate-400">
+            <div className="flex justify-between">
+              <span>Mã giao dịch:</span>
+              <span className="text-white font-bold">{selectedTx?.MaGiaoDich}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Mã đặt vé:</span>
+              <span className="text-white font-bold">{selectedTx?.MaPhieuDatVe}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Khách hàng:</span>
+              <span className="text-white font-bold">{selectedTx?.KhachHang}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Phim chiếu:</span>
+              <span className="text-white font-bold max-w-[250px] text-right truncate" title={selectedTx?.Phim}>{selectedTx?.Phim}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Ghế đặt:</span>
+              <span className="text-white font-bold">{selectedTx?.Ghe}</span>
+            </div>
+            <div className="h-[1px] bg-white/5 my-2"></div>
+            <div className="flex justify-between text-sm">
+              <span>Số tiền hoàn trả:</span>
+              <span className="text-red-500 font-bold">{selectedTx && formatPrice(selectedTx.SoTien)}</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Lý do hoàn tiền</label>
+            <textarea 
+              required
+              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-slate-300 text-sm min-h-[100px]"
+              placeholder="Nhập lý do hoàn trả (VD: Khách yêu cầu đổi suất chiếu khác, sự cố rạp chiếu...)"
+              value={refundReason}
+              onChange={e => setRefundReason(e.target.value)}
+            />
+          </div>
+
+          <div className="flex gap-4 pt-4 border-t border-white/5">
+            <button 
+              type="button" 
+              onClick={() => setIsRefundModalOpen(false)} 
+              className="flex-grow py-3 rounded-xl font-bold border border-white/10 hover:bg-white/5 transition-all text-xs uppercase tracking-widest cursor-pointer text-slate-400"
+            >
+              Đóng
+            </button>
+            <button 
+              type="button"
+              disabled={!refundReason.trim()}
+              onClick={handleRefundSubmit}
+              className="flex-grow py-3 rounded-xl font-bold bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:hover:bg-red-500 text-white transition-all shadow-lg shadow-red-500/20 text-xs uppercase tracking-widest cursor-pointer"
+            >
+              Xác nhận Hoàn tiền
+            </button>
+          </div>
+        </div>
+      </Modal>
     </AdminLayout>
   );
 };
