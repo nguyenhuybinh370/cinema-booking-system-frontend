@@ -6,6 +6,12 @@ const ShiftActionModal = ({ selectedShift, onClose, onConfirm }) => {
   const { data, template, dateString } = selectedShift;
   const isMyShift = data.isMyShift;
 
+  const formatTime = (timeStr) => {
+    if (!timeStr) return "";
+    const date = new Date(timeStr);
+    return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4">
       <div className="bg-[var(--navy-light)] border border-white/20 rounded-3xl p-8 max-w-sm w-full shadow-2xl relative">
@@ -37,13 +43,13 @@ const ShiftActionModal = ({ selectedShift, onClose, onConfirm }) => {
             <p className="text-sm text-white/50">
               Ca:{" "}
               <span className="font-bold text-[var(--btn-neon)] float-right">
-                {template.name}
+                {template.TenCa}
               </span>
             </p>
             <p className="text-sm text-white/50">
               Thời gian:{" "}
               <span className="font-mono text-white float-right">
-                {template.startTime} - {template.endTime}
+                {formatTime(template.GioBatDau)} - {formatTime(template.GioKetThuc)}
               </span>
             </p>
           </div>
@@ -51,13 +57,13 @@ const ShiftActionModal = ({ selectedShift, onClose, onConfirm }) => {
           <div className="flex gap-3 w-full mt-8">
             <button
               onClick={onClose}
-              className="flex-1 py-3 rounded-full font-bold text-white/50 hover:bg-white/5 hover:text-white transition-colors border border-white/10"
+              className="flex-1 py-3 rounded-full font-bold text-white/50 hover:bg-white/5 hover:text-white transition-colors border border-white/10 cursor-pointer"
             >
               Đóng
             </button>
             <button
               onClick={onConfirm}
-              className={`flex-1 py-3 rounded-full font-bold uppercase tracking-wider transition-colors
+              className={`flex-1 py-3 rounded-full font-bold uppercase tracking-wider transition-colors cursor-pointer
                 ${
                   isMyShift
                     ? "bg-red-500/20 text-red-400 hover:bg-red-500/40 border border-red-500/50"

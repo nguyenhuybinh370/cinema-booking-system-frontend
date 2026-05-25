@@ -1,7 +1,6 @@
 export const generateWeek = (offset = 0) => {
   const week = [];
-  // Lấy mốc chuẩn là giữa tháng 5/2026, cộng trừ số ngày dựa theo offset
-  const baseDate = new Date("2026-05-14T12:00:00");
+  const baseDate = new Date();
   baseDate.setDate(baseDate.getDate() + offset * 7);
 
   const currentDay = baseDate.getDay();

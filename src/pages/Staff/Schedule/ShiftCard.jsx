@@ -1,10 +1,16 @@
 import { CheckCircle2, Clock, Users } from "lucide-react";
 
 const ShiftCard = ({ day, shiftTemplate, shiftData, onClick }) => {
-  const isFull = shiftData.registeredCount >= shiftTemplate.maxStaff;
+  const isFull = shiftData.registeredCount >= shiftTemplate.SoNguoiToiDa;
   const isMyShift = shiftData.isMyShift;
 
-  // Xác định style dựa trên trạng thái
+  const formatTime = (timeStr) => {
+    if (!timeStr) return "";
+    const date = new Date(timeStr);
+    return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+  };
+
+  // Style based on state
   let cardStyle =
     "border-white/10 text-white/50 bg-white/5 hover:border-[var(--btn-neon)] hover:text-[var(--btn-neon)] cursor-pointer";
   if (isMyShift) {
@@ -26,8 +32,8 @@ const ShiftCard = ({ day, shiftTemplate, shiftData, onClick }) => {
       }
     >
       <div className="flex justify-between items-start">
-        <span className="font-bold text-sm uppercase tracking-wider">
-          {shiftTemplate.name}
+        <span className="font-bold text-sm uppercase tracking-wider truncate">
+          {shiftTemplate.TenCa}
         </span>
         {isMyShift && (
           <CheckCircle2 size={16} className="text-[var(--btn-neon)]" />
@@ -36,12 +42,12 @@ const ShiftCard = ({ day, shiftTemplate, shiftData, onClick }) => {
 
       <div className="text-xs space-y-1">
         <p className="flex items-center gap-1 opacity-80">
-          <Clock size={12} /> {shiftTemplate.startTime} -{" "}
-          {shiftTemplate.endTime}
+          <Clock size={12} /> {formatTime(shiftTemplate.GioBatDau)} -{" "}
+          {formatTime(shiftTemplate.GioKetThuc)}
         </p>
         <p className="flex items-center gap-1 opacity-80">
           <Users size={12} /> {shiftData.registeredCount}/
-          {shiftTemplate.maxStaff} người
+          {shiftTemplate.SoNguoiToiDa} người
         </p>
       </div>
 
