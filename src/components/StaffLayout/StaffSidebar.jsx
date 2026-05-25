@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   Ticket,
   Scan,
@@ -7,6 +7,7 @@ import {
   Calendar,
   LogOut,
 } from "lucide-react";
+import axiosClient from "../../api/axiosClient";
 
 import LogoImage from "../../assets/UITCinema.png";
 
@@ -27,6 +28,27 @@ const menuItems = [
 ];
 
 const StaffSidebar = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (refreshToken) {
+        await axiosClient.post("/auth/logout", { refreshToken });
+      }
+    } catch (err) {
+      console.error("Error during backend logout:", err);
+    } finally {
+      // Always clear local storage tokens and navigate to login
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("userRole");
+      localStorage.removeItem("userName");
+      localStorage.removeItem("userCode");
+      navigate("/login");
+    }
+  };
+
   return (
     <aside className="w-72 shrink-0 h-full staff-card-flat border-r border-white/5 flex flex-col overflow-hidden scrollbar-hide">
       <div className="h-36 flex items-center justify-center border-b border-white/5 shrink-0 px-4">
@@ -61,7 +83,10 @@ const StaffSidebar = () => {
       </nav>
 
       <div className="p-4 border-t border-white/5 shrink-0">
-        <button className="flex items-center gap-4 px-6 py-4 w-full rounded-2xl font-bold uppercase tracking-wider text-white/50 hover:bg-red-500/10 hover:text-red-400 transition-colors group min-w-0">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-4 px-6 py-4 w-full rounded-2xl font-bold uppercase tracking-wider text-white/50 hover:bg-red-500/10 hover:text-red-400 transition-colors group min-w-0 cursor-pointer"
+        >
           <LogOut size={22} className="shrink-0" />
 
           <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-left text-sm">

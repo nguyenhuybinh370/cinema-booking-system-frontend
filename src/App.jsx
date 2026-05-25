@@ -1,10 +1,11 @@
 import { Route, Routes, Navigate } from "react-router-dom";
 import Home from "./pages/Client/Home";
+import Login from "./pages/Client/Login";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import SellTicketWizard from "./pages/Staff/SellTicket/SellTicketWizard";
 import StaffLayout from "./components/StaffLayout/StaffLayout";
-import CheckIn from "./pages/Staff/Checkin";
-import Dashboard from "./pages/Staff/dashboard";
+import CheckIn from "./pages/Staff/CheckIn";
+import Dashboard from "./pages/Staff/Dashboard";
 import Profile from "./pages/Staff/Profile/Profile";
 import Schedule from "./pages/Staff/Schedule/Schedule";
 import TransactionHistory from "./pages/Staff/TransactionHistory";
@@ -15,6 +16,7 @@ function App() {
       <Routes>
         {/* === PUBLIC ROUTES === */}
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
 
         {/* === STAFF ROUTES (Role: STAFF) === */}
         <Route element={<ProtectedRoute allowedRoles={["STAFF"]} />}>
