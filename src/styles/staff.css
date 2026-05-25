@@ -1,0 +1,21 @@
+/* Scoped CSS dành riêng cho phân hệ Nhân Viên */
+
+.staff-container {
+  /* Khóa cứng nền màu tối phẳng (Solid Navy Deep) để ghi đè mesh gradient của body */
+  background-color: #020617 !important; 
+  background-image: none !important;
+  min-height: 100vh;
+}
+
+/* Nền kính mờ dạng phẳng, tối ưu độ tương phản cho báo cáo */
+.staff-card-flat {
+  background-color: rgba(30, 27, 75, 0.4); 
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+}
+
+.staff-card-flat:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(30, 27, 75, 0.6);
+}
