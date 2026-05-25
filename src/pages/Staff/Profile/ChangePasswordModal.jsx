@@ -25,10 +25,10 @@ const ChangePasswordModal = ({
         </button>
 
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-[var(--btn-neon)]/10 rounded-xl text-[var(--btn-neon)] border border-[var(--btn-neon)]/20 shadow-inner">
+          <div className="p-3 bg-[#FFB000]/10 rounded-xl text-[#FFB000] border border-[#FFB000]/20 shadow-inner">
             <Lock size={20} />
           </div>
-          <h2 className="text-xl font-extrabold uppercase tracking-widest text-[var(--btn-neon)] text-glow">
+          <h2 className="text-xl font-extrabold uppercase tracking-widest text-[#FFB000] text-glow">
             Đổi Mật Khẩu
           </h2>
         </div>
@@ -45,7 +45,7 @@ const ChangePasswordModal = ({
               onChange={(e) =>
                 setFormData({ ...formData, oldPassword: e.target.value })
               }
-              className="w-full bg-slate-950/60 border border-slate-800 focus:border-[var(--btn-neon)] focus:ring-1 focus:ring-[var(--btn-neon)]/30 rounded-xl px-4 py-3 text-sm text-white focus:outline-none transition-all font-mono tracking-widest"
+              className="w-full bg-slate-950/60 border border-slate-800 focus:border-[#FFB000] focus:ring-1 focus:ring-[#FFB000]/30 rounded-xl px-4 py-3 text-sm text-white focus:outline-none transition-all font-mono tracking-widest"
             />
           </div>
 
@@ -61,7 +61,7 @@ const ChangePasswordModal = ({
               onChange={(e) =>
                 setFormData({ ...formData, newPassword: e.target.value })
               }
-              className="w-full bg-slate-950/60 border border-slate-800 focus:border-[var(--btn-neon)] focus:ring-1 focus:ring-[var(--btn-neon)]/30 rounded-xl px-4 py-3 text-sm text-white focus:outline-none transition-all font-mono tracking-widest"
+              className="w-full bg-slate-950/60 border border-slate-800 focus:border-[#FFB000] focus:ring-1 focus:ring-[#FFB000]/30 rounded-xl px-4 py-3 text-sm text-white focus:outline-none transition-all font-mono tracking-widest"
             />
           </div>
 
@@ -82,7 +82,7 @@ const ChangePasswordModal = ({
                   formData.confirmPassword &&
                   formData.confirmPassword !== formData.newPassword
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500/30"
-                    : "border-slate-800 focus:border-[var(--btn-neon)] focus:ring-[var(--btn-neon)]/30"
+                    : "border-slate-800 focus:border-[#FFB000] focus:ring-[#FFB000]/30"
                 }
               `}
             />

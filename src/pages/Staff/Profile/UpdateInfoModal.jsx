@@ -19,7 +19,7 @@ const UpdateInfoModal = ({
           <X size={20} />
         </button>
 
-        <h2 className="text-xl font-extrabold uppercase tracking-widest text-[var(--btn-neon)] mb-6 text-glow">
+        <h2 className="text-xl font-extrabold uppercase tracking-widest text-[#FFB000] mb-6 text-glow">
           Cập nhật thông tin
         </h2>
 
@@ -35,7 +35,7 @@ const UpdateInfoModal = ({
               onChange={(e) =>
                 setFormData({ ...formData, fullName: e.target.value })
               }
-              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--btn-neon)] focus:ring-1 focus:ring-[var(--btn-neon)]/30 transition-all font-medium"
+              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFB000] focus:ring-1 focus:ring-[#FFB000]/30 transition-all font-medium"
             />
           </div>
 
@@ -51,7 +51,7 @@ const UpdateInfoModal = ({
                 onChange={(e) =>
                   setFormData({ ...formData, phone: e.target.value })
                 }
-                className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--btn-neon)] focus:ring-1 focus:ring-[var(--btn-neon)]/30 transition-all font-mono"
+                className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFB000] focus:ring-1 focus:ring-[#FFB000]/30 transition-all font-mono"
               />
             </div>
             <div>
@@ -63,7 +63,7 @@ const UpdateInfoModal = ({
                 onChange={(e) =>
                   setFormData({ ...formData, gender: e.target.value })
                 }
-                className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--btn-neon)] focus:ring-1 focus:ring-[var(--btn-neon)]/30 transition-all font-medium appearance-none"
+                className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFB000] focus:ring-1 focus:ring-[#FFB000]/30 transition-all font-medium appearance-none"
               >
                 <option value="Nam" className="bg-[#131A2A] text-white">
                   Nam
@@ -86,7 +86,7 @@ const UpdateInfoModal = ({
               onChange={(e) =>
                 setFormData({ ...formData, dob: e.target.value })
               }
-              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--btn-neon)] focus:ring-1 focus:ring-[var(--btn-neon)]/30 transition-all font-mono"
+              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFB000] focus:ring-1 focus:ring-[#FFB000]/30 transition-all font-mono"
             />
           </div>
 
@@ -101,7 +101,7 @@ const UpdateInfoModal = ({
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--btn-neon)] focus:ring-1 focus:ring-[var(--btn-neon)]/30 transition-all font-medium"
+              className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFB000] focus:ring-1 focus:ring-[#FFB000]/30 transition-all font-medium"
             />
           </div>
 

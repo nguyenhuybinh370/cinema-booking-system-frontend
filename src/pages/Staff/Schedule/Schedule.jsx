@@ -162,31 +162,30 @@ const Schedule = () => {
     <div className="flex flex-col h-full space-y-8 relative min-h-0">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <span className="text-[10px] uppercase tracking-[0.4em] text-[var(--btn-neon)] font-black">Phân hệ ca trực</span>
+          <span className="text-[10px] uppercase tracking-[0.4em] text-[#FFB000] font-black">
+            PREMIUM STAFF OPERATIONS SCHEDULE
+          </span>
           <h1 className="text-3xl font-black text-glow uppercase tracking-widest text-white mt-1">
-            Lịch Làm Việc
+            Lịch Làm Việc Tuần
           </h1>
-          <p className="text-slate-400 mt-2 text-sm">
-            Xem lịch trực cá nhân và đăng ký ca trực hàng tuần tại cụm rạp
-          </p>
         </div>
 
-        <div className="bg-[#131A2A]/80 border border-white/5 rounded-full p-1 flex items-center shrink-0 shadow-lg">
+        <div className="bg-[#131A2A] border border-white/[0.08] rounded-lg px-2 py-1 flex items-center shrink-0 shadow-lg">
           <button
             onClick={() => setWeekOffset((prev) => prev - 1)}
-            className="p-2 hover:bg-white/5 rounded-full transition-all text-slate-500 hover:text-white cursor-pointer"
+            className="p-2 hover:bg-white/5 rounded transition-all text-slate-400 hover:text-white cursor-pointer"
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={16} />
           </button>
-          <div className="px-5 py-1.5 flex items-center gap-2 font-bold text-xs min-w-[240px] justify-center text-white/90">
-            <CalendarIcon size={14} className="text-[var(--btn-neon)] filter drop-shadow-[0_0_5px_rgba(255,176,0,0.4)]" />
-            <span className="tracking-wide uppercase">{weekDisplayTitle}</span>
+          <div className="px-4 py-1.5 flex items-center gap-2 font-bold text-xs min-w-[220px] justify-center text-[#FFB000]">
+            <CalendarIcon size={14} className="filter drop-shadow-[0_0_5px_rgba(255,176,0,0.4)]" />
+            <span className="tracking-widest uppercase font-mono">{weekDisplayTitle.replace("Tuần:", "TUẦN:")}</span>
           </div>
           <button
             onClick={() => setWeekOffset((prev) => prev + 1)}
-            className="p-2 hover:bg-white/5 rounded-full transition-all text-slate-500 hover:text-white cursor-pointer"
+            className="p-2 hover:bg-white/5 rounded transition-all text-slate-400 hover:text-white cursor-pointer"
           >
-            <ChevronRight size={18} />
+            <ChevronRight size={16} />
           </button>
         </div>
       </div>
@@ -199,35 +198,33 @@ const Schedule = () => {
 
       {isLoading ? (
         <div className="flex-1 min-h-[350px] bg-[#131A2A]/40 border border-white/5 rounded-3xl p-12 flex flex-col items-center justify-center text-slate-400 font-bold uppercase tracking-wider">
-          <div className="w-12 h-12 border-4 border-[var(--btn-neon)] border-t-transparent rounded-full animate-spin mb-4"></div>
-          <span className="text-glow text-[var(--btn-neon)] text-sm">Đang tải lịch làm việc...</span>
+          <div className="w-12 h-12 border-4 border-[#FFB000] border-t-transparent rounded-full animate-spin mb-4"></div>
+          <span className="text-glow text-[#FFB000] text-sm">Đang tải lịch làm việc...</span>
         </div>
       ) : (
-        <div className="bg-[#131A2A]/40 border border-white/5 rounded-3xl p-6 flex-1 overflow-x-auto min-h-[480px] shadow-2xl">
-          <div className="min-w-[1000px] grid grid-cols-7 gap-4 h-full">
+        <div className="bg-[#131A2A]/60 border border-white/[0.06] rounded-2xl p-4 flex-1 overflow-x-auto min-h-[480px] shadow-2xl">
+          <div className="min-w-[1000px] grid grid-cols-7 divide-x divide-white/[0.06] h-full">
             {currentWeek.map((day) => {
               const isToday = day.dateString === new Date().toISOString().split("T")[0];
               
               return (
-                <div key={day.dateString} className="flex flex-col gap-4">
-                  <div className={`text-center pb-4 border-b shrink-0 py-3 rounded-2xl transition-all duration-300 ${
-                    isToday 
-                      ? "bg-[var(--btn-neon)]/10 border-[var(--btn-neon)]/30 text-[var(--btn-neon)] shadow-[0_0_15px_rgba(255,176,0,0.05)]" 
-                      : "border-white/5 bg-slate-950/20"
-                  }`}>
-                    <h3 className="font-extrabold text-sm uppercase tracking-wider text-white">
-                      {day.dayName}
+                <div key={day.dateString} className={`flex flex-col gap-4 px-3 pb-2 ${isToday ? "bg-white/[0.01]" : ""}`}>
+                  {/* Header Cell */}
+                  <div className="text-center pb-3 pt-2 relative min-h-[64px] flex flex-col items-center justify-center">
+                    <h3 className={`font-black text-[11px] uppercase tracking-wider ${isToday ? "text-[#FFB000]" : "text-slate-300"}`}>
+                      {day.dayName} ({day.displayDate})
                     </h3>
-                    <p className="text-[11px] text-[var(--btn-neon)] font-mono font-bold mt-0.5">
-                      {day.displayDate}
-                    </p>
                     {isToday && (
-                      <span className="inline-block px-2 py-0.5 bg-[var(--btn-neon)] text-slate-950 text-[8px] font-black uppercase rounded mt-1.5 tracking-widest font-mono">
+                      <span className="inline-block mt-1 px-2 py-0.5 bg-[#FFB000] text-slate-950 text-[8px] font-black uppercase rounded tracking-widest font-mono scale-90">
                         Hôm nay
                       </span>
                     )}
+                    {/* Horizontal Line under Header */}
+                    <div className={`absolute bottom-0 inset-x-0 h-[2px] ${isToday ? "bg-[#FFB000] shadow-[0_0_8px_rgba(255,176,0,0.8)]" : "bg-white/5"}`}></div>
                   </div>
-                  <div className="flex flex-col gap-3 flex-1 overflow-y-auto min-h-0">
+
+                  {/* Cards List */}
+                  <div className="flex flex-col gap-3 flex-1 overflow-y-auto min-h-0 pt-2">
                     {shiftTemplates.map((template) => (
                       <ShiftCard
                         key={template.MaCa}

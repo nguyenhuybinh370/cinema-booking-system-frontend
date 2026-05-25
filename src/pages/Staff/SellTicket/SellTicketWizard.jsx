@@ -50,24 +50,24 @@ const SellTicketWizard = () => {
 
   return (
     <div className="flex flex-col h-full min-h-0 min-w-0 space-y-6">
-      <div className="staff-card-flat rounded-2xl p-5 flex justify-between items-center px-12 shrink-0 min-w-0 overflow-x-auto scrollbar-hide shadow-lg border border-white/5 bg-[#1B2435]">
+      <div className="rounded-2xl p-4 flex justify-between items-center px-12 shrink-0 min-w-0 overflow-x-auto scrollbar-hide shadow-lg border border-white/[0.06] bg-[#131A2A]/80">
         {[1, 2, 3].map((step) => (
           <div key={step} className="flex items-center gap-3 shrink-0">
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-all duration-300 shrink-0 ${
+              className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-sm transition-all duration-300 shrink-0 ${
                 currentStep === step
-                  ? "bg-gradient-to-r from-[var(--btn-neon)] to-[#E59A00] text-slate-950 shadow-[0_0_20px_rgba(255,176,0,0.4)] scale-110"
+                  ? "bg-[#FFB000] text-slate-950 shadow-[0_0_15px_rgba(255,176,0,0.3)] scale-105"
                   : currentStep > step
-                    ? "bg-[var(--btn-neon)]/20 border border-[var(--btn-neon)]/50 text-[var(--btn-neon)]"
-                    : "bg-slate-800/40 border border-slate-700/50 text-slate-500"
+                    ? "bg-[#FFB000]/10 border border-[#FFB000]/30 text-[#FFB000]"
+                    : "bg-slate-800/40 border border-white/5 text-slate-500"
               }`}
             >
               {step}
             </div>
 
             <span
-              className={`text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-300 ${
-                currentStep >= step ? "text-glow text-[var(--btn-neon)]" : "text-slate-500"
+              className={`text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all duration-300 ${
+                currentStep >= step ? "text-[#FFB000]" : "text-slate-500"
               }`}
             >
               {step === 1
@@ -79,9 +79,9 @@ const SellTicketWizard = () => {
 
             {step < 3 && (
               <div
-                className={`w-16 h-1 mx-4 hidden md:block shrink-0 rounded-full transition-all duration-300 ${
+                className={`w-16 h-[2px] mx-4 hidden md:block shrink-0 rounded-full transition-all duration-300 ${
                   currentStep > step
-                    ? "bg-gradient-to-r from-[var(--btn-neon)] to-[#E59A00]"
+                    ? "bg-[#FFB000]"
                     : "bg-white/10"
                 }`}
               ></div>

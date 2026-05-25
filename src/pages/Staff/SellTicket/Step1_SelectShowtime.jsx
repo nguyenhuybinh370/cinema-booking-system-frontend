@@ -88,18 +88,18 @@ const Step1_SelectShowtime = ({ onNext }) => {
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-full min-h-0">
-      {/* Cột trái: Danh sách phim */}
-      <div className="flex-[2] glass-effect rounded-3xl p-6 overflow-y-auto max-h-[70vh] border border-white/5 shadow-2xl bg-[#131A2A]/40">
-        <h2 className="text-xl font-extrabold text-glow mb-6 uppercase tracking-widest text-[var(--btn-neon)]">
-          🎬 Phim Đang Chiếu
+      {/* Left column: Movie grid */}
+      <div className="flex-[2] bg-[#131A2A]/50 rounded-2xl p-6 overflow-y-auto max-h-[70vh] border border-white/[0.06]">
+        <h2 className="text-lg font-black mb-5 uppercase tracking-widest text-[var(--btn-neon)]">
+          Phim Đang Chiếu
         </h2>
 
         {movies.length === 0 ? (
-          <div className="text-white/40 text-center py-12 italic">
+          <div className="text-white/30 text-center py-12 italic text-sm">
             Không có suất chiếu nào khả dụng tại quầy hôm nay.
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
             {movies.map((movie) => {
               const isSelected = selectedMovie?.id === movie.id;
               const isT18 = movie.genre.includes("18");
@@ -108,41 +108,52 @@ const Step1_SelectShowtime = ({ onNext }) => {
               return (
                 <div
                   key={movie.id}
-                  onClick={() => setSelectedMovie(movie)}
-                  className={`movie-card cursor-pointer group relative rounded-2xl overflow-hidden transition-all duration-300 border ${
+                  className={`group relative rounded-xl overflow-hidden transition-all duration-300 border flex flex-col bg-[#1B2435] ${
                     isSelected 
-                      ? "border-[var(--btn-neon)] shadow-[0_0_25px_rgba(255,176,0,0.25)] -translate-y-1 scale-[1.02]" 
-                      : "border-white/5 hover:border-[var(--btn-neon)]/40"
+                      ? "border-[var(--btn-neon)] shadow-[0_0_20px_rgba(255,176,0,0.2)] scale-[1.02]" 
+                      : "border-white/[0.06] hover:border-white/15"
                   }`}
                 >
+                  {/* Poster */}
                   <div className="aspect-[2/3] overflow-hidden relative">
                     <img
                       src={movie.poster}
                       alt={movie.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-75 group-hover:opacity-90"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     
-                    {/* Badge thể loại/tuổi ở góc trên */}
-                    <div className="absolute top-3 left-3 z-10">
-                      <span className={`px-2.5 py-1 text-[10px] font-black rounded-md tracking-wider uppercase border ${
+                    {/* Age badge */}
+                    <div className="absolute top-2 left-2 z-10">
+                      <span className={`px-2 py-0.5 text-[10px] font-bold rounded tracking-wide uppercase ${
                         isT18 
-                          ? "bg-red-950/80 text-red-400 border-red-500/40" 
+                          ? "bg-red-600 text-white" 
                           : isT16 
-                            ? "bg-orange-950/80 text-orange-400 border-orange-500/40"
-                            : "bg-slate-900/80 text-[var(--btn-neon)] border-[var(--btn-neon)]/40"
+                            ? "bg-orange-500 text-white"
+                            : "bg-emerald-600 text-white"
                       }`}>
                         {movie.genre}
                       </span>
                     </div>
                   </div>
                   
-                  <div className="p-4 absolute bottom-0 w-full bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent pt-14">
-                    <h3 className="font-extrabold text-white text-base leading-tight truncate group-hover:text-[var(--btn-neon)] transition-colors duration-300">
+                  {/* Info */}
+                  <div className="p-3 flex flex-col gap-2">
+                    <h3 className="font-bold text-sm text-white leading-tight truncate">
                       {movie.title}
                     </h3>
-                    <p className="text-[11px] text-slate-400 mt-1 font-mono tracking-wider">
-                      ⏱ {movie.duration} phút
-                    </p>
+                    <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                      <span className="font-mono">⏱ {movie.duration} phút</span>
+                    </div>
+                    <button
+                      onClick={() => setSelectedMovie(movie)}
+                      className={`w-full py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                        isSelected
+                          ? "bg-[var(--btn-neon)] text-slate-900"
+                          : "bg-[var(--btn-neon)]/15 text-[var(--btn-neon)] border border-[var(--btn-neon)]/30 hover:bg-[var(--btn-neon)] hover:text-slate-900"
+                      }`}
+                    >
+                      Chọn phim
+                    </button>
                   </div>
                 </div>
               );
@@ -151,45 +162,59 @@ const Step1_SelectShowtime = ({ onNext }) => {
         )}
       </div>
 
-      {/* Cột phải: Khung chọn suất chiếu */}
-      <div className="flex-1 glass-effect rounded-3xl p-6 flex flex-col overflow-y-auto max-h-[70vh] border border-white/5 shadow-2xl bg-[#131A2A]/40 min-w-[280px]">
-        <h2 className="text-xl font-extrabold text-glow mb-6 uppercase tracking-widest text-[var(--btn-neon)] text-center">
-          🕒 Suất Chiếu
-        </h2>
-
+      {/* Right column: Showtime panel */}
+      <div className="flex-1 bg-[#131A2A]/50 rounded-2xl p-6 flex flex-col overflow-y-auto max-h-[70vh] border border-white/[0.06] min-w-[280px]">
         {!selectedMovie ? (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-400 text-center px-4 py-12">
             <div className="w-16 h-16 mb-4 rounded-full border border-dashed border-slate-700 flex items-center justify-center text-3xl animate-bounce">
               🎥
             </div>
-            <p className="text-sm font-medium">
+            <p className="text-sm font-medium text-white/30">
               Vui lòng chọn một bộ phim bên trái để xem các suất chiếu khả dụng.
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
-            <div className="border-b border-slate-800 pb-3 mb-2">
-              <span className="text-[11px] uppercase tracking-widest text-slate-500 font-bold">Đang Chọn Phim</span>
-              <h3 className="text-lg font-black text-white uppercase tracking-wide truncate">
+          <div className="flex flex-col gap-5">
+            {/* Movie info header */}
+            <div className="border-b border-white/[0.06] pb-4">
+              <h3 className="text-lg font-black text-white uppercase tracking-wide leading-tight">
                 {selectedMovie.title}
               </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                {selectedMovie.genre} • {selectedMovie.duration} phút
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Showtimes heading */}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+                Đặt vào {new Date().toLocaleDateString("vi-VN")}
+              </span>
+            </div>
+
+            {/* Showtime buttons */}
+            <div className="flex flex-col gap-3">
               {showtimesMap[selectedMovie.id]?.map((st) => (
-                <button
+                <div
                   key={st.id}
-                  onClick={() => handleSelectTime(st)}
-                  className="bg-[#1B2435]/60 hover:bg-gradient-to-br hover:from-[var(--btn-neon)] hover:to-[#E59A00] border border-white/5 hover:border-transparent hover:text-slate-950 hover:shadow-[0_0_20px_rgba(255,176,0,0.3)] transition-all duration-300 rounded-xl p-4 flex flex-col items-center group cursor-pointer"
+                  className="flex items-center justify-between bg-[#1B2435]/60 border border-white/[0.06] rounded-xl p-4 hover:border-[var(--btn-neon)]/40 transition-all group"
                 >
-                  <span className="text-2xl font-black tracking-tight text-white group-hover:text-slate-950 font-mono transition-colors duration-300">{st.time}</span>
-                  <span className="text-xs mt-1 text-slate-400 group-hover:text-slate-950 font-bold transition-colors duration-300">
-                    🏢 {st.room}
-                  </span>
-                </button>
+                  <div>
+                    <span className="text-lg font-black text-white font-mono">{st.time}</span>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      {st.room}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleSelectTime(st)}
+                    className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-[var(--btn-neon)]/40 text-[var(--btn-neon)] hover:bg-[var(--btn-neon)] hover:text-slate-900 transition-all cursor-pointer"
+                  >
+                    Chọn suất
+                  </button>
+                </div>
               ))}
               {(!showtimesMap[selectedMovie.id] || showtimesMap[selectedMovie.id].length === 0) && (
-                <div className="col-span-2 text-slate-500 text-center py-6 text-sm italic">
+                <div className="text-slate-500 text-center py-6 text-sm italic">
                   Không có suất chiếu nào khả dụng.
                 </div>
               )}
