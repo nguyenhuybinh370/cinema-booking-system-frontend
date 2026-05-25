@@ -187,37 +187,37 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
   // SUCCESS SCREEN
   if (checkoutResult) {
     return (
-      <div className="h-full glass-effect rounded-3xl flex flex-col items-center justify-center p-12 text-center animate-in fade-in zoom-in duration-500 max-h-[70vh] overflow-y-auto">
-        <div className="w-24 h-24 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mb-6 border-2 border-green-500/50 shadow-[0_0_30px_rgba(34,197,94,0.3)] shrink-0">
-          <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+      <div className="h-full glass-effect rounded-3xl flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in duration-500 max-h-[70vh] overflow-y-auto border border-white/5 bg-[#131A2A]/40 shadow-2xl">
+        <div className="w-20 h-20 bg-green-500/10 text-green-400 rounded-full flex items-center justify-center mb-5 border border-green-500/30 shadow-[0_0_30px_rgba(34,197,94,0.2)] shrink-0">
+          <svg className="w-10 h-10 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="text-3xl font-black text-glow text-white mb-2 uppercase tracking-widest">
+        <h2 className="text-2xl font-black text-glow text-white mb-2 uppercase tracking-widest">
           Thanh toán thành công
         </h2>
-        <p className="text-white/60 mb-6 max-w-md">
-          Giao dịch đã được ghi nhận. Mã hóa đơn: <span className="font-mono text-white font-bold">{checkoutResult.MaPhieuDat}</span>
+        <p className="text-slate-400 mb-6 text-sm">
+          Giao dịch đã được ghi nhận. Mã hóa đơn: <span className="font-mono text-white font-black bg-slate-950/80 px-2 py-1 rounded border border-white/5">{checkoutResult.MaPhieuDat}</span>
         </p>
 
-        <div className="bg-black/30 border border-white/10 rounded-2xl p-6 mb-8 max-w-sm w-full text-left space-y-2">
-          <p className="text-xs text-white/40 uppercase">Tóm tắt thanh toán</p>
-          <div className="flex justify-between text-sm">
-            <span className="text-white/60">Số lượng ghế:</span>
+        <div className="bg-slate-950/40 border border-white/5 rounded-2xl p-5 mb-8 max-w-sm w-full text-left space-y-3">
+          <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Tóm tắt thanh toán</p>
+          <div className="flex justify-between text-xs">
+            <span className="text-slate-400 font-medium">Số lượng ghế:</span>
             <span className="font-bold text-white">{bookingData.seats.length} ghế</span>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-white/60">Tổng tiền thu:</span>
-            <span className="font-bold text-[var(--btn-neon)]">{checkoutResult.TongTien.toLocaleString()} đ</span>
+          <div className="flex justify-between text-xs border-t border-white/5 pt-2">
+            <span className="text-slate-400 font-medium">Tổng tiền thu:</span>
+            <span className="font-black text-[var(--btn-neon)]">{checkoutResult.TongTien.toLocaleString()} đ</span>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-white/60">Phương thức:</span>
+          <div className="flex justify-between text-xs border-t border-white/5 pt-2">
+            <span className="text-slate-400 font-medium">Phương thức:</span>
             <span className="font-bold text-white uppercase">{checkoutResult.GiaoDich.PhuongThuc}</span>
           </div>
           {checkoutResult.QRPayload && (
             <div className="text-center pt-4 border-t border-white/5">
-              <span className="text-[10px] uppercase font-bold text-[var(--btn-neon)] tracking-wider">Mã soát vé check-in:</span>
-              <p className="font-mono text-xs text-white/50 break-all mt-1 bg-black/40 p-2 rounded border border-white/10">{checkoutResult.QRPayload}</p>
+              <span className="text-[9px] uppercase font-black text-[var(--btn-neon)] tracking-wider">Mã soát vé check-in:</span>
+              <p className="font-mono text-xs text-slate-400 break-all mt-1.5 bg-slate-950/80 p-2.5 rounded border border-white/5">{checkoutResult.QRPayload}</p>
             </div>
           )}
         </div>
@@ -225,11 +225,11 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
         <div className="flex gap-4 shrink-0">
           <button
             onClick={handlePrintTicket}
-            className="px-8 py-3 rounded-full font-bold text-slate-900 bg-white hover:bg-white/90 transition-colors uppercase text-sm shadow-lg cursor-pointer"
+            className="px-6 py-3 rounded-full font-bold text-slate-300 bg-white/5 hover:bg-white/10 hover:text-white transition-all duration-300 uppercase text-xs tracking-wider border border-white/5 cursor-pointer"
           >
             🖨 In Vé POS
           </button>
-          <button onClick={onReset} className="btn-bright cursor-pointer">
+          <button onClick={onReset} className="btn-bright cursor-pointer text-xs tracking-wider">
             Bán vé mới
           </button>
         </div>
@@ -239,43 +239,45 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
 
   // CHECKOUT SCREEN
   return (
-    <div className="flex gap-8 h-full max-h-[70vh]">
+    <div className="flex flex-col lg:flex-row gap-6 h-full max-h-[70vh] min-h-0">
       {/* CỘT TRÁI: HÓA ĐƠN CHI TIẾT */}
-      <div className="flex-1 glass-effect rounded-3xl p-8 flex flex-col justify-between overflow-y-auto">
+      <div className="flex-1 glass-effect rounded-3xl p-6 flex flex-col justify-between overflow-y-auto border border-white/5 shadow-2xl bg-[#131A2A]/40">
         <div>
-          <h2 className="text-xl font-bold text-glow mb-6 uppercase tracking-widest border-b border-white/10 pb-4">
-            Hóa Đơn Chi Tiết
+          <h2 className="text-xl font-extrabold text-glow mb-6 uppercase tracking-widest text-[var(--btn-neon)] border-b border-white/5 pb-4">
+            🎫 Hóa Đơn Chi Tiết
           </h2>
 
           <div className="space-y-6">
-            <div>
-              <p className="text-xs text-white/50 uppercase mb-1">Tên Phim</p>
-              <p className="font-bold text-2xl text-[var(--btn-neon)]">
+            <div className="bg-slate-950/40 p-5 rounded-2xl border border-white/5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[var(--btn-neon)]/5 to-transparent rounded-full"></div>
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1">Tên Phim</p>
+              <h3 className="font-black text-xl text-white uppercase tracking-wide leading-tight">
                 {bookingData.movie?.title}
-              </p>
+              </h3>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-white/50 uppercase mb-1">Suất chiếu</p>
-                <p className="font-bold text-lg">{bookingData.showtime?.time}</p>
+              <div className="bg-slate-950/40 p-4 rounded-xl border border-white/5">
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1">Suất chiếu</p>
+                <p className="font-bold text-sm text-[var(--btn-neon)]">{bookingData.showtime?.time}</p>
               </div>
-              <div>
-                <p className="text-xs text-white/50 uppercase mb-1">Phòng chiếu</p>
-                <p className="font-bold text-lg">{bookingData.showtime?.room}</p>
+              <div className="bg-slate-950/40 p-4 rounded-xl border border-white/5">
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1">Phòng chiếu</p>
+                <p className="font-bold text-sm text-white">{bookingData.showtime?.room}</p>
               </div>
             </div>
 
-            <div className="bg-black/20 p-5 rounded-2xl border border-white/5 space-y-4">
+            <div className="bg-slate-950/40 p-5 rounded-2xl border border-white/5 space-y-4">
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black border-b border-white/5 pb-2">Danh sách vé</p>
               {Object.keys(breakdown).map((typeName) => {
                 const list = breakdown[typeName];
                 const sumPrice = list.reduce((sum, s) => sum + s.GiaVeTinhToan, 0);
                 return (
-                  <div key={typeName} className="flex justify-between text-sm">
-                    <span className="text-white/70">
-                      {list.length}x {typeName} ({list.map((s) => s.TenGhe).join(", ")})
+                  <div key={typeName} className="flex justify-between items-center text-xs pb-1 border-b border-white/5 last:border-0 last:pb-0">
+                    <span className="text-slate-300 font-medium">
+                      {list.length}x {typeName} <span className="font-bold font-mono text-[var(--btn-neon)]">({list.map((s) => s.TenGhe).join(", ")})</span>
                     </span>
-                    <span className="font-mono text-white">
+                    <span className="font-bold text-white font-mono">
                       {sumPrice.toLocaleString()} đ
                     </span>
                   </div>
@@ -285,51 +287,54 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
           </div>
         </div>
 
-        <div className="mt-6 pt-6 border-t border-white/10 flex justify-between items-end shrink-0">
-          <span className="text-lg text-white/60 uppercase tracking-widest">
+        <div className="mt-6 pt-6 border-t border-white/5 flex justify-between items-end shrink-0">
+          <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">
             Tổng Thanh Toán
           </span>
-          <span className="text-4xl font-black text-glow text-[var(--btn-neon)]">
+          <span className="text-3xl font-black text-glow text-[var(--btn-neon)] tracking-tight">
             {totalPrice.toLocaleString("vi-VN")} đ
           </span>
         </div>
       </div>
 
       {/* CỘT PHẢI: PHƯƠNG THỨC THANH TOÁN */}
-      <div className="flex-1 glass-effect rounded-3xl p-8 flex flex-col justify-between overflow-y-auto">
+      <div className="flex-1 glass-effect rounded-3xl p-6 flex flex-col justify-between overflow-y-auto border border-white/5 shadow-2xl bg-[#131A2A]/40 min-w-[320px]">
         <div className="space-y-6">
-          <h2 className="text-xl font-bold text-glow mb-6 uppercase tracking-widest border-b border-white/10 pb-4">
-            Phương Thức Thanh Toán
+          <h2 className="text-xl font-extrabold text-glow mb-6 uppercase tracking-widest text-[var(--btn-neon)] border-b border-white/5 pb-4">
+            💳 Thanh Toán
           </h2>
 
           <div className="grid grid-cols-2 gap-4">
-            {PAYMENT_METHODS.map((method) => (
-              <button
-                key={method.id}
-                type="button"
-                onClick={() => setPaymentMethod(method.id)}
-                className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-300 cursor-pointer
-                  ${
-                    paymentMethod === method.id
-                      ? "border-[var(--btn-neon)] bg-[var(--btn-neon)]/10 text-[var(--btn-neon)] shadow-[0_0_15px_rgba(253,224,71,0.2)] scale-105"
-                      : "border-white/10 text-white/50 hover:border-white/30 hover:bg-white/5"
-                  }
-                `}
-              >
-                <span className="text-2xl mb-2">{method.icon}</span>
-                <span className="text-sm font-bold uppercase">{method.name}</span>
-              </button>
-            ))}
+            {PAYMENT_METHODS.map((method) => {
+              const isSelected = paymentMethod === method.id;
+              return (
+                <button
+                  key={method.id}
+                  type="button"
+                  onClick={() => setPaymentMethod(method.id)}
+                  className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 cursor-pointer
+                    ${
+                      isSelected
+                        ? "border-[var(--btn-neon)] bg-gradient-to-br from-[var(--btn-neon)]/15 to-[var(--btn-neon)]/5 text-[var(--btn-neon)] shadow-[0_0_15px_rgba(255,176,0,0.15)] scale-105"
+                        : "border-white/5 text-slate-500 bg-slate-950/20 hover:border-slate-700 hover:bg-slate-950/40 hover:text-slate-300"
+                    }
+                  `}
+                >
+                  <span className="text-2xl mb-2">{method.icon}</span>
+                  <span className="text-xs font-bold uppercase tracking-wider">{method.name}</span>
+                </button>
+              );
+            })}
           </div>
 
           {paymentMethod === "TIEN_MAT" ? (
-            <div className="space-y-4 bg-black/20 p-6 rounded-2xl border border-white/5">
+            <div className="space-y-4 bg-slate-950/40 p-5 rounded-2xl border border-white/5">
               <div>
-                <div className="flex justify-between mb-2">
-                  <label className="text-xs text-white/60 uppercase">Tiền khách đưa</label>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Tiền khách đưa</label>
                   <button
                     onClick={handleExactAmount}
-                    className="text-xs text-[var(--btn-neon)] hover:underline cursor-pointer"
+                    className="text-xs text-[var(--btn-neon)] hover:text-white font-bold bg-[var(--btn-neon)]/15 border border-[var(--btn-neon)]/20 px-2 py-0.5 rounded cursor-pointer transition-colors animate-pulse"
                   >
                     Vừa đủ
                   </button>
@@ -340,48 +345,48 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
                     value={amountGiven}
                     onChange={handleAmountChange}
                     placeholder="Nhập số tiền..."
-                    className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-2xl font-bold text-white focus:outline-none focus:border-[var(--btn-neon)] text-right pr-12 font-mono"
+                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-[var(--btn-neon)] rounded-xl px-4 py-3 text-2xl font-black text-[var(--btn-neon)] focus:outline-none text-right pr-12 font-mono"
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40">đ</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold font-mono">đ</span>
                 </div>
               </div>
-              <div className="flex justify-between items-center pt-4 border-t border-white/10">
-                <span className="text-sm text-white/60 uppercase">Tiền thối lại</span>
-                <span className={`text-2xl font-bold ${changeAmount >= 0 ? "text-green-400" : "text-red-400"}`}>
+              <div className="flex justify-between items-center pt-4 border-t border-white/5">
+                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Tiền thối lại</span>
+                <span className={`text-2xl font-black font-mono ${changeAmount >= 0 ? "text-green-400" : "text-red-400"}`}>
                   {changeAmount >= 0 ? `${changeAmount.toLocaleString("vi-VN")} đ` : "---"}
                 </span>
               </div>
             </div>
           ) : (
-            <div className="space-y-4 bg-black/20 p-6 rounded-2xl border border-white/5">
+            <div className="space-y-4 bg-slate-950/40 p-5 rounded-2xl border border-white/5">
               <div>
-                <label className="block text-xs uppercase text-white/50 mb-2 pl-1">
-                  Mã giao dịch ngoài (Ngân hàng / QR code bill)
+                <label className="block text-[10px] text-slate-500 uppercase tracking-widest font-black mb-2 pl-1">
+                  Mã giao dịch đối tác (Mã chuyển khoản ngân hàng)
                 </label>
                 <input
                   type="text"
                   value={externalRefId}
                   onChange={(e) => setExternalRefId(e.target.value)}
                   placeholder="Nhập mã giao dịch đối tác..."
-                  className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[var(--btn-neon)] font-mono text-sm"
+                  className="w-full bg-slate-950/80 border border-slate-800 focus:border-[var(--btn-neon)] rounded-xl px-4 py-3 text-white focus:outline-none font-mono text-sm"
                 />
               </div>
-              <p className="text-xs text-white/40 italic">
-                * Vui lòng yêu cầu khách chuyển khoản theo mã QR của rạp, sau đó điền mã tham chiếu giao dịch thành công.
+              <p className="text-[11px] text-slate-500 leading-relaxed pl-1">
+                ⚠️ Nhân viên lưu ý kiểm tra lịch sử biến động số dư tài khoản của rạp trước khi hoàn tất giao dịch chuyển khoản.
               </p>
             </div>
           )}
 
           <div>
-            <label className="block text-xs uppercase text-white/50 mb-2 pl-1">
+            <label className="block text-[10px] text-slate-500 uppercase tracking-widest font-black mb-2 pl-1">
               Ghi chú đơn hàng (Tùy chọn)
             </label>
             <input
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="VD: Khách lấy bắp nước kèm, hoặc thắc mắc ghế..."
-              className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[var(--btn-neon)] text-sm"
+              placeholder="Ghi chú thêm thông tin..."
+              className="w-full bg-slate-950/80 border border-slate-800 focus:border-[var(--btn-neon)] rounded-xl px-4 py-3 text-white focus:outline-none text-xs"
             />
           </div>
         </div>
@@ -390,7 +395,7 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
           <button
             onClick={onPrev}
             disabled={isProcessing}
-            className="px-6 py-4 rounded-full font-bold text-white/70 bg-white/5 hover:bg-white/10 transition-colors uppercase text-sm border border-white/10 w-1/3 cursor-pointer disabled:opacity-50"
+            className="px-6 py-4 rounded-full font-bold text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white transition-all duration-300 uppercase text-xs tracking-wider border border-white/5 w-1/3 cursor-pointer disabled:opacity-50"
           >
             Quay Lại
           </button>

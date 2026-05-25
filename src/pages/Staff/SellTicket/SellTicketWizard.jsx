@@ -50,22 +50,24 @@ const SellTicketWizard = () => {
 
   return (
     <div className="flex flex-col h-full min-h-0 min-w-0 space-y-6">
-      <div className="staff-card-flat rounded-2xl p-4 flex justify-between items-center px-10 shrink-0 min-w-0 overflow-x-auto scrollbar-hide">
+      <div className="staff-card-flat rounded-2xl p-5 flex justify-between items-center px-12 shrink-0 min-w-0 overflow-x-auto scrollbar-hide shadow-lg border border-white/5 bg-[#1B2435]">
         {[1, 2, 3].map((step) => (
           <div key={step} className="flex items-center gap-3 shrink-0">
             <div
               className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-all duration-300 shrink-0 ${
-                currentStep >= step
-                  ? "bg-[var(--btn-neon)] text-slate-900 shadow-[0_0_15px_rgba(253,224,71,0.5)]"
-                  : "bg-white/10 text-white/50"
+                currentStep === step
+                  ? "bg-gradient-to-r from-[var(--btn-neon)] to-[#E59A00] text-slate-950 shadow-[0_0_20px_rgba(255,176,0,0.4)] scale-110"
+                  : currentStep > step
+                    ? "bg-[var(--btn-neon)]/20 border border-[var(--btn-neon)]/50 text-[var(--btn-neon)]"
+                    : "bg-slate-800/40 border border-slate-700/50 text-slate-500"
               }`}
             >
               {step}
             </div>
 
             <span
-              className={`text-sm font-semibold uppercase tracking-wider whitespace-nowrap ${
-                currentStep >= step ? "text-glow text-white" : "text-white/40"
+              className={`text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-300 ${
+                currentStep >= step ? "text-glow text-[var(--btn-neon)]" : "text-slate-500"
               }`}
             >
               {step === 1
@@ -76,7 +78,13 @@ const SellTicketWizard = () => {
             </span>
 
             {step < 3 && (
-              <div className="w-16 h-px bg-white/20 mx-4 hidden md:block shrink-0"></div>
+              <div
+                className={`w-16 h-1 mx-4 hidden md:block shrink-0 rounded-full transition-all duration-300 ${
+                  currentStep > step
+                    ? "bg-gradient-to-r from-[var(--btn-neon)] to-[#E59A00]"
+                    : "bg-white/10"
+                }`}
+              ></div>
             )}
           </div>
         ))}

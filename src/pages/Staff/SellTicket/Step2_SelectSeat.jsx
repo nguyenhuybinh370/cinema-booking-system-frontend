@@ -48,8 +48,11 @@ const Step2_SelectSeat = ({ onNext, onPrev, bookingData }) => {
 
   if (isLoading || !seatMapData) {
     return (
-      <div className="flex items-center justify-center h-64 text-white/50 font-bold uppercase tracking-wider">
-        Đang tải sơ đồ ghế...
+      <div className="flex items-center justify-center h-64 text-slate-400 font-bold uppercase tracking-wider">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[var(--btn-neon)] border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-glow text-[var(--btn-neon)] text-sm">Đang tải sơ đồ ghế...</span>
+        </div>
       </div>
     );
   }
@@ -116,14 +119,16 @@ const Step2_SelectSeat = ({ onNext, onPrev, bookingData }) => {
   });
 
   return (
-    <div className="flex gap-8 h-full relative">
+    <div className="flex flex-col lg:flex-row gap-6 h-full relative min-h-0">
       {/* --- CỘT TRÁI: MA TRẬN GHẾ DỰA TRÊN SƠ ĐỒ DÂN DỤNG --- */}
-      <div className="flex-[2] glass-effect rounded-3xl p-8 flex flex-col items-center relative overflow-hidden overflow-x-auto max-h-[70vh]">
-        <div className="w-[80%] h-12 mb-12 relative flex items-center justify-center shrink-0">
-          <div className="absolute top-0 w-full h-full border-t-4 border-[var(--btn-neon)] rounded-[50%] blur-[2px] opacity-70"></div>
-          <div className="absolute top-[-10px] w-full h-full border-t-2 border-[var(--btn-neon)] rounded-[50%] shadow-[0_-15px_30px_rgba(253,224,71,0.3)]"></div>
-          <span className="text-white/50 text-sm tracking-[0.5em] uppercase font-bold mt-4">
-            Màn hình chính
+      <div className="flex-[2] glass-effect rounded-3xl p-8 flex flex-col items-center relative overflow-hidden overflow-x-auto max-h-[70vh] border border-white/5 shadow-2xl bg-[#131A2A]/40">
+        
+        {/* Luxury curved screen indicator */}
+        <div className="w-[80%] mb-14 relative flex flex-col items-center shrink-0">
+          <div className="w-full h-1 bg-gradient-to-r from-transparent via-[var(--btn-neon)] to-transparent rounded-full shadow-[0_0_25px_rgba(255,176,0,0.9)]"></div>
+          <div className="w-[90%] h-10 bg-gradient-to-b from-[var(--btn-neon)]/10 to-transparent blur-md rounded-t-full mt-0.5"></div>
+          <span className="text-[var(--btn-neon)]/40 text-[10px] tracking-[0.6em] uppercase font-black mt-2 text-glow">
+            Màn hình hiển thị
           </span>
         </div>
 
@@ -140,7 +145,7 @@ const Step2_SelectSeat = ({ onNext, onPrev, bookingData }) => {
 
             return (
               <div key={rowLetter} className="flex gap-2 items-center justify-center">
-                <div className="w-8 text-center text-white/40 font-bold text-sm shrink-0">
+                <div className="w-8 text-center text-slate-500 font-extrabold text-xs shrink-0 font-mono">
                   {rowLetter}
                 </div>
 
@@ -160,11 +165,11 @@ const Step2_SelectSeat = ({ onNext, onPrev, bookingData }) => {
                   const isSelected = selectedSeats.some((s) => s.MaGheSuatChieu === seat.MaGheSuatChieu);
                   
                   // Color configuration based on type names from backend
-                  let typeColorClass = "border-white/30 text-white/60 hover:border-white hover:text-white";
+                  let typeColorClass = "border-slate-700 bg-slate-800/40 text-slate-300 hover:border-[var(--btn-neon)]/75 hover:text-white hover:bg-slate-800/60";
                   if (seat.TenLoaiGhe.toUpperCase().includes("VIP")) {
-                    typeColorClass = "border-red-500/60 text-red-400 hover:border-red-400 hover:text-red-300 bg-red-500/10";
+                    typeColorClass = "border-amber-600/50 bg-amber-950/20 text-amber-400 hover:border-amber-400 hover:text-amber-200 hover:bg-amber-950/30";
                   } else if (seat.TenLoaiGhe.toUpperCase().includes("ĐÔI") || seat.TenLoaiGhe.toUpperCase().includes("COUPLE")) {
-                    typeColorClass = "border-pink-500/60 text-pink-400 hover:border-pink-400 hover:text-pink-300 bg-pink-500/10";
+                    typeColorClass = "border-pink-500/50 bg-pink-950/15 text-pink-400 hover:border-pink-400 hover:text-pink-200 hover:bg-pink-950/25";
                   }
 
                   const isCouple = seat.TenLoaiGhe.toUpperCase().includes("ĐÔI") || seat.TenLoaiGhe.toUpperCase().includes("COUPLE");
@@ -178,11 +183,11 @@ const Step2_SelectSeat = ({ onNext, onPrev, bookingData }) => {
                         ${isCouple ? "w-[72px]" : "w-8"} 
                         ${
                           isSold
-                            ? "bg-red-500/20 text-red-500 border-red-500/30 cursor-not-allowed opacity-50"
+                            ? "bg-slate-900/80 text-slate-700 border-slate-800/50 cursor-not-allowed opacity-30"
                             : isHeld
-                            ? "bg-orange-500/20 text-orange-400 border-orange-500/30 cursor-not-allowed opacity-60"
+                            ? "bg-orange-950/35 text-orange-500/70 border-orange-950/50 cursor-not-allowed opacity-40"
                             : isSelected
-                            ? "bg-[var(--btn-neon)] text-slate-900 border-[var(--btn-neon)] shadow-[0_0_10px_rgba(253,224,71,0.5)] scale-110"
+                            ? "bg-gradient-to-r from-[var(--btn-neon)] to-[#E59A00] text-slate-950 border-transparent shadow-[0_0_15px_rgba(255,176,0,0.5)] font-extrabold scale-105"
                             : typeColorClass
                         }
                       `}
@@ -193,7 +198,7 @@ const Step2_SelectSeat = ({ onNext, onPrev, bookingData }) => {
                   );
                 })}
 
-                <div className="w-8 text-center text-white/40 font-bold text-sm shrink-0">
+                <div className="w-8 text-center text-slate-500 font-extrabold text-xs shrink-0 font-mono">
                   {rowLetter}
                 </div>
               </div>
@@ -202,52 +207,59 @@ const Step2_SelectSeat = ({ onNext, onPrev, bookingData }) => {
         </div>
 
         {/* Legend */}
-        <div className="mt-8 flex flex-wrap gap-6 border-t border-white/10 pt-4 w-full justify-center shrink-0">
+        <div className="mt-8 flex flex-wrap gap-5 border-t border-white/5 pt-5 w-full justify-center shrink-0">
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded border border-white/30 bg-white/5"></div>
-            <span className="text-xs text-white/60">Thường</span>
+            <div className="w-4 h-4 rounded-t bg-slate-800/40 border border-slate-700"></div>
+            <span className="text-[11px] text-slate-400 font-medium">Thường</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded border border-red-500/60 bg-red-500/10"></div>
-            <span className="text-xs text-white/60">VIP</span>
+            <div className="w-4 h-4 rounded-t bg-amber-950/20 border border-amber-600/50"></div>
+            <span className="text-[11px] text-slate-400 font-medium">VIP</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-10 h-5 rounded border border-pink-500/60 bg-pink-500/10"></div>
-            <span className="text-xs text-white/60">Đôi</span>
+            <div className="w-8 h-4 rounded-t bg-pink-950/15 border border-pink-500/50"></div>
+            <span className="text-[11px] text-slate-400 font-medium">Đôi</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded bg-[var(--btn-neon)]"></div>
-            <span className="text-xs text-white/60">Đang chọn</span>
+            <div className="w-4 h-4 rounded-t bg-gradient-to-r from-[var(--btn-neon)] to-[#E59A00] shadow-[0_0_8px_rgba(255,176,0,0.5)]"></div>
+            <span className="text-[11px] text-slate-400 font-medium">Đang chọn</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded border border-orange-500/30 bg-orange-500/20"></div>
-            <span className="text-xs text-white/60">Đang giữ (Online)</span>
+            <div className="w-4 h-4 rounded-t bg-orange-950/35 border border-orange-950/50 opacity-40"></div>
+            <span className="text-[11px] text-slate-400 font-medium">Đang giữ</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded border border-red-500/30 bg-red-500/20 opacity-50"></div>
-            <span className="text-xs text-white/60">Đã bán</span>
+            <div className="w-4 h-4 rounded-t bg-slate-900/80 border border-slate-800/50 opacity-30"></div>
+            <span className="text-[11px] text-slate-400 font-medium">Đã bán</span>
           </div>
         </div>
       </div>
 
       {/* --- CỘT PHẢI: CHI TIẾT ĐẶT VÉ --- */}
-      <div className="flex-1 glass-effect rounded-3xl p-6 flex flex-col justify-between overflow-y-auto max-h-[70vh]">
+      <div className="flex-1 glass-effect rounded-3xl p-6 flex flex-col justify-between overflow-y-auto max-h-[70vh] border border-white/5 shadow-2xl bg-[#131A2A]/40 min-w-[320px]">
         <div className="space-y-6">
-          <h2 className="text-xl font-bold text-glow mb-6 uppercase tracking-widest text-center">
-            Chi Tiết Đặt Vé
-          </h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-extrabold text-glow uppercase tracking-widest text-[var(--btn-neon)]">
+              Chi Tiết Đặt Vé
+            </h2>
+            {selectedSeats.length > 0 && (
+              <span className="px-3 py-1 bg-red-950/60 border border-red-500/30 text-red-400 rounded-full font-mono text-xs font-bold animate-pulse">
+                ⏱ {formatTime(timeLeft)}
+              </span>
+            )}
+          </div>
 
-          <div className="space-y-4 bg-black/20 p-4 rounded-xl border border-white/5">
+          <div className="space-y-4 bg-slate-950/40 p-4 rounded-xl border border-white/5">
             <div>
-              <p className="text-xs text-white/50 uppercase mb-1">Phim</p>
-              <p className="font-bold text-lg text-[var(--btn-neon)]">
+              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Phim</p>
+              <p className="font-extrabold text-base text-white uppercase">
                 {bookingData.movie?.title}
               </p>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between border-t border-white/5 pt-3">
               <div>
-                <p className="text-xs text-white/50 uppercase mb-1">Suất chiếu</p>
-                <p className="font-bold">
+                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Suất chiếu</p>
+                <p className="font-bold text-sm text-[var(--btn-neon)]">
                   {bookingData.showtime?.time} • {bookingData.showtime?.room}
                 </p>
               </div>
@@ -255,24 +267,24 @@ const Step2_SelectSeat = ({ onNext, onPrev, bookingData }) => {
           </div>
 
           <div className="space-y-3">
-            <p className="text-xs text-white/50 uppercase font-bold">
+            <p className="text-[10px] text-slate-500 uppercase font-extrabold tracking-wider">
               Ghế đang chọn ({selectedSeats.length})
             </p>
 
             {selectedSeats.length === 0 && (
-              <span className="text-sm text-white/30 italic">
+              <div className="text-sm text-slate-500 italic py-2">
                 Chưa chọn ghế nào...
-              </span>
+              </div>
             )}
 
             {Object.keys(breakdown).map((typeName) => (
-              <div key={typeName} className="flex items-start gap-2">
-                <span className="w-20 text-xs text-white/40 pt-1 truncate">{typeName}:</span>
+              <div key={typeName} className="flex items-start gap-2 border-b border-white/5 pb-2">
+                <span className="w-20 text-xs text-slate-400 font-bold pt-1 truncate">{typeName}:</span>
                 <div className="flex flex-wrap gap-1">
                   {breakdown[typeName].map((seatName) => (
                     <span
                       key={seatName}
-                      className="px-2 py-0.5 bg-white/10 rounded border border-white/20 text-xs font-bold font-mono"
+                      className="px-2 py-0.5 bg-[var(--btn-neon)]/10 text-[var(--btn-neon)] rounded border border-[var(--btn-neon)]/20 text-xs font-black font-mono"
                     >
                       {seatName}
                     </span>
@@ -283,12 +295,12 @@ const Step2_SelectSeat = ({ onNext, onPrev, bookingData }) => {
           </div>
         </div>
 
-        <div className="mt-8 border-t border-white/10 pt-6">
+        <div className="mt-8 border-t border-white/5 pt-6">
           <div className="flex justify-between items-end mb-6">
-            <span className="text-sm text-white/60 uppercase tracking-widest">
+            <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">
               Tổng tiền
             </span>
-            <span className="text-3xl font-black text-glow text-[var(--btn-neon)]">
+            <span className="text-3xl font-black text-glow text-[var(--btn-neon)] tracking-tight">
               {totalPrice.toLocaleString("vi-VN")} đ
             </span>
           </div>
@@ -296,7 +308,7 @@ const Step2_SelectSeat = ({ onNext, onPrev, bookingData }) => {
           <div className="flex gap-3">
             <button
               onClick={onPrev}
-              className="px-6 py-3 rounded-full font-bold text-white/70 bg-white/5 hover:bg-white/10 transition-colors uppercase text-sm border border-white/10 cursor-pointer"
+              className="px-6 py-3 rounded-full font-bold text-slate-400 bg-white/5 hover:bg-white/10 hover:text-white transition-all duration-300 uppercase text-xs tracking-wider border border-white/5 cursor-pointer"
             >
               Quay lại
             </button>
@@ -305,7 +317,7 @@ const Step2_SelectSeat = ({ onNext, onPrev, bookingData }) => {
               disabled={selectedSeats.length === 0}
               className={`flex-1 btn-bright cursor-pointer ${selectedSeats.length === 0 ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
             >
-              Thanh Toán
+              Tiếp Tục
             </button>
           </div>
         </div>
