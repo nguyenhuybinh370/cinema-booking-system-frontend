@@ -1,3 +1,15 @@
+import { Route, Routes, Navigate } from "react-router-dom";
+import Home from "./pages/Client/Home";
+import Login from "./pages/Client/Login";
+import ProtectedRoute from "./components/Auth/ProtectedRoute";
+import SellTicketWizard from "./pages/Staff/SellTicket/SellTicketWizard";
+import StaffLayout from "./components/StaffLayout/StaffLayout";
+import CheckIn from "./pages/Staff/CheckIn";
+import Dashboard from "./pages/Staff/Dashboard";
+import Profile from "./pages/Staff/Profile/Profile";
+import Schedule from "./pages/Staff/Schedule/Schedule";
+import TransactionHistory from "./pages/Staff/TransactionHistory";
+
 import { Route, Routes, useLocation } from 'react-router-dom'
 import Home from './pages/Client/Home'
 import Navbar from './components/Navbar';
@@ -19,6 +31,23 @@ function App() {
       <Toaster />
       {!isAdminRoute && <Navbar />}
       <Routes>
+        {/* === PUBLIC ROUTES === */}
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+
+        {/* === STAFF ROUTES (Role: STAFF) === */}
+        <Route element={<ProtectedRoute allowedRoles={["STAFF"]} />}>
+          <Route path="/staff" element={<StaffLayout />}>
+            {/* Chuyển hướng mặc định vào thẳng trang dashboard */}
+            <Route index element={<Navigate to="/staff/dashboard" replace />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="sell-ticket" element={<SellTicketWizard />} />
+            <Route path="check-in" element={<CheckIn />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="schedule" element={<Schedule />} />
+            <Route path="transactions" element={<TransactionHistory />} />
+          </Route>
+        </Route>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -30,7 +59,7 @@ function App() {
       </Routes>
       {!isAdminRoute && <Footer />}
     </>
-  )
+  );
 }
 
-export default App
+export default App;
