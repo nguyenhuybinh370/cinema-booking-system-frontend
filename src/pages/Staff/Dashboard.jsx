@@ -1,20 +1,69 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, ScanLine, Clock, Film, TrendingUp } from "lucide-react";
-import {
-  UPCOMING_SHOWS,
-  SHIFT_STATS,
-  RECENT_TRANSACTIONS,
-} from "../../data/mockDashboard";
+import { Clock, Film } from "lucide-react";
+import axiosClient from "../../api/axiosClient";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [dashboardData, setDashboardData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const fetchDashboard = async () => {
+    try {
+      setIsLoading(true);
+      setError("");
+      const res = await axiosClient.get("/staff/dashboard");
+      setDashboardData(res);
+    } catch (err) {
+      console.error("Failed to load dashboard data:", err);
+      setError("Không thể tải thông tin tổng quan ca làm việc.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboard();
+  }, []);
 
   const handleQuickSell = (show) => {
     navigate("/staff/sell-ticket", {
       state: {
-        preSelected: { movie: show.movie, showtime: show.showtime },
+        preSelected: { 
+          movie: show.movie, 
+          showtime: {
+            ...show.showtime,
+            // Reconstruct nested structure if SellTicket expects it
+            MaSuatChieu: show.showtime.id,
+            GioChieu: show.showtime.time,
+          } 
+        },
       },
     });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full min-h-[400px] flex-col items-center justify-center text-slate-400 font-bold uppercase tracking-wider">
+        <div className="w-12 h-12 border-4 border-[var(--btn-neon)] border-t-transparent rounded-full animate-spin mb-4"></div>
+        <span className="text-glow text-[var(--btn-neon)] text-sm">Đang tải thông tin tổng quan...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 bg-red-950/20 border border-red-500/30 rounded-3xl text-red-400 text-xs font-bold text-center animate-pulse">
+        ⚠️ {error}
+      </div>
+    );
+  }
+
+  const { stats, upcomingShows, recentActivities } = dashboardData || {
+    stats: { revenue: 0, ticketsSold: 0, ticketsChecked: 0, shiftName: "Không có ca trực" },
+    upcomingShows: [],
+    recentActivities: []
   };
 
   return (
@@ -27,7 +76,7 @@ const Dashboard = () => {
           <p className="text-white/60 mt-2 flex items-center gap-2">
             <Clock size={16} /> Đang diễn ra:{" "}
             <span className="font-bold text-white">
-              {SHIFT_STATS.shiftName}
+              {stats.shiftName}
             </span>
           </p>
         </div>
@@ -39,7 +88,7 @@ const Dashboard = () => {
             Doanh thu tại quầy
           </p>
           <h2 className="text-4xl font-black text-white">
-            {SHIFT_STATS.revenue.toLocaleString("vi-VN")}đ
+            {stats.revenue.toLocaleString("vi-VN")}đ
           </h2>
         </div>
         <div className="staff-card-flat p-6 rounded-3xl relative overflow-hidden group">
@@ -47,7 +96,7 @@ const Dashboard = () => {
             Vé đã bán
           </p>
           <h2 className="text-4xl font-black text-white">
-            {SHIFT_STATS.ticketsSold}{" "}
+            {stats.ticketsSold}{" "}
             <span className="text-lg text-white/30 font-normal">vé</span>
           </h2>
         </div>
@@ -56,7 +105,7 @@ const Dashboard = () => {
             Vé đã soát (Check-in)
           </p>
           <h2 className="text-4xl font-black text-white">
-            {SHIFT_STATS.ticketsChecked}{" "}
+            {stats.ticketsChecked}{" "}
             <span className="text-lg text-white/30 font-normal">lượt</span>
           </h2>
         </div>
@@ -69,11 +118,11 @@ const Dashboard = () => {
             Suất chiếu sắp diễn ra
           </h2>
           <div className="flex-1 space-y-4">
-            {UPCOMING_SHOWS.map((show, index) => {
-              const fillPercentage = (show.booked / show.total) * 100;
+            {upcomingShows.map((show, index) => {
+              const fillPercentage = show.total > 0 ? (show.booked / show.total) * 100 : 0;
               return (
                 <div
-                  key={index}
+                  key={show.showtime.id || index}
                   onClick={() => handleQuickSell(show)}
                   className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between hover:border-[var(--btn-neon)] hover:bg-[var(--btn-neon)]/5 transition-all cursor-pointer group"
                 >
@@ -109,6 +158,11 @@ const Dashboard = () => {
                 </div>
               );
             })}
+            {upcomingShows.length === 0 && (
+              <div className="text-white/40 text-center py-8 text-sm italic">
+                Không có suất chiếu sắp diễn ra hôm nay.
+              </div>
+            )}
           </div>
         </div>
 
@@ -118,9 +172,9 @@ const Dashboard = () => {
             Hoạt động gần đây
           </h2>
           <div className="flex-1 space-y-4">
-            {RECENT_TRANSACTIONS.map((tx) => (
+            {recentActivities.map((tx, index) => (
               <div
-                key={tx.id}
+                key={tx.id || index}
                 className="flex items-start gap-4 pb-4 border-b border-white/5 last:border-0"
               >
                 <div className="w-2 h-2 mt-2 rounded-full bg-[var(--btn-neon)]"></div>
@@ -142,6 +196,11 @@ const Dashboard = () => {
                 </div>
               </div>
             ))}
+            {recentActivities.length === 0 && (
+              <div className="text-white/40 text-center py-8 text-sm italic">
+                Không có hoạt động nào gần đây.
+              </div>
+            )}
           </div>
           <button
             onClick={() => navigate("/staff/transactions")}
