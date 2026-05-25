@@ -14,17 +14,34 @@ import LogoImage from "../../assets/UITCinema.png";
 const menuItems = [
   {
     title: "Tổng quan",
+    subtitle: "Dashboard",
     path: "/staff/dashboard",
-    icon: <LayoutDashboard size={22} />,
+    icon: <LayoutDashboard size={20} />,
   },
-  { title: "Bán vé", path: "/staff/sell-ticket", icon: <Ticket size={22} /> },
-  { title: "Soát vé", path: "/staff/check-in", icon: <Scan size={22} /> },
+  {
+    title: "Bán vé",
+    subtitle: "POS",
+    path: "/staff/sell-ticket",
+    icon: <Ticket size={20} />,
+  },
+  {
+    title: "Soát vé",
+    subtitle: "Check-in",
+    path: "/staff/check-in",
+    icon: <Scan size={20} />,
+  },
   {
     title: "Lịch làm việc",
+    subtitle: "Schedule",
     path: "/staff/schedule",
-    icon: <Calendar size={22} />,
+    icon: <Calendar size={20} />,
   },
-  { title: "Cá nhân", path: "/staff/profile", icon: <User size={22} /> },
+  {
+    title: "Cá nhân",
+    subtitle: "Profile",
+    path: "/staff/profile",
+    icon: <User size={20} />,
+  },
 ];
 
 const StaffSidebar = () => {
@@ -50,46 +67,53 @@ const StaffSidebar = () => {
   };
 
   return (
-    <aside className="w-72 shrink-0 h-full staff-card-flat border-r border-white/5 flex flex-col overflow-hidden scrollbar-hide">
-      <div className="h-36 flex items-center justify-center border-b border-white/5 shrink-0 px-4">
+    <aside className="w-60 shrink-0 h-full bg-[#0D1321] border-r border-white/5 flex flex-col overflow-hidden scrollbar-hide relative">
+      {/* Logo */}
+      <div className="h-24 flex items-center justify-center border-b border-white/[0.06] shrink-0 px-5">
         <img
           src={LogoImage}
           alt="UIT Cinema Logo"
-          className="h-28 w-auto object-contain transition-all duration-300 hover:scale-105"
+          className="h-16 w-auto object-contain filter drop-shadow-[0_0_12px_rgba(255,176,0,0.12)]"
         />
       </div>
 
-      <nav className="flex-1 py-8 px-4 space-y-2 overflow-y-auto overflow-x-hidden scrollbar-hide">
+      <nav className="flex-1 py-5 px-3 space-y-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
         {menuItems.map((item, index) => (
           <NavLink
             key={index}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center gap-4 px-6 py-4 rounded-2xl font-bold uppercase tracking-wider transition-all duration-300 w-full group min-w-0
+              `flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold transition-all duration-200 w-full group min-w-0 border-l-[3px]
               ${
                 isActive
-                  ? "bg-[var(--btn-neon)]/10 text-[var(--btn-neon)] shadow-[0_0_20px_rgba(253,224,71,0.1)]"
-                  : "text-white/50 hover:bg-white/5 hover:text-white"
+                  ? "bg-[var(--btn-neon)]/10 border-[var(--btn-neon)] text-[var(--btn-neon)]"
+                  : "border-transparent text-slate-500 hover:bg-white/[0.04] hover:text-slate-300"
               }`
             }
           >
-            <span className="shrink-0">{item.icon}</span>
+            <span className="shrink-0 transition-transform duration-200 group-hover:scale-105">{item.icon}</span>
 
-            <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-left text-sm">
-              {item.title}
-            </span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[13px] font-bold uppercase tracking-wider leading-tight truncate">
+                {item.title}
+              </span>
+              <span className="text-[10px] text-slate-600 font-medium tracking-wide leading-tight">
+                {item.subtitle}
+              </span>
+            </div>
           </NavLink>
         ))}
       </nav>
 
-      <div className="p-4 border-t border-white/5 shrink-0">
+      {/* Logout area */}
+      <div className="p-3 border-t border-white/[0.06] shrink-0">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-4 px-6 py-4 w-full rounded-2xl font-bold uppercase tracking-wider text-white/50 hover:bg-red-500/10 hover:text-red-400 transition-colors group min-w-0 cursor-pointer"
+          className="flex items-center gap-3.5 px-4 py-3 w-full rounded-xl font-semibold text-slate-500 hover:bg-red-500/10 hover:text-red-400 border-l-[3px] border-transparent transition-all duration-200 group min-w-0 cursor-pointer"
         >
-          <LogOut size={22} className="shrink-0" />
+          <LogOut size={18} className="shrink-0 transition-transform duration-200 group-hover:-translate-x-0.5" />
 
-          <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-left text-sm">
+          <span className="text-[13px] font-bold uppercase tracking-wider truncate">
             Đăng xuất
           </span>
         </button>

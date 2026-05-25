@@ -13,61 +13,60 @@ const ShiftActionModal = ({ selectedShift, onClose, onConfirm }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4">
-      <div className="bg-[var(--navy-light)] border border-white/20 rounded-3xl p-8 max-w-sm w-full shadow-2xl relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 p-4">
+      <div className="bg-[#131A2A] border border-white/[0.08] rounded-2xl p-8 max-w-sm w-full shadow-2xl relative">
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 text-white/50 hover:text-white"
+          className="absolute top-6 right-6 text-slate-400 hover:text-white transition-colors cursor-pointer"
         >
-          <X size={24} />
+          <X size={20} />
         </button>
 
         <div className="flex flex-col items-center text-center mt-2">
           <div
-            className={`p-4 rounded-full mb-4 ${isMyShift ? "bg-red-500/10 text-red-400" : "bg-[var(--btn-neon)]/10 text-[var(--btn-neon)]"}`}
+            className={`p-4 rounded-full mb-4 ${isMyShift ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-[#FFB000]/10 text-[#FFB000] border border-[#FFB000]/20"}`}
           >
-            {isMyShift ? <AlertCircle size={32} /> : <Check size={32} />}
+            {isMyShift ? <AlertCircle size={28} /> : <Check size={28} />}
           </div>
 
-          <h2 className="text-xl font-bold uppercase tracking-widest text-white mb-2">
+          <h2 className="text-lg font-black uppercase tracking-widest text-white mb-1">
             {isMyShift ? "Xác nhận hủy ca" : "Xác nhận đăng ký"}
           </h2>
+          <p className="text-xs text-slate-400">
+            {isMyShift ? "Bạn có chắc chắn muốn hủy đăng ký ca làm này?" : "Vui lòng xác nhận đăng ký ca làm việc dưới đây:"}
+          </p>
 
-          <div className="bg-black/20 w-full p-4 rounded-xl border border-white/5 mt-4 text-left space-y-2">
-            <p className="text-sm text-white/50">
-              Ngày:{" "}
-              <span className="font-bold text-white float-right">
-                {dateString}
-              </span>
+          <div className="bg-[#0D1321]/60 w-full p-4 rounded-xl border border-white/5 mt-5 text-left space-y-2.5">
+            <p className="text-xs text-slate-400 flex justify-between">
+              <span>Ngày làm:</span>
+              <span className="font-bold text-white">{dateString}</span>
             </p>
-            <p className="text-sm text-white/50">
-              Ca:{" "}
-              <span className="font-bold text-[var(--btn-neon)] float-right">
-                {template.TenCa}
-              </span>
+            <p className="text-xs text-slate-400 flex justify-between">
+              <span>Ca trực:</span>
+              <span className="font-bold text-[#FFB000] uppercase">{template.TenCa}</span>
             </p>
-            <p className="text-sm text-white/50">
-              Thời gian:{" "}
-              <span className="font-mono text-white float-right">
+            <p className="text-xs text-slate-400 flex justify-between">
+              <span>Thời gian:</span>
+              <span className="font-mono font-bold text-white">
                 {formatTime(template.GioBatDau)} - {formatTime(template.GioKetThuc)}
               </span>
             </p>
           </div>
 
-          <div className="flex gap-3 w-full mt-8">
+          <div className="flex gap-3 w-full mt-7">
             <button
               onClick={onClose}
-              className="flex-1 py-3 rounded-full font-bold text-white/50 hover:bg-white/5 hover:text-white transition-colors border border-white/10 cursor-pointer"
+              className="flex-1 py-2.5 rounded-full font-bold text-xs text-slate-400 hover:bg-white/5 hover:text-white transition-all border border-white/10 cursor-pointer"
             >
               Đóng
             </button>
             <button
               onClick={onConfirm}
-              className={`flex-1 py-3 rounded-full font-bold uppercase tracking-wider transition-colors cursor-pointer
+              className={`flex-1 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all cursor-pointer
                 ${
                   isMyShift
-                    ? "bg-red-500/20 text-red-400 hover:bg-red-500/40 border border-red-500/50"
-                    : "btn-bright"
+                    ? "bg-red-950/40 text-red-400 hover:bg-red-900/60 border border-red-500/40 hover:border-red-500"
+                    : "bg-[#FFB000] text-slate-950 hover:bg-[#FFB000]/80"
                 }
               `}
             >

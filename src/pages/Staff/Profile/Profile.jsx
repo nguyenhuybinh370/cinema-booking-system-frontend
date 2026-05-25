@@ -104,56 +104,61 @@ const Profile = () => {
 
   if (isLoading || !staffInfo) {
     return (
-      <div className="flex items-center justify-center h-64 text-white/50 font-bold uppercase tracking-wider">
-        Đang tải thông tin hồ sơ...
+      <div className="flex items-center justify-center h-64 text-slate-400 font-bold uppercase tracking-wider">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[#FFB000] border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-glow text-[#FFB000] text-sm">Đang tải thông tin hồ sơ...</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full max-w-6xl mx-auto space-y-8">
+    <div className="flex flex-col h-full max-w-6xl mx-auto space-y-8 py-2">
       <div>
-        <h1 className="text-3xl font-black text-glow uppercase tracking-widest text-[var(--btn-neon)]">
+        <span className="text-[10px] uppercase tracking-[0.4em] text-[#FFB000] font-black">Thông tin tài khoản</span>
+        <h1 className="text-3xl font-black text-glow uppercase tracking-widest text-white mt-1">
           Hồ Sơ Cá Nhân
         </h1>
-        <p className="text-white/50 mt-2">
-          Quản lý thông tin định danh và bảo mật tài khoản
+        <p className="text-slate-400 mt-2 text-sm">
+          Quản lý thông tin định danh cá nhân và bảo mật mật khẩu tài khoản trực
         </p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8 items-start">
         {/* ID CARD */}
-        <div className="w-full lg:w-1/3 glass-effect rounded-3xl p-8 flex flex-col items-center relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-[var(--purple-glow)] to-transparent opacity-20"></div>
-          <div className="w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-[var(--btn-neon)] to-[var(--purple-glow)] relative z-10 mb-6 shadow-[0_0_30px_rgba(253,224,71,0.2)]">
-            <div className="w-full h-full bg-slate-900 rounded-full flex items-center justify-center text-5xl font-black text-white">
+        <div className="w-full lg:w-1/3 bg-[#131A2A]/80 border border-white/[0.06] shadow-2xl rounded-2xl p-8 flex flex-col items-center relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-[#FFB000]/5 to-transparent pointer-events-none"></div>
+          <div className="w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-[#FFB000] to-purple-500 relative z-10 mb-6 shadow-[0_0_30px_rgba(255,176,0,0.15)]">
+            <div className="w-full h-full bg-[#0B1020] rounded-full flex items-center justify-center text-5xl font-black text-white select-none">
               {staffInfo.fullName.charAt(0)}
             </div>
             <button
               onClick={() => setIsUpdateModalOpen(true)}
-              className="absolute bottom-0 right-0 p-2 bg-[var(--btn-neon)] text-slate-900 rounded-full hover:scale-110 transition-transform cursor-pointer"
+              className="absolute bottom-0 right-0 p-2.5 bg-[#FFB000] text-slate-950 rounded-full hover:scale-110 shadow-[0_0_10px_rgba(255,176,0,0.3)] transition-all duration-300 cursor-pointer border border-transparent"
+              title="Chỉnh sửa thông tin"
             >
-              <Edit3 size={16} />
+              <Edit3 size={15} />
             </button>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-1 text-center">
+          <h2 className="text-xl font-black text-white mb-1 text-center uppercase tracking-wide">
             {staffInfo.fullName}
           </h2>
-          <p className="text-[var(--btn-neon)] font-mono tracking-widest mb-6">
-            {staffInfo.id}
+          <p className="text-[#FFB000] font-mono font-bold tracking-widest mb-6 text-xs text-glow">
+            ID: {staffInfo.id}
           </p>
 
           <div className="w-full space-y-3">
-            <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
-              <span className="text-white/50 text-sm">Chức vụ</span>
-              <span className="font-bold text-sm text-white flex items-center gap-2">
+            <div className="flex items-center justify-between p-3.5 bg-slate-950/30 rounded-xl border border-white/5">
+              <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Chức vụ</span>
+              <span className="font-extrabold text-xs text-white uppercase tracking-wider flex items-center gap-2">
                 <Shield size={14} className="text-blue-400" />
                 {staffInfo.role}
               </span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
-              <span className="text-white/50 text-sm">Trạng thái</span>
-              <span className="font-bold text-sm text-green-400 flex items-center gap-2">
+            <div className="flex items-center justify-between p-3.5 bg-slate-950/30 rounded-xl border border-white/5">
+              <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Trạng thái</span>
+              <span className="font-extrabold text-xs text-green-400 flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
                 {staffInfo.status}
               </span>
@@ -162,17 +167,17 @@ const Profile = () => {
 
           <button
             onClick={() => setIsPasswordModalOpen(true)}
-            className="w-full mt-8 py-3 rounded-xl border border-white/20 text-white/70 hover:text-[var(--btn-neon)] hover:border-[var(--btn-neon)] transition-colors flex items-center justify-center gap-2 font-bold text-sm uppercase cursor-pointer"
+            className="w-full mt-8 py-3 rounded-xl border border-slate-700/60 text-slate-300 hover:text-[#FFB000] hover:border-[#FFB000] transition-all duration-300 flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider cursor-pointer"
           >
-            <Key size={16} /> Đổi Mật Khẩu
+            <Key size={14} /> Đổi Mật Khẩu
           </button>
         </div>
 
         {/* INFO DETAILS */}
-        <div className="w-full lg:w-2/3 glass-effect rounded-3xl p-8">
-          <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
-            <h3 className="text-xl font-bold uppercase tracking-widest text-glow">
-              Thông tin chi tiết
+        <div className="w-full lg:w-2/3 bg-[#131A2A]/80 border border-white/[0.06] shadow-2xl rounded-2xl p-8">
+          <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
+            <h3 className="text-lg font-black uppercase tracking-widest text-[#FFB000] text-glow">
+              📋 Thông tin chi tiết
             </h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -235,11 +240,11 @@ const Profile = () => {
 
 // Helper component
 const InfoItem = ({ label, value, icon }) => (
-  <div>
-    <label className="flex items-center gap-2 text-xs uppercase tracking-wider text-white/50 mb-2">
-      {icon} {label}
+  <div className="bg-[#0D1321]/60 p-4 rounded-xl border border-white/5">
+    <label className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1.5">
+      <span className="text-[#FFB000]/75">{icon}</span> {label}
     </label>
-    <p className="font-bold text-lg text-white">{value}</p>
+    <p className="font-extrabold text-sm text-slate-200 tracking-wide">{value}</p>
   </div>
 );
 

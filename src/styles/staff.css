@@ -2,20 +2,21 @@
 
 .staff-container {
   /* Khóa cứng nền màu tối phẳng (Solid Navy Deep) để ghi đè mesh gradient của body */
-  background-color: #020617 !important; 
-  background-image: none !important;
+  background-color: #0B1020 !important; 
+  background-image: radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.08) 0px, transparent 50%),
+                    radial-gradient(at 100% 0%, rgba(255, 176, 0, 0.06) 0px, transparent 50%) !important;
   min-height: 100vh;
 }
 
 /* Nền kính mờ dạng phẳng, tối ưu độ tương phản cho báo cáo */
 .staff-card-flat {
-  background-color: rgba(30, 27, 75, 0.4); 
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: all 0.3s ease;
+  background-color: #1B2435; 
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .staff-card-flat:hover {
-  border-color: rgba(255, 255, 255, 0.2);
-  background-color: rgba(30, 27, 75, 0.6);
+  border-color: rgba(255, 176, 0, 0.3);
+  box-shadow: 0 10px 30px -15px rgba(255, 176, 0, 0.15);
+  transform: translateY(-2px);
 }

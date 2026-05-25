@@ -10,15 +10,16 @@ const ShiftCard = ({ day, shiftTemplate, shiftData, onClick }) => {
     return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
   };
 
-  // Style based on state
+  // Base style is dark themed card
   let cardStyle =
-    "border-white/10 text-white/50 bg-white/5 hover:border-[var(--btn-neon)] hover:text-[var(--btn-neon)] cursor-pointer";
+    "border-white/[0.06] bg-[#1B2435]/60 text-slate-300 hover:border-slate-500 hover:text-white cursor-pointer hover:-translate-y-0.5 shadow-lg group";
+  
   if (isMyShift) {
     cardStyle =
-      "border-[var(--btn-neon)] bg-[var(--btn-neon)]/10 text-[var(--btn-neon)] shadow-[0_0_15px_rgba(253,224,71,0.2)] cursor-pointer hover:border-red-400";
+      "border-[#FFB000] bg-[#FFB000]/10 text-[#FFB000] shadow-[0_0_20px_rgba(255,176,0,0.1)] cursor-pointer hover:border-red-500/50 hover:text-red-400 hover:bg-red-950/20";
   } else if (isFull) {
     cardStyle =
-      "border-red-500/20 bg-red-500/10 text-red-400/50 cursor-not-allowed";
+      "border-white/[0.03] bg-slate-900/40 text-slate-600 cursor-not-allowed opacity-40";
   }
 
   return (
@@ -26,33 +27,39 @@ const ShiftCard = ({ day, shiftTemplate, shiftData, onClick }) => {
       onClick={() =>
         !isFull || isMyShift ? onClick(day.dateString, shiftTemplate) : null
       }
-      className={`p-4 rounded-xl border transition-all duration-300 relative flex flex-col gap-2 ${cardStyle}`}
+      className={`p-4 rounded-xl border transition-all duration-300 relative flex flex-col gap-3 ${cardStyle}`}
       title={
         isMyShift ? "Nhấn để hủy ca" : isFull ? "Ca đã đầy" : "Nhấn để đăng ký"
       }
     >
       <div className="flex justify-between items-start">
-        <span className="font-bold text-sm uppercase tracking-wider truncate">
+        <span className={`font-black text-xs uppercase tracking-widest truncate ${isMyShift ? "text-[#FFB000]" : "text-white"}`}>
           {shiftTemplate.TenCa}
         </span>
         {isMyShift && (
-          <CheckCircle2 size={16} className="text-[var(--btn-neon)]" />
+          <CheckCircle2 size={16} className="text-[#FFB000] shrink-0 filter drop-shadow-[0_0_5px_rgba(255,176,0,0.5)]" />
         )}
       </div>
 
-      <div className="text-xs space-y-1">
-        <p className="flex items-center gap-1 opacity-80">
-          <Clock size={12} /> {formatTime(shiftTemplate.GioBatDau)} -{" "}
-          {formatTime(shiftTemplate.GioKetThuc)}
+      <div className="text-[11px] space-y-1.5 font-mono">
+        <p className="flex items-center gap-2 opacity-80">
+          <Clock size={12} className={isMyShift ? "text-[#FFB000]/60" : "text-slate-500"} />
+          <span className="font-semibold">{formatTime(shiftTemplate.GioBatDau)} - {formatTime(shiftTemplate.GioKetThuc)}</span>
         </p>
-        <p className="flex items-center gap-1 opacity-80">
-          <Users size={12} /> {shiftData.registeredCount}/
-          {shiftTemplate.SoNguoiToiDa} người
+        <p className="flex items-center gap-2 opacity-80">
+          <Users size={12} className={isMyShift ? "text-[#FFB000]/60" : "text-slate-500"} />
+          <span className="font-semibold">{shiftData.registeredCount}/{shiftTemplate.SoNguoiToiDa} người</span>
         </p>
       </div>
 
-      <div className="mt-2 text-[10px] font-bold uppercase tracking-widest text-center">
-        {isMyShift ? "Của bạn" : isFull ? "Đã đầy" : "Đăng ký"}
+      <div className={`mt-1 py-1.5 text-[9px] font-black uppercase tracking-widest text-center rounded transition-all duration-300 border ${
+        isMyShift 
+          ? "bg-[#FFB000] border-transparent text-slate-950 hover:bg-red-600 hover:text-white" 
+          : isFull 
+            ? "bg-transparent border-white/[0.04] text-slate-600" 
+            : "bg-white/[0.03] border-white/10 text-slate-300 hover:bg-white/[0.08] hover:text-white"
+      }`}>
+        {isMyShift ? "Đã Đăng Ký" : isFull ? "Đã Đầy" : "Đăng Ký"}
       </div>
     </div>
   );
