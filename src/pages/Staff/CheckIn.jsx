@@ -92,10 +92,11 @@ const CheckIn = () => {
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto space-y-6">
       <div className="text-center mb-4">
-        <h1 className="text-3xl font-black text-glow uppercase tracking-widest text-[var(--btn-neon)]">
+        <span className="text-[10px] uppercase tracking-[0.4em] text-[var(--btn-neon)] font-black">Nhân Viên Soát Vé</span>
+        <h1 className="text-3xl font-black text-glow uppercase tracking-widest text-white mt-1">
           Hệ Thống Soát Vé
         </h1>
-        <p className="text-white/50 mt-2">
+        <p className="text-slate-400 mt-2 text-sm">
           Sử dụng máy quét mã vạch hoặc nhập thủ công mã chi tiết đặt vé (UUID)
         </p>
       </div>
@@ -103,10 +104,10 @@ const CheckIn = () => {
       {/* Form Nhập Mã */}
       <form
         onSubmit={handleScan}
-        className="glass-effect p-4 rounded-2xl flex gap-4 items-center"
+        className="glass-effect p-4 rounded-2xl flex gap-4 items-center bg-[#131A2A]/40 border border-white/5 shadow-xl"
       >
-        <div className="w-14 h-14 bg-white/5 rounded-xl flex items-center justify-center border border-white/10 text-[var(--btn-neon)]">
-          <ScanLine size={28} />
+        <div className="w-14 h-14 bg-[var(--btn-neon)]/10 rounded-xl flex items-center justify-center border border-[var(--btn-neon)]/20 text-[var(--btn-neon)] shadow-inner shrink-0">
+          <ScanLine size={28} className="animate-pulse" />
         </div>
         <input
           ref={inputRef}
@@ -115,40 +116,41 @@ const CheckIn = () => {
           onChange={(e) => setTicketId(e.target.value)}
           placeholder="Quét mã QR hoặc nhập mã vé UUID vào đây..."
           disabled={status === "PROCESSING"}
-          className="flex-1 bg-transparent text-2xl font-mono text-white placeholder-white/20 focus:outline-none uppercase"
+          className="flex-1 bg-transparent text-xl font-mono text-white placeholder-slate-600 focus:outline-none uppercase tracking-widest"
           autoComplete="off"
         />
         <button
           type="submit"
           disabled={!ticketId || status === "PROCESSING"}
-          className="btn-bright px-8 cursor-pointer disabled:opacity-50"
+          className="btn-bright px-8 cursor-pointer disabled:opacity-40 text-xs tracking-wider"
         >
-          {status === "PROCESSING" ? "Đang kiểm tra..." : "Kiểm tra"}
+          {status === "PROCESSING" ? "Đang quét..." : "Kiểm tra"}
         </button>
       </form>
 
       {/* Màn hình Hiển thị Trạng thái */}
       <div
-        className={`flex-1 rounded-3xl border-2 flex flex-col items-center justify-center p-12 transition-all duration-500 relative overflow-hidden min-h-[350px]
-        ${status === "IDLE" ? "border-white/10 glass-effect" : ""}
-        ${status === "PROCESSING" ? "border-white/20 bg-white/5 animate-pulse" : ""}
-        ${status === "SUCCESS" ? "border-green-500 bg-green-500/10 shadow-[0_0_50px_rgba(34,197,94,0.2)]" : ""}
-        ${status === "ERROR" ? "border-red-500 bg-red-500/10 shadow-[0_0_50px_rgba(239,68,68,0.2)]" : ""}
+        className={`flex-1 rounded-3xl border-2 flex flex-col items-center justify-center p-12 transition-all duration-500 relative overflow-hidden min-h-[380px]
+        ${status === "IDLE" ? "border-dashed border-[var(--btn-neon)]/20 bg-slate-950/20" : ""}
+        ${status === "PROCESSING" ? "border-dashed border-[var(--btn-neon)]/60 bg-[var(--btn-neon)]/5 animate-pulse" : ""}
+        ${status === "SUCCESS" ? "border-solid border-green-500/50 bg-green-950/10 shadow-[0_0_50px_rgba(34,197,94,0.15)]" : ""}
+        ${status === "ERROR" ? "border-solid border-red-500/50 bg-red-950/10 shadow-[0_0_50px_rgba(239,68,68,0.15)]" : ""}
       `}
       >
         {status === "IDLE" && (
-          <div className="text-center opacity-30 flex flex-col items-center">
-            <ScanLine size={80} className="mb-6" />
-            <h2 className="text-2xl font-bold uppercase tracking-widest">
+          <div className="text-center text-slate-500 flex flex-col items-center select-none">
+            <ScanLine size={80} className="mb-6 text-[var(--btn-neon)]/40 filter drop-shadow-[0_0_10px_rgba(255,176,0,0.1)]" />
+            <h2 className="text-xl font-black uppercase tracking-widest text-slate-400">
               Sẵn sàng quét vé
             </h2>
+            <p className="text-xs text-slate-500 mt-2">Đưa mã QR của khách vào trước camera hoặc máy quét</p>
           </div>
         )}
 
         {status === "PROCESSING" && (
           <div className="text-center flex flex-col items-center">
-            <RefreshCw size={80} className="animate-spin text-[var(--btn-neon)] mb-6" />
-            <h2 className="text-2xl font-bold uppercase tracking-widest text-[var(--btn-neon)]">
+            <RefreshCw size={80} className="animate-spin text-[var(--btn-neon)] mb-6 filter drop-shadow-[0_0_15px_rgba(255,176,0,0.4)]" />
+            <h2 className="text-xl font-black uppercase tracking-widest text-[var(--btn-neon)] text-glow">
               Đang xác thực thông tin...
             </h2>
           </div>
@@ -157,31 +159,32 @@ const CheckIn = () => {
         {status === "SUCCESS" && (
           <div className="text-center animate-in zoom-in duration-300">
             <CheckCircle2
-              size={100}
-              className="text-green-400 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]"
+              size={80}
+              className="text-green-400 mx-auto mb-6 filter drop-shadow-[0_0_20px_rgba(34,197,94,0.4)]"
             />
-            <h2 className="text-4xl font-black text-green-400 mb-8 drop-shadow-md">
+            <h2 className="text-3xl font-black text-green-400 mb-8 tracking-wide drop-shadow-md">
               {message}
             </h2>
-            <div className="bg-black/30 p-8 rounded-2xl border border-green-500/30 inline-block text-left min-w-[320px]">
-              <p className="text-green-200/60 uppercase text-xs mb-1">Phim</p>
-              <p className="font-bold text-2xl text-white mb-4">
+            <div className="bg-slate-950/60 p-6 rounded-2xl border border-green-500/20 inline-block text-left min-w-[340px] shadow-2xl relative">
+              <div className="absolute top-0 right-0 w-12 h-12 bg-green-500/5 rounded-bl-full pointer-events-none"></div>
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1">Bộ Phim</p>
+              <p className="font-extrabold text-xl text-white mb-4 uppercase tracking-wide leading-tight">
                 {ticketData?.movie}
               </p>
-              <div className="flex gap-12">
+              <div className="flex justify-between gap-8 border-t border-white/5 pt-4">
                 <div>
-                  <p className="text-green-200/60 uppercase text-xs mb-1">
-                    Phòng / Giờ
+                  <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1">
+                    Phòng / Giờ chiếu
                   </p>
-                  <p className="font-bold text-lg text-white">
-                    {ticketData?.room} - {ticketData?.time}
+                  <p className="font-bold text-sm text-slate-200">
+                    🏢 {ticketData?.room} <span className="text-[var(--btn-neon)] ml-1 font-mono">{ticketData?.time}</span>
                   </p>
                 </div>
                 <div>
-                  <p className="text-green-200/60 uppercase text-xs mb-1">
+                  <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1">
                     Ghế ngồi
                   </p>
-                  <p className="font-bold text-3xl text-[var(--btn-neon)]">
+                  <p className="font-black text-2xl text-[var(--btn-neon)] font-mono text-glow">
                     {ticketData?.seat}
                   </p>
                 </div>
@@ -193,19 +196,19 @@ const CheckIn = () => {
         {status === "ERROR" && (
           <div className="text-center animate-in shake duration-300">
             <XCircle
-              size={100}
-              className="text-red-500 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]"
+              size={80}
+              className="text-red-500 mx-auto mb-6 filter drop-shadow-[0_0_20px_rgba(239,68,68,0.4)]"
             />
-            <h2 className="text-3xl font-black text-red-500 mb-6 drop-shadow-md">
+            <h2 className="text-2xl font-black text-red-500 mb-6 tracking-wide drop-shadow-md">
               {message}
             </h2>
-            <div className="bg-red-950/50 px-6 py-4 rounded-xl border border-red-500/30 inline-block">
-              <p className="text-red-200 uppercase text-xs mb-1 text-center font-bold">
-                Mã lỗi hệ thống
+            <div className="bg-slate-950/60 p-5 rounded-2xl border border-red-500/20 inline-block min-w-[320px]">
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-2 text-center">
+                Thông tin lỗi soát vé
               </p>
-              <p className="font-mono text-red-400 text-sm">{ticketData?.errorType}</p>
+              <p className="font-mono text-red-400 text-xs font-bold bg-red-950/40 py-1.5 px-3 rounded border border-red-500/10 text-center uppercase">{ticketData?.errorType}</p>
               {ticketData?.detail && (
-                <p className="text-xs text-red-300/60 mt-2 max-w-xs text-center mx-auto">
+                <p className="text-xs text-slate-400 mt-3 max-w-xs text-center mx-auto leading-relaxed">
                   {ticketData.detail}
                 </p>
               )}
@@ -217,10 +220,10 @@ const CheckIn = () => {
         {status !== "IDLE" && status !== "PROCESSING" && (
           <button
             onClick={resetScanner}
-            className="absolute top-6 right-6 p-3 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-colors cursor-pointer"
+            className="absolute top-6 right-6 p-3 rounded-full bg-white/5 hover:bg-[var(--btn-neon)] hover:text-slate-950 text-slate-400 transition-all duration-300 cursor-pointer shadow-lg border border-white/5 hover:border-transparent"
             title="Quét lại"
           >
-            <RefreshCw size={24} />
+            <RefreshCw size={18} />
           </button>
         )}
       </div>
