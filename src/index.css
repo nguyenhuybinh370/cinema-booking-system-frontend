@@ -22,14 +22,14 @@
     background-attachment: fixed;
     color: var(--white-light);
     @apply antialiased;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Montserrat', 'Inter', sans-serif;
   }
 }
 
 @layer components {
   /* Nút bấm tươi rói, có hiệu ứng phát sáng nhẹ */
   .btn-bright {
-    @apply px-7 py-3 bg-[var(--btn-neon)] hover:bg-[var(--btn-neon-hover)]
+    @apply px-7 py-3 bg-(--btn-neon) hover:bg-(--btn-neon-hover)
            text-slate-900 font-bold rounded-full transition-all duration-300
            active:scale-95 shadow-[0_0_20px_rgba(253,224,71,0.3)] 
            hover:shadow-[0_0_30px_rgba(253,224,71,0.5)] uppercase text-sm tracking-wider;
