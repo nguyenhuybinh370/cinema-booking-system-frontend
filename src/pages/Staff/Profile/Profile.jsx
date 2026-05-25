@@ -1,48 +1,114 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User, Mail, Phone, Calendar, Shield, Key, Edit3 } from "lucide-react";
 import UpdateInfoModal from "./UpdateInfoModal";
 import ChangePasswordModal from "./ChangePasswordModal";
+import axiosClient from "../../../api/axiosClient";
 
 const Profile = () => {
-  const [staffInfo, setStaffInfo] = useState({
-    id: "NV24520287",
-    fullName: "Phan Gia Đạt",
-    email: "dat.phan@cinema.vn",
-    phone: "0901234567",
-    gender: "Nam",
-    dob: "2004-08-15",
-    role: "Nhân viên quầy (Staff)",
-    joinDate: "01/12/2025",
-    status: "Đang hoạt động",
-  });
-
+  const [staffInfo, setStaffInfo] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({ ...staffInfo });
+  const [editForm, setEditForm] = useState(null);
   const [passwordForm, setPasswordForm] = useState({
     oldPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
 
-  const handleUpdateSubmit = (e) => {
-    e.preventDefault();
-    setStaffInfo({ ...editForm });
-    setIsUpdateModalOpen(false);
-    alert("Cập nhật thành công!");
+  const loadProfile = async () => {
+    try {
+      setIsLoading(true);
+      const data = await axiosClient.get("/staff/ho-so");
+      const mapped = {
+        id: data.MaNhanVien,
+        fullName: data.HoTen,
+        email: data.Email,
+        phone: data.SoDienThoai,
+        gender: data.GioiTinh === true ? "Nam" : data.GioiTinh === false ? "Nữ" : "Chưa cập nhật",
+        dob: data.NgaySinh ? new Date(data.NgaySinh).toISOString().split("T")[0] : "",
+        role: data.ChucVu,
+        joinDate: data.NgayTao ? new Date(data.NgayTao).toLocaleDateString("vi-VN") : "",
+        status: data.KhaDung ? "Đang hoạt động" : "Bị vô hiệu hóa",
+      };
+      setStaffInfo(mapped);
+      setEditForm(mapped);
+    } catch (err) {
+      console.error("Error loading profile:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handlePasswordSubmit = (e) => {
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const handleUpdateSubmit = async (e) => {
     e.preventDefault();
-    setIsPasswordModalOpen(false);
-    setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
-    alert("Đổi mật khẩu thành công!");
+    try {
+      const payload = {
+        HoTen: editForm.fullName,
+        Email: editForm.email,
+        SoDienThoai: editForm.phone,
+        GioiTinh: editForm.gender === "Nam" ? true : editForm.gender === "Nữ" ? false : null,
+        NgaySinh: editForm.dob ? new Date(editForm.dob).toISOString() : null,
+      };
+
+      await axiosClient.put("/staff/ho-so", payload);
+      alert("Cập nhật thông tin cá nhân thành công!");
+      await loadProfile();
+      setIsUpdateModalOpen(false);
+    } catch (err) {
+      console.error("Update profile error:", err);
+      alert(err.response?.data?.message || err.message || "Cập nhật thông tin thất bại.");
+    }
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      alert("Xác nhận mật khẩu mới không khớp!");
+      return;
+    }
+
+    try {
+      const payload = {
+        MatKhauCu: passwordForm.oldPassword,
+        MatKhauMoi: passwordForm.newPassword,
+        XacNhanMatKhauMoi: passwordForm.confirmPassword,
+      };
+
+      await axiosClient.put("/staff/doi-mat-khau", payload);
+      alert("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
+      setIsPasswordModalOpen(false);
+
+      // Clean tokens and force log in again
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("userRole");
+      localStorage.removeItem("userName");
+      localStorage.removeItem("userCode");
+      window.location.href = "/login";
+    } catch (err) {
+      console.error("Change password error:", err);
+      alert(err.response?.data?.message || err.message || "Đổi mật khẩu thất bại.");
+    }
   };
 
   const formatDOB = (dateString) => {
+    if (!dateString) return "Chưa cập nhật";
     const [year, month, day] = dateString.split("-");
     return `${day}/${month}/${year}`;
   };
+
+  if (isLoading || !staffInfo) {
+    return (
+      <div className="flex items-center justify-center h-64 text-white/50 font-bold uppercase tracking-wider">
+        Đang tải thông tin hồ sơ...
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full max-w-6xl mx-auto space-y-8">
@@ -65,12 +131,12 @@ const Profile = () => {
             </div>
             <button
               onClick={() => setIsUpdateModalOpen(true)}
-              className="absolute bottom-0 right-0 p-2 bg-[var(--btn-neon)] text-slate-900 rounded-full hover:scale-110 transition-transform"
+              className="absolute bottom-0 right-0 p-2 bg-[var(--btn-neon)] text-slate-900 rounded-full hover:scale-110 transition-transform cursor-pointer"
             >
               <Edit3 size={16} />
             </button>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-1">
+          <h2 className="text-2xl font-bold text-white mb-1 text-center">
             {staffInfo.fullName}
           </h2>
           <p className="text-[var(--btn-neon)] font-mono tracking-widest mb-6">
@@ -96,7 +162,7 @@ const Profile = () => {
 
           <button
             onClick={() => setIsPasswordModalOpen(true)}
-            className="w-full mt-8 py-3 rounded-xl border border-white/20 text-white/70 hover:text-[var(--btn-neon)] hover:border-[var(--btn-neon)] transition-colors flex items-center justify-center gap-2 font-bold text-sm uppercase"
+            className="w-full mt-8 py-3 rounded-xl border border-white/20 text-white/70 hover:text-[var(--btn-neon)] hover:border-[var(--btn-neon)] transition-colors flex items-center justify-center gap-2 font-bold text-sm uppercase cursor-pointer"
           >
             <Key size={16} /> Đổi Mật Khẩu
           </button>
@@ -167,7 +233,7 @@ const Profile = () => {
   );
 };
 
-// Helper component để code gọn hơn nữa
+// Helper component
 const InfoItem = ({ label, value, icon }) => (
   <div>
     <label className="flex items-center gap-2 text-xs uppercase tracking-wider text-white/50 mb-2">
