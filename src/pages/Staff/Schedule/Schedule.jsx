@@ -159,83 +159,100 @@ const Schedule = () => {
   };
 
   return (
-    <div className="flex flex-col h-full space-y-8 relative">
+    <div className="flex flex-col h-full space-y-8 relative min-h-0">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-black text-glow uppercase tracking-widest text-[var(--btn-neon)]">
+          <span className="text-[10px] uppercase tracking-[0.4em] text-[var(--btn-neon)] font-black">Phân hệ ca trực</span>
+          <h1 className="text-3xl font-black text-glow uppercase tracking-widest text-white mt-1">
             Lịch Làm Việc
           </h1>
-          <p className="text-white/50 mt-2">
-            Xem lịch và đăng ký ca làm việc hàng tuần
+          <p className="text-slate-400 mt-2 text-sm">
+            Xem lịch trực cá nhân và đăng ký ca trực hàng tuần tại cụm rạp
           </p>
         </div>
 
-        <div className="staff-card-flat rounded-full p-1 flex items-center shrink-0">
+        <div className="bg-[#131A2A]/80 border border-white/5 rounded-full p-1 flex items-center shrink-0 shadow-lg">
           <button
             onClick={() => setWeekOffset((prev) => prev - 1)}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white cursor-pointer"
+            className="p-2 hover:bg-white/5 rounded-full transition-all text-slate-500 hover:text-white cursor-pointer"
           >
-            <ChevronLeft size={20} />
+            <ChevronLeft size={18} />
           </button>
-          <div className="px-6 py-2 flex items-center gap-2 font-bold text-sm min-w-[220px] justify-center">
-            <CalendarIcon size={16} className="text-[var(--btn-neon)]" />
-            <span>{weekDisplayTitle}</span>
+          <div className="px-5 py-1.5 flex items-center gap-2 font-bold text-xs min-w-[240px] justify-center text-white/90">
+            <CalendarIcon size={14} className="text-[var(--btn-neon)] filter drop-shadow-[0_0_5px_rgba(255,176,0,0.4)]" />
+            <span className="tracking-wide uppercase">{weekDisplayTitle}</span>
           </div>
           <button
             onClick={() => setWeekOffset((prev) => prev + 1)}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white cursor-pointer"
+            className="p-2 hover:bg-white/5 rounded-full transition-all text-slate-500 hover:text-white cursor-pointer"
           >
-            <ChevronRight size={20} />
+            <ChevronRight size={18} />
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm font-semibold text-center">
+        <div className="p-4 bg-red-950/20 border border-red-500/30 rounded-2xl text-red-400 text-xs font-bold text-center animate-pulse">
           ⚠️ {error}
         </div>
       )}
 
       {isLoading ? (
-        <div className="flex-1 staff-card-flat rounded-3xl p-12 flex items-center justify-center text-white/50 font-bold uppercase tracking-wider">
-          Đang tải lịch làm việc...
+        <div className="flex-1 min-h-[350px] bg-[#131A2A]/40 border border-white/5 rounded-3xl p-12 flex flex-col items-center justify-center text-slate-400 font-bold uppercase tracking-wider">
+          <div className="w-12 h-12 border-4 border-[var(--btn-neon)] border-t-transparent rounded-full animate-spin mb-4"></div>
+          <span className="text-glow text-[var(--btn-neon)] text-sm">Đang tải lịch làm việc...</span>
         </div>
       ) : (
-        <div className="staff-card-flat rounded-3xl p-6 flex-1 overflow-x-auto min-h-[450px]">
+        <div className="bg-[#131A2A]/40 border border-white/5 rounded-3xl p-6 flex-1 overflow-x-auto min-h-[480px] shadow-2xl">
           <div className="min-w-[1000px] grid grid-cols-7 gap-4 h-full">
-            {currentWeek.map((day) => (
-              <div key={day.dateString} className="flex flex-col gap-4">
-                <div className="text-center pb-4 border-b border-white/10 shrink-0">
-                  <h3 className="font-bold text-lg text-white">{day.dayName}</h3>
-                  <p className="text-xs text-[var(--btn-neon)] font-mono mt-1">
-                    {day.displayDate}
-                  </p>
-                </div>
-                <div className="flex flex-col gap-3 flex-1 overflow-y-auto">
-                  {shiftTemplates.map((template) => (
-                    <ShiftCard
-                      key={template.MaCa}
-                      day={day}
-                      shiftTemplate={template}
-                      shiftData={
-                        shiftDetails[`${day.dateString}_${template.MaCa}`] || {
-                          registeredCount: 0,
-                          isMyShift: false,
-                          capacity: template.SoNguoiToiDa,
-                          conTrong: true,
+            {currentWeek.map((day) => {
+              const isToday = day.dateString === new Date().toISOString().split("T")[0];
+              
+              return (
+                <div key={day.dateString} className="flex flex-col gap-4">
+                  <div className={`text-center pb-4 border-b shrink-0 py-3 rounded-2xl transition-all duration-300 ${
+                    isToday 
+                      ? "bg-[var(--btn-neon)]/10 border-[var(--btn-neon)]/30 text-[var(--btn-neon)] shadow-[0_0_15px_rgba(255,176,0,0.05)]" 
+                      : "border-white/5 bg-slate-950/20"
+                  }`}>
+                    <h3 className="font-extrabold text-sm uppercase tracking-wider text-white">
+                      {day.dayName}
+                    </h3>
+                    <p className="text-[11px] text-[var(--btn-neon)] font-mono font-bold mt-0.5">
+                      {day.displayDate}
+                    </p>
+                    {isToday && (
+                      <span className="inline-block px-2 py-0.5 bg-[var(--btn-neon)] text-slate-950 text-[8px] font-black uppercase rounded mt-1.5 tracking-widest font-mono">
+                        Hôm nay
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-3 flex-1 overflow-y-auto min-h-0">
+                    {shiftTemplates.map((template) => (
+                      <ShiftCard
+                        key={template.MaCa}
+                        day={day}
+                        shiftTemplate={template}
+                        shiftData={
+                          shiftDetails[`${day.dateString}_${template.MaCa}`] || {
+                            registeredCount: 0,
+                            isMyShift: false,
+                            capacity: template.SoNguoiToiDa,
+                            conTrong: true,
+                          }
                         }
-                      }
-                      onClick={handleCardClick}
-                    />
-                  ))}
-                  {shiftTemplates.length === 0 && (
-                    <div className="text-white/20 text-center py-8 text-xs italic">
-                      Không có ca làm
-                    </div>
-                  )}
+                        onClick={handleCardClick}
+                      />
+                    ))}
+                    {shiftTemplates.length === 0 && (
+                      <div className="text-slate-600 text-center py-8 text-xs italic select-none">
+                        Không có ca làm việc
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
