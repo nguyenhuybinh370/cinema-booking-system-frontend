@@ -36,15 +36,36 @@ const SeatMapTemplates = () => {
     handleSubmit,
     resetForm
   } = useAdminForm(initialFormState, async (data) => {
-    // In a real app, this would call adminService.addSeatMap
-    // For now, we simulate
-    setTemplates(prev => [...prev, data]);
-    setIsModalOpen(false);
-    resetForm();
+    try {
+      await adminService.addSeatMap({
+        TenSoDo: data.MaSoDoGhe,
+        TongHang: Number(data.TongHang),
+        TongCot: Number(data.TongCot)
+      });
+      alert("Tạo sơ đồ mẫu mới thành công!");
+      await loadData();
+      setIsModalOpen(false);
+      resetForm();
+    } catch (err) {
+      alert(`Lỗi khi tạo sơ đồ: ${err.message}`);
+    }
   });
+
+  const handleDelete = async (id) => {
+    if (window.confirm(`Bạn có chắc chắn muốn xóa sơ đồ mẫu ${id}?`)) {
+      try {
+        await adminService.deleteSeatMap(id);
+        alert("Xóa sơ đồ mẫu thành công!");
+        await loadData();
+      } catch (err) {
+        alert(`Lỗi khi xóa: ${err.message}`);
+      }
+    }
+  };
 
   const columns = [
     { header: 'Mã sơ đồ', accessor: 'MaSoDoGhe', className: 'font-mono font-bold text-white' },
+    { header: 'Tên sơ đồ', accessor: 'TenSoDo', className: 'text-slate-400' },
     { header: 'Số hàng', accessor: 'TongHang', className: 'text-slate-400' },
     { header: 'Số cột', accessor: 'TongCot', className: 'text-slate-400' },
     { 
@@ -58,15 +79,16 @@ const SeatMapTemplates = () => {
         <div className="flex justify-end gap-2">
           <button 
             onClick={() => setPreviewTemplate(t)}
-            className="p-2 hover:bg-white/5 text-blue-500 hover:text-blue-400 rounded-xl transition-all"
+            className="p-2 hover:bg-white/5 text-blue-500 hover:text-blue-400 rounded-xl transition-all cursor-pointer"
             title="Xem trước"
           >
             <Eye size={18} />
           </button>
-          <button className="p-2 hover:bg-white/5 text-slate-500 hover:text-white rounded-xl transition-all">
-            <Code size={18} />
-          </button>
-          <button className="p-2 hover:bg-white/5 text-red-500 hover:text-red-400 rounded-xl transition-all">
+          <button 
+            onClick={() => handleDelete(t.MaSoDoGhe)}
+            className="p-2 hover:bg-white/5 text-red-500 hover:text-red-400 rounded-xl transition-all cursor-pointer"
+            title="Xóa"
+          >
             <Trash2 size={18} />
           </button>
         </div>
