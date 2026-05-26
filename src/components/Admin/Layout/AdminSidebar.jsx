@@ -1,6 +1,7 @@
 
 import logo from '../../../assets/logo.png';
 import { NavLink } from 'react-router-dom';
+import axiosClient from '../../../api/axiosClient';
 import {
   LayoutDashboard,
   Film,
@@ -16,6 +17,31 @@ import {
 } from 'lucide-react';
 
 const AdminSidebar = () => {
+  const userName = localStorage.getItem('userName') || 'Administrator';
+  const userRole = localStorage.getItem('userRole') || 'ADMIN';
+  const getInitials = (name) => {
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+  const initials = getInitials(userName);
+
+  const handleLogout = async () => {
+    try {
+      await axiosClient.post('/auth/logout');
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userCode");
+    window.location.href = "/staff/login";
+  };
+
   const menuItems = [
     { name: 'Phòng chiếu', icon: LayoutDashboard, path: '/admin/rooms' },
     { name: 'Sơ đồ mẫu', icon: Grid3X3, path: '/admin/seat-templates' },
@@ -61,14 +87,14 @@ const AdminSidebar = () => {
       <div className="mt-auto p-6 border-t border-white/5">
         <div className="flex items-center gap-3 mb-6 p-3 bg-white/5 rounded-2xl">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-amber-500 flex items-center justify-center text-white font-bold">
-            HB
+            {initials}
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-bold text-white">Huy Bình</span>
-            <span className="text-xs text-slate-500">Administrator</span>
+            <span className="text-sm font-bold text-white truncate max-w-[120px]">{userName}</span>
+            <span className="text-xs text-slate-500">{userRole}</span>
           </div>
         </div>
-        <button className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-red-500 transition-colors">
+        <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-red-500 transition-colors cursor-pointer">
           <LogOut size={20} />
           <span className="font-medium">Đăng xuất</span>
         </button>
