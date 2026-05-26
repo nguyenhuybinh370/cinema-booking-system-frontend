@@ -48,13 +48,13 @@ const MovieDetails = () => {
   // Construct backward-compatible merged movie object
   const movie = useMemo(() => {
     if (!rawMovie) return null;
-    const visuals = getMovieVisuals(rawMovie, 0);
+    const visuals = getMovieVisuals(rawMovie);
     return {
       ...rawMovie,
       _id: rawMovie.MaPhim,
       id: rawMovie.MaPhim,
       title: rawMovie.TenPhim,
-      poster_path: visuals.poster,
+      poster_path: rawMovie.HinhAnh || visuals.poster,
       backdrop_path: visuals.backdrop,
       release_date: rawMovie.NgayKhoiChieu ? new Date(rawMovie.NgayKhoiChieu).toLocaleDateString('vi-VN') : '',
       runtime: rawMovie.ThoiLuong,
@@ -159,13 +159,9 @@ const MovieDetails = () => {
   };
 
   const getEmbedUrl = (videoUrl) => {
-    if (!movie) return '';
-    const originalIndex = dummyShowsData.findIndex(m => m._id === movie.MaPhim);
-    const finalUrl = videoUrl || dummyTrailers[Math.max(0, originalIndex) % dummyTrailers.length]?.videoUrl;
-    
-    if (!finalUrl) return '';
+    if (!videoUrl) return '';
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = finalUrl.match(regExp);
+    const match = videoUrl.match(regExp);
     return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}?autoplay=1` : '';
   };
 
@@ -282,7 +278,7 @@ const MovieDetails = () => {
             className="w-full h-full object-cover" 
             onError={(e) => {
               e.target.onerror = null;
-              e.target.src = dummyShowsData[0]?.poster_path;
+              e.target.src = getMovieVisuals(rawMovie).poster;
             }}
           />
         </div>

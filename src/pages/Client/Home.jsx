@@ -53,12 +53,11 @@ const Home = () => {
   };
 
   // --- GET EMBED URL FOR YOUTUBE ---
-  const getEmbedUrl = (videoUrl, index) => {
-    const finalUrl = videoUrl || dummyTrailers[index % dummyTrailers.length]?.videoUrl;
-    if (!finalUrl) return '';
+  const getEmbedUrl = (videoUrl) => {
+    if (!videoUrl) return '';
 
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = finalUrl.match(regExp);
+    const match = videoUrl.match(regExp);
     return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}?autoplay=1` : '';
   };
 
@@ -82,7 +81,7 @@ const Home = () => {
         // Pick the first now showing movie as the hero, if available
         if (nowMovies.length > 0) {
           const firstMovie = nowMovies[0];
-          const visuals = getMovieVisuals(firstMovie, 0);
+          const visuals = getMovieVisuals(firstMovie);
           setHeroMovie({
             title: firstMovie.TenPhim,
             backdrop: visuals.backdrop,
@@ -118,8 +117,8 @@ const Home = () => {
   }, [trailerUrl]);
 
   // --- RENDER MOVIE CARD ---
-  const MovieCard = ({ movie, type, index }) => {
-    const { poster: finalPoster, trailer: finalTrailer } = getMovieVisuals(movie, index);
+  const MovieCard = ({ movie, type }) => {
+    const visuals = getMovieVisuals(movie);
 
     return (
       <div className="shrink-0 w-full sm:w-1/2 lg:w-1/4 px-3 group">
@@ -128,12 +127,12 @@ const Home = () => {
           {/* Poster */}
           <Link to={`/movie/${movie.MaPhim}`} className="block relative aspect-2/3 overflow-hidden rounded-lg cursor-pointer">
             <img
-              src={finalPoster}
+              src={movie.HinhAnh || visuals.poster}
               alt={movie.TenPhim}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               onError={(e) => {
                 e.target.onerror = null;
-                e.target.src = dummyShowsData[index % dummyShowsData.length]?.poster_path;
+                e.target.src = visuals.poster;
               }}
             />
             <div className="absolute top-2 left-2 flex gap-1">
@@ -153,7 +152,7 @@ const Home = () => {
             <div className="flex items-center justify-between gap-2">
               {/* Nút Xem Trailer */}
               <button
-                onClick={() => setTrailerUrl(getEmbedUrl(finalTrailer, index))}
+                onClick={() => setTrailerUrl(getEmbedUrl(visuals.trailer))}
                 className="flex items-center gap-2 group/btn cursor-pointer"
               >
                 <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg transition-transform group-hover/btn:scale-110">
@@ -226,7 +225,7 @@ const Home = () => {
             </Link>
 
             <button
-              onClick={() => setTrailerUrl(getEmbedUrl(heroMovie.videoUrl, 0))}
+              onClick={() => setTrailerUrl(getEmbedUrl(heroMovie.videoUrl))}
               className="glass-effect px-7 py-3 rounded-full font-bold flex items-center gap-2 border border-white/20 cursor-pointer"
             >
               <Play size={20} fill="white" /> Xem Trailer

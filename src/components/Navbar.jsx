@@ -114,8 +114,8 @@ const Navbar = () => {
             {/* --- DROPDOWN HIỂN THỊ KẾT QUẢ TÌM KIẾM --- */}
             {searchResults.length > 0 && (
               <div className="absolute top-full left-0 mt-2 w-72 bg-[#020617]/95 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl z-50 max-h-80 overflow-y-auto flex flex-col text-left">
-                {searchResults.map((movie, idx) => {
-                  const visuals = getMovieVisuals(movie, idx);
+                {searchResults.map((movie) => {
+                  const visuals = getMovieVisuals(movie);
                   return (
                     <Link 
                       key={movie.MaPhim} 
@@ -124,9 +124,13 @@ const Navbar = () => {
                       className="flex items-center gap-3 p-3 hover:bg-white/10 border-b border-white/5 transition-colors group/item"
                     >
                       <img 
-                        src={visuals.poster} 
+                        src={movie.HinhAnh || visuals.thumbnail} 
                         alt={movie.TenPhim} 
                         className="w-10 h-14 object-cover rounded-md shrink-0 border border-white/10"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = visuals.thumbnail;
+                        }}
                       />
                       <div className="flex flex-col min-w-0">
                         <span className="text-white font-semibold text-sm truncate group-hover/item:text-(--btn-neon) transition-colors">

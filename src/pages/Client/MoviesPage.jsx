@@ -81,11 +81,10 @@ const MoviesPage = ({ initialType }) => {
   };
 
   // Hàm đổi link Youtube sang link nhúng iFrame
-  const getEmbedUrl = (videoUrl, index) => {
-    const finalUrl = videoUrl || dummyTrailers[index % dummyTrailers.length]?.videoUrl;
-    if (!finalUrl) return '';
+  const getEmbedUrl = (videoUrl) => {
+    if (!videoUrl) return '';
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = finalUrl.match(regExp);
+    const match = videoUrl.match(regExp);
     return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}?autoplay=1` : '';
   };
 
@@ -167,8 +166,8 @@ const MoviesPage = ({ initialType }) => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10 min-h-[40vh]">
-          {movies.map((movie, idx) => {
-            const { poster: finalPoster, trailer: finalTrailer } = getMovieVisuals(movie, idx);
+          {movies.map((movie) => {
+            const visuals = getMovieVisuals(movie);
 
             return (
               <div key={movie.MaPhim} className="movie-card bg-transparent rounded-lg overflow-hidden border border-white/5 shadow-none transition-all duration-300 hover:-translate-y-2 flex flex-col">
@@ -176,12 +175,12 @@ const MoviesPage = ({ initialType }) => {
                 {/* Poster */}
                 <Link to={`/movie/${movie.MaPhim}`} className="block relative aspect-2/3 overflow-hidden rounded-lg cursor-pointer">
                   <img
-                    src={finalPoster}
+                    src={movie.HinhAnh || visuals.poster}
                     alt={movie.TenPhim}
                     className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                     onError={(e) => {
                       e.target.onerror = null;
-                      e.target.src = dummyShowsData[idx % dummyShowsData.length]?.poster_path;
+                      e.target.src = visuals.poster;
                     }}
                   />
                   <div className="absolute top-2 left-2 flex gap-1">
@@ -200,7 +199,7 @@ const MoviesPage = ({ initialType }) => {
 
                   <div className="flex items-center justify-between gap-2 mt-auto">
                     <button
-                      onClick={() => setTrailerUrl(getEmbedUrl(finalTrailer, idx))}
+                      onClick={() => setTrailerUrl(getEmbedUrl(visuals.trailer))}
                       className="flex items-center gap-1.5 group/btn cursor-pointer"
                     >
                       <div className="w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-lg transition-transform group-hover/btn:scale-110">
