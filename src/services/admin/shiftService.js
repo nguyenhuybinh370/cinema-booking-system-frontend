@@ -1,208 +1,135 @@
-import { STAFF, ACCOUNTS, SHIFTS, SHIFT_DETAILS } from '../../constants/adminMockData';
+import axiosClient from '../../api/axiosClient';
 
-const delay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
+const formatTime = (t) => {
+  if (!t) return '00:00:00';
+  if (typeof t === 'string' && t.includes('T')) {
+    return t.split('T')[1].substring(0, 8);
+  }
+  const date = new Date(t);
+  if (!isNaN(date.getTime())) {
+    return date.toISOString().substring(11, 19);
+  }
+  return t;
+};
+
+const mapShift = (s) => ({
+  MaCaLamViec: s.MaCa,
+  TenCa: s.TenCa,
+  GioBatDau: formatTime(s.GioBatDau),
+  GioKetThuc: formatTime(s.GioKetThuc),
+  SoNguoiToiDa: s.SoNguoiToiDa,
+  KhaDung: s.KhaDung ? 1 : 0,
+  NgayTao: s.NgayTao ? new Date(s.NgayTao).toISOString().replace('T', ' ').substring(0, 19) : null,
+  NgayCapNhat: s.NgayCapNhat ? new Date(s.NgayCapNhat).toISOString().replace('T', ' ').substring(0, 19) : null,
+});
 
 const shiftService = {
   getShifts: async () => {
-    await delay();
-    return [...SHIFTS];
+    const data = await axiosClient.get('/admin/ca-lam-viec');
+    return data.map(mapShift);
   },
+
   addShift: async (shift) => {
-    await delay();
-    if (!shift.TenCa || shift.TenCa.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Tên ca không được để trống!');
-    }
-    if (!shift.GioBatDau || shift.GioBatDau.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Giờ bắt đầu không được để trống!');
-    }
-    if (!shift.GioKetThuc || shift.GioKetThuc.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Giờ kết thúc không được để trống!');
-    }
-    if (shift.SoNguoiToiDa === undefined || isNaN(shift.SoNguoiToiDa) || parseInt(shift.SoNguoiToiDa, 10) <= 0) {
-      throw new Error('Thông tin không hợp lệ: Số người tối đa phải lớn hơn 0!');
-    }
-
-    const idNum = SHIFTS.reduce((max, s) => {
-      const num = parseInt(s.MaCaLamViec.substring(1), 10);
-      return isNaN(num) ? max : Math.max(max, num);
-    }, 0);
-    const nextId = `C${String(idNum + 1).padStart(2, '0')}`;
-
-    const newShift = {
-      MaCaLamViec: nextId,
+    const payload = {
       TenCa: shift.TenCa,
       GioBatDau: shift.GioBatDau.length === 5 ? `${shift.GioBatDau}:00` : shift.GioBatDau,
       GioKetThuc: shift.GioKetThuc.length === 5 ? `${shift.GioKetThuc}:00` : shift.GioKetThuc,
-      SoNguoiToiDa: parseInt(shift.SoNguoiToiDa, 10),
-      KhaDung: shift.KhaDung !== undefined ? parseInt(shift.KhaDung, 10) : 1,
-      NgayTao: new Date().toISOString().replace('T', ' ').substring(0, 19),
-      NgayCapNhat: null
     };
-    SHIFTS.push(newShift);
-    return newShift;
+    const data = await axiosClient.post('/admin/ca-lam-viec', payload);
+    return mapShift(data);
   },
+
   updateShift: async (maCa, updates) => {
-    await delay();
-    const index = SHIFTS.findIndex(s => s.MaCaLamViec === maCa);
-    if (index === -1) {
-      throw new Error('Không tìm thấy ca làm việc');
-    }
-
-    if (updates.TenCa !== undefined && (!updates.TenCa || updates.TenCa.trim() === '')) {
-      throw new Error('Thông tin không hợp lệ: Tên ca không được để trống!');
-    }
-    if (updates.GioBatDau !== undefined && (!updates.GioBatDau || updates.GioBatDau.trim() === '')) {
-      throw new Error('Thông tin không hợp lệ: Giờ bắt đầu không được để trống!');
-    }
-    if (updates.GioKetThuc !== undefined && (!updates.GioKetThuc || updates.GioKetThuc.trim() === '')) {
-      throw new Error('Thông tin không hợp lệ: Giờ kết thúc không được để trống!');
-    }
-    if (updates.SoNguoiToiDa !== undefined && (isNaN(updates.SoNguoiToiDa) || parseInt(updates.SoNguoiToiDa, 10) <= 0)) {
-      throw new Error('Thông tin không hợp lệ: Số người tối đa phải lớn hơn 0!');
-    }
-
-    SHIFTS[index] = {
-      ...SHIFTS[index],
-      ...updates,
-      GioBatDau: updates.GioBatDau && updates.GioBatDau.length === 5 ? `${updates.GioBatDau}:00` : updates.GioBatDau || SHIFTS[index].GioBatDau,
-      GioKetThuc: updates.GioKetThuc && updates.GioKetThuc.length === 5 ? `${updates.GioKetThuc}:00` : updates.GioKetThuc || SHIFTS[index].GioKetThuc,
-      SoNguoiToiDa: updates.SoNguoiToiDa !== undefined ? parseInt(updates.SoNguoiToiDa, 10) : SHIFTS[index].SoNguoiToiDa,
-      KhaDung: updates.KhaDung !== undefined ? parseInt(updates.KhaDung, 10) : SHIFTS[index].KhaDung,
-      NgayCapNhat: new Date().toISOString().replace('T', ' ').substring(0, 19)
+    const payload = {
+      ...(updates.TenCa !== undefined && { TenCa: updates.TenCa }),
+      ...(updates.GioBatDau !== undefined && { 
+        GioBatDau: updates.GioBatDau.length === 5 ? `${updates.GioBatDau}:00` : updates.GioBatDau 
+      }),
+      ...(updates.GioKetThuc !== undefined && { 
+        GioKetThuc: updates.GioKetThuc.length === 5 ? `${updates.GioKetThuc}:00` : updates.GioKetThuc 
+      }),
     };
-    return SHIFTS[index];
+    const data = await axiosClient.put(`/admin/ca-lam-viec/${maCa}`, payload);
+    return mapShift(data);
   },
+
   deleteShift: async (maCa) => {
-    await delay();
-    const index = SHIFTS.findIndex(s => s.MaCaLamViec === maCa);
-    if (index === -1) {
-      throw new Error('Không tìm thấy ca làm việc');
-    }
-    const hasAssignments = SHIFT_DETAILS.some(sd => sd.MaCaLamViec === maCa && sd.KhaDung === 1);
-    if (hasAssignments) {
-      throw new Error('Không thể xóa ca làm việc vì đã có nhân viên đăng ký ca này (Kiểm tra trong bảng CHITIETCALAMVIEC)!');
-    }
-    SHIFTS.splice(index, 1);
+    await axiosClient.delete(`/admin/ca-lam-viec/${maCa}`);
     return true;
   },
 
   getShiftDetails: async () => {
-    await delay();
-    return SHIFT_DETAILS.map(sd => {
-      const staffMember = STAFF.find(s => s.MaNhanVien === sd.MaNhanVien);
-      const account = staffMember ? ACCOUNTS.find(a => a.MaTaiKhoan === staffMember.MaTaiKhoan) : null;
-      const shift = SHIFTS.find(s => s.MaCaLamViec === sd.MaCaLamViec);
+    const data = await axiosClient.get('/admin/ca-lam-viec/phan-ca/lich-truc');
+    return data.map(sd => {
+      const staffName = sd.NhanVien?.TaiKhoan?.HoTen || 'N/A';
+      const staffRole = sd.NhanVien?.ChucVu || 'N/A';
+      const shiftName = sd.CaLamViec?.TenCa || 'N/A';
+      const start = sd.CaLamViec?.GioBatDau ? formatTime(sd.CaLamViec.GioBatDau) : '00:00:00';
+      const end = sd.CaLamViec?.GioKetThuc ? formatTime(sd.CaLamViec.GioKetThuc) : '00:00:00';
 
       return {
-        ...sd,
-        HoTen: account ? account.HoTen : 'N/A',
-        ChucVu: staffMember ? staffMember.ChucVu : 'N/A',
-        TenCa: shift ? shift.TenCa : 'N/A',
-        GioBatDau: shift ? shift.GioBatDau : '00:00:00',
-        GioKetThuc: shift ? shift.GioKetThuc : '00:00:00',
+        MaChiTietCa: sd.MaChiTietCa,
+        MaNhanVien: sd.MaNhanVien,
+        MaCaLamViec: sd.MaCa,
+        NgayLam: sd.NgayLamViec ? new Date(sd.NgayLamViec).toISOString().substring(0, 10) : '',
+        GhiChu: sd.GhiChu || '',
+        KhaDung: sd.KhaDung ? 1 : 0,
+        HoTen: staffName,
+        ChucVu: staffRole,
+        TenCa: shiftName,
+        GioBatDau: start,
+        GioKetThuc: end,
       };
     });
   },
+
   addShiftDetail: async (detail) => {
-    await delay();
-    if (!detail.MaNhanVien || detail.MaNhanVien.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Chưa chọn nhân viên!');
-    }
-    if (!detail.MaCaLamViec || detail.MaCaLamViec.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Chưa chọn ca làm việc!');
-    }
-    if (!detail.NgayLam || detail.NgayLam.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Chưa chọn ngày làm việc!');
-    }
+    const dates = [];
+    const startDate = new Date(detail.NgayLam);
+    const endDate = detail.NgayLap ? new Date(detail.NgayLap) : startDate;
 
-    const shift = SHIFTS.find(s => s.MaCaLamViec === detail.MaCaLamViec);
-    if (!shift) {
-      throw new Error('Lỗi: Ca làm việc không tồn tại!');
-    }
-
-    const isDuplicate = SHIFT_DETAILS.some(sd =>
-      sd.MaNhanVien === detail.MaNhanVien &&
-      sd.MaCaLamViec === detail.MaCaLamViec &&
-      sd.NgayLam === detail.NgayLam &&
-      sd.KhaDung === 1
-    );
-    if (isDuplicate) {
-      throw new Error('Lỗi: Nhân viên này đã đăng ký ca làm việc này trong ngày đã chọn!');
+    let current = new Date(startDate);
+    while (current <= endDate) {
+      dates.push(current.toISOString().substring(0, 10));
+      if (detail.KieuLap === 1) { // Weekly
+        current.setDate(current.getDate() + 7);
+      } else if (detail.KieuLap === 2) { // Daily
+        current.setDate(current.getDate() + 1);
+      } else {
+        break;
+      }
     }
 
-    const activeCount = SHIFT_DETAILS.filter(sd =>
-      sd.MaCaLamViec === detail.MaCaLamViec &&
-      sd.NgayLam === detail.NgayLam &&
-      sd.KhaDung === 1
-    ).length;
-
-    if (activeCount >= shift.SoNguoiToiDa) {
-      throw new Error(`Lỗi: Ca làm việc đã đạt giới hạn tối đa (${shift.SoNguoiToiDa} người) trong ngày này!`);
+    let lastResult = null;
+    for (const d of dates) {
+      const payload = {
+        MaNhanVien: detail.MaNhanVien,
+        MaCa: detail.MaCaLamViec,
+        NgayLamViec: d,
+      };
+      lastResult = await axiosClient.post('/admin/ca-lam-viec/phan-ca', payload);
     }
 
-    const idNum = SHIFT_DETAILS.reduce((max, sd) => {
-      const num = parseInt(sd.MaChiTietCa.substring(3), 10);
-      return isNaN(num) ? max : Math.max(max, num);
-    }, 0);
-    const nextId = `CTC${String(idNum + 1).padStart(2, '0')}`;
-
-    const newDetail = {
-      MaChiTietCa: nextId,
+    return {
+      MaChiTietCa: lastResult?.MaChiTietCa || 'N/A',
       MaNhanVien: detail.MaNhanVien,
       MaCaLamViec: detail.MaCaLamViec,
       NgayLam: detail.NgayLam,
-      GhiChu: detail.GhiChu || '',
-      KhaDung: detail.KhaDung !== undefined ? parseInt(detail.KhaDung, 10) : 1,
-      NgayLap: detail.NgayLap || null,
-      KieuLap: detail.KieuLap !== undefined && detail.KieuLap !== null ? parseInt(detail.KieuLap, 10) : null,
-      NgayTao: new Date().toISOString().replace('T', ' ').substring(0, 19),
-      NgayCapNhat: null
+      KhaDung: 1,
     };
-
-    SHIFT_DETAILS.push(newDetail);
-    return newDetail;
   },
+
   toggleShiftDetailStatus: async (maChiTietCa) => {
-    await delay();
-    const index = SHIFT_DETAILS.findIndex(sd => sd.MaChiTietCa === maChiTietCa);
-    if (index === -1) {
-      throw new Error('Không tìm thấy đăng ký ca');
-    }
-
-    const registration = SHIFT_DETAILS[index];
-    const newKhaDung = registration.KhaDung === 1 ? 0 : 1;
-
-    if (newKhaDung === 1) {
-      const shift = SHIFTS.find(s => s.MaCaLamViec === registration.MaCaLamViec);
-      if (!shift) {
-        throw new Error('Lỗi: Ca làm việc không tồn tại!');
-      }
-
-      const activeCount = SHIFT_DETAILS.filter(sd =>
-        sd.MaCaLamViec === registration.MaCaLamViec &&
-        sd.NgayLam === registration.NgayLam &&
-        sd.KhaDung === 1
-      ).length;
-
-      if (activeCount >= shift.SoNguoiToiDa) {
-        throw new Error(`Lỗi: Không thể đăng ký lại ca vì đã đạt giới hạn tối đa (${shift.SoNguoiToiDa} người) trong ngày này!`);
-      }
-    }
-
-    SHIFT_DETAILS[index] = {
-      ...registration,
-      KhaDung: newKhaDung,
-      NgayCapNhat: new Date().toISOString().replace('T', ' ').substring(0, 19)
+    // Delete/cancel assignment
+    await axiosClient.delete(`/admin/ca-lam-viec/phan-ca/${maChiTietCa}`);
+    return {
+      MaChiTietCa: maChiTietCa,
+      KhaDung: 0,
     };
-    return SHIFT_DETAILS[index];
   },
+
   deleteShiftDetail: async (maChiTietCa) => {
-    await delay();
-    const index = SHIFT_DETAILS.findIndex(sd => sd.MaChiTietCa === maChiTietCa);
-    if (index === -1) {
-      throw new Error('Không tìm thấy đăng ký ca');
-    }
-    SHIFT_DETAILS.splice(index, 1);
+    await axiosClient.delete(`/admin/ca-lam-viec/phan-ca/${maChiTietCa}`);
     return true;
   }
 };
