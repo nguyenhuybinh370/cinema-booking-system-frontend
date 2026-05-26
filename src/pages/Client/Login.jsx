@@ -26,8 +26,8 @@ const Login = () => {
         throw new Error("Phản hồi đăng nhập không hợp lệ từ máy chủ");
       }
 
-      if (taiKhoan.VaiTro !== "STAFF") {
-        setError("Tài khoản của bạn không có quyền truy cập cổng nhân viên!");
+      if (taiKhoan.VaiTro !== "STAFF" && taiKhoan.VaiTro !== "ADMIN") {
+        setError("Tài khoản của bạn không có quyền truy cập!");
         setIsLoading(false);
         return;
       }
@@ -39,8 +39,12 @@ const Login = () => {
       localStorage.setItem("userName", taiKhoan.HoTen);
       localStorage.setItem("userCode", taiKhoan.TenDangNhap);
 
-      // Redirect to staff portal
-      navigate("/staff/dashboard");
+      // Redirect depending on role
+      if (taiKhoan.VaiTro === "ADMIN") {
+        navigate("/admin/rooms");
+      } else {
+        navigate("/staff/dashboard");
+      }
     } catch (err) {
       console.error("Login error:", err);
       const msg = err.response?.data?.message || err.message || "Đăng nhập thất bại. Vui lòng thử lại.";
