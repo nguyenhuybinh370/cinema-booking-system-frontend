@@ -95,7 +95,8 @@ axiosClient.interceptors.response.use(
           localStorage.removeItem("userName");
           localStorage.removeItem("userCode");
           
-          window.location.href = "/login";
+          const isStaffOrAdmin = window.location.pathname.startsWith('/staff') || window.location.pathname.startsWith('/admin');
+          window.location.href = isStaffOrAdmin ? "/staff/login" : "/login";
           return Promise.reject(refreshError);
         }
       } else {
@@ -106,7 +107,8 @@ axiosClient.interceptors.response.use(
         localStorage.removeItem("userName");
         localStorage.removeItem("userCode");
         
-        window.location.href = "/login";
+        const isStaffOrAdmin = window.location.pathname.startsWith('/staff') || window.location.pathname.startsWith('/admin');
+        window.location.href = isStaffOrAdmin ? "/staff/login" : "/login";
       }
     }
 
