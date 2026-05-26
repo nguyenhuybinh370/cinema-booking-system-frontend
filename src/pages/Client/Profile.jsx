@@ -9,6 +9,67 @@ import { getCustomerProfile, updateCustomerProfile, changeCustomerPassword } fro
 import { getBookingHistory, getBookingDetail } from '../../api/bookingHistoryApi';
 import { getMovieVisuals } from '../../utils/visualHelper';
 
+// Helper to correctly parse showtime date/time from backend booking detail/history response
+const getShowtimeStartFromBooking = (booking) => {
+  if (!booking) return null;
+  
+  let ngayChieu = null;
+  let gioChieu = null;
+
+  if (booking.Phim) {
+    ngayChieu = booking.Phim.NgayChieu;
+    gioChieu = booking.Phim.GioChieu;
+  } else if (booking.ChiTietDatVes && booking.ChiTietDatVes.length > 0) {
+    const suatChieu = booking.ChiTietDatVes[0]?.SuatChieu;
+    if (suatChieu) {
+      ngayChieu = suatChieu.NgayChieu;
+      gioChieu = suatChieu.GioChieu;
+    }
+  }
+
+  if (!ngayChieu || !gioChieu) return null;
+
+  try {
+    const dDate = new Date(ngayChieu);
+    if (isNaN(dDate.getTime())) return null;
+
+    let hour = 0;
+    let minute = 0;
+    let second = 0;
+
+    // Handle GioChieu parsing (support ISO strings or TIME strings)
+    if (typeof gioChieu === 'string') {
+      if (gioChieu.includes('T')) {
+        const dTime = new Date(gioChieu);
+        if (!isNaN(dTime.getTime())) {
+          hour = dTime.getUTCHours();
+          minute = dTime.getUTCMinutes();
+          second = dTime.getUTCSeconds();
+        }
+      } else {
+        const parts = gioChieu.split(':');
+        hour = parseInt(parts[0], 10) || 0;
+        minute = parseInt(parts[1], 10) || 0;
+        second = parseInt(parts[2], 10) || 0;
+      }
+    } else {
+      const dTime = new Date(gioChieu);
+      if (!isNaN(dTime.getTime())) {
+        hour = dTime.getUTCHours();
+        minute = dTime.getUTCMinutes();
+        second = dTime.getUTCSeconds();
+      }
+    }
+
+    const showtimeStart = new Date(dDate);
+    showtimeStart.setUTCHours(hour, minute, second, 0);
+    return showtimeStart;
+  } catch (e) {
+    console.error("Lỗi khi parse showtime:", e);
+    return null;
+  }
+};
+
 const Profile = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -172,13 +233,13 @@ const Profile = () => {
   // Filter bookings using timezone-safe Date comparisons and status
   const now = new Date();
   const upcomingTickets = bookings.filter(item => {
-    const showtimeStart = new Date(item.Phim?.GioChieu || item.Phim?.NgayChieu || 0);
-    return item.TrangThai === 'DA_THANH_TOAN' && showtimeStart >= now;
+    const showtimeStart = getShowtimeStartFromBooking(item);
+    return item.TrangThai === 'DA_THANH_TOAN' && showtimeStart && showtimeStart >= now;
   });
 
   const pastTickets = bookings.filter(item => {
-    const showtimeStart = new Date(item.Phim?.GioChieu || item.Phim?.NgayChieu || 0);
-    return item.TrangThai !== 'DA_THANH_TOAN' || showtimeStart < now;
+    const showtimeStart = getShowtimeStartFromBooking(item);
+    return !showtimeStart || item.TrangThai !== 'DA_THANH_TOAN' || showtimeStart < now;
   });
 
   // Xử lý Lưu thông tin cá nhân
@@ -329,10 +390,10 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen pt-28 pb-16 px-6 md:px-16 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_3fr] gap-10 items-start">
+    <div className="min-h-screen pt-28 pb-16 px-6 md:px-16 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-10 items-start">
       
       {/* KHỐI TRÁI: THÔNG TIN USER PROFILE (SIDEBAR ĐÃ GỌN NHẸ) */}
-      <div className="bg-[#3f3e85]/20 backdrop-blur-md rounded-3xl p-6 border border-white/5 text-center flex flex-col items-center gap-4 shadow-2xl">
+      <div className="w-full lg:w-[280px] shrink-0 bg-[#3f3e85]/20 backdrop-blur-md rounded-3xl p-6 border border-white/5 text-center flex flex-col items-center gap-4 shadow-2xl">
         <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-yellow-400 shadow-[0_0_20px_rgba(253,224,71,0.2)]">
           <img 
             src={assets.profile || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"} 
@@ -355,8 +416,8 @@ const Profile = () => {
               activeTab === 'account' ? 'bg-white/10 text-yellow-400 font-bold' : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            <User size={18} />
-            <span>Thông tin khách hàng</span>
+            <User size={18} className="shrink-0" />
+            <span className="whitespace-nowrap">Thông tin khách hàng</span>
           </button>
 
           <button 
@@ -365,8 +426,8 @@ const Profile = () => {
               activeTab === 'upcoming' ? 'bg-white/10 text-yellow-400 font-bold' : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            <Ticket size={18} />
-            <span>Vé Sắp Xem ({upcomingTickets.length})</span>
+            <Ticket size={18} className="shrink-0" />
+            <span className="whitespace-nowrap">Vé Sắp Xem ({upcomingTickets.length})</span>
           </button>
           
           <button 
@@ -375,8 +436,8 @@ const Profile = () => {
               activeTab === 'past' ? 'bg-white/10 text-yellow-400 font-bold' : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            <History size={18} />
-            <span>Lịch sử mua hàng ({pastTickets.length})</span>
+            <History size={18} className="shrink-0" />
+            <span className="whitespace-nowrap">Lịch sử mua hàng ({pastTickets.length})</span>
           </button>
 
           <div className="w-full h-px bg-white/5 my-2"></div>
@@ -386,14 +447,14 @@ const Profile = () => {
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-rose-500 hover:bg-rose-500/10 transition-all cursor-pointer"
           >
-            <LogOut size={18} />
-            <span>Đăng xuất</span>
+            <LogOut size={18} className="shrink-0" />
+            <span className="whitespace-nowrap">Đăng xuất</span>
           </button>
         </div>
       </div>
 
       {/* KHỐI PHẢI: CHI TIẾT NỘI DUNG TỪNG TAB */}
-      <div className="w-full flex flex-col gap-6 text-left">
+      <div className="w-full min-w-0 flex flex-col gap-6 text-left">
         
         {/* ================= TAB 1: THÔNG TIN KHÁCH HÀNG ================= */}
         {activeTab === 'account' && (
@@ -588,7 +649,7 @@ const Profile = () => {
                           </span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-400">
-                          <p className="flex items-center gap-1.5"><Calendar size={14} className="text-gray-500" />Suất: {formatDateTime(booking.Phim?.GioChieu || booking.Phim?.NgayChieu)}</p>
+                          <p className="flex items-center gap-1.5"><Calendar size={14} className="text-gray-500" />Suất: {getShowtimeStartFromBooking(booking) ? formatDateTime(getShowtimeStartFromBooking(booking)) : "Không xác định"}</p>
                           <p className="flex items-center gap-1.5"><MapPin size={14} className="text-gray-500" />Phòng: <span className="text-white font-bold">{booking.Phim?.TenPhong || 'Chưa cập nhật'}</span></p>
                           <p className="flex items-center gap-1.5"><CreditCard size={14} className="text-gray-500" />Tổng tiền: <span className="text-yellow-400 font-bold">{formatVND(booking.TongTien)}</span></p>
                           <p className="flex items-center gap-1.5">Số lượng: <span className="text-gray-300 font-medium">{booking.SoLuongVe} vé</span></p>
@@ -651,7 +712,7 @@ const Profile = () => {
                     {bookingDetail.ChiTietDatVes[0]?.SuatChieu?.Phim?.TenPhim || 'Thông tin vé'}
                   </h3>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400 mt-2">
-                    <p className="flex items-center gap-1"><Calendar size={12} /> Suất: {formatDateTime(bookingDetail.ChiTietDatVes[0]?.SuatChieu?.GioChieu || bookingDetail.ChiTietDatVes[0]?.SuatChieu?.NgayChieu)}</p>
+                    <p className="flex items-center gap-1"><Calendar size={12} /> Suất: {getShowtimeStartFromBooking(bookingDetail) ? formatDateTime(getShowtimeStartFromBooking(bookingDetail)) : "Không xác định"}</p>
                     <p className="flex items-center gap-1"><MapPin size={12} /> Phòng: {bookingDetail.ChiTietDatVes[0]?.SuatChieu?.PhongChieu?.TenPhong} ({bookingDetail.ChiTietDatVes[0]?.SuatChieu?.PhongChieu?.TenLoaiPhong})</p>
                   </div>
                 </div>
