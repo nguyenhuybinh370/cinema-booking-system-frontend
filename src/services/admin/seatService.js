@@ -32,6 +32,17 @@ const seatService = {
     };
   },
 
+  getSeatsByRoom: async (roomId) => {
+    const data = await axiosClient.get(`/admin/phong-chieu/${roomId}/ghe`);
+    return data.map(s => ({
+      MaGhe: s.MaGhe,
+      ViTriDay: s.ViTriDay,
+      ViTriCot: s.ViTriCot,
+      MaLoaiGhe: s.MaLoaiGhe,
+      KhaDung: s.KhaDung ? 1 : 0
+    }));
+  },
+
   saveSeatConfig: async (roomId, overrides) => {
     const ghes = Object.entries(overrides)
       .filter(([_, value]) => value.MaGhe) // Must have MaGhe (UUID)
