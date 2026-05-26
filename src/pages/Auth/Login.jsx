@@ -26,12 +26,6 @@ const Login = () => {
         throw new Error("Phản hồi đăng nhập không hợp lệ từ máy chủ");
       }
 
-      if (taiKhoan.VaiTro !== "CUSTOMER") {
-        toast.error("Đây không phải tài khoản khách hàng.");
-        setIsLoading(false);
-        return;
-      }
-
       // Store tokens and metadata
       localStorage.setItem("accessToken", tokens.accessToken);
       localStorage.setItem("refreshToken", tokens.refreshToken);
@@ -41,8 +35,23 @@ const Login = () => {
       localStorage.setItem("userInfo", JSON.stringify(taiKhoan));
 
       toast.success("Đăng nhập thành công!");
-      const from = location.state?.from || "/";
-      navigate(from, { replace: true });
+
+      // Role-based redirect
+      const from = location.state?.from;
+      const role = taiKhoan.VaiTro;
+
+      if (role === "CUSTOMER") {
+        navigate(from || "/", { replace: true });
+      } else if (role === "STAFF") {
+        // If from is a staff page, go there; otherwise staff dashboard
+        const staffTarget = from && from.startsWith("/staff") ? from : "/staff/dashboard";
+        navigate(staffTarget, { replace: true });
+      } else if (role === "ADMIN") {
+        const adminTarget = from && from.startsWith("/admin") ? from : "/admin";
+        navigate(adminTarget, { replace: true });
+      } else {
+        navigate("/", { replace: true });
+      }
     } catch (err) {
       console.error("Login error:", err);
       const msg = err.response?.data?.message || err.message || "Đăng nhập thất bại. Vui lòng thử lại.";

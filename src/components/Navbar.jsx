@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Search, Menu, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-// Import dữ liệu phim thật từ assets để tìm kiếm
-import { dummyShowsData } from '../assets/assets'; 
 import UITLogo from '../assets/LogoUIT2.jpg';
 import axiosClient from '../api/axiosClient';
+import { getMovies } from '../api/movieApi';
+import { getMovieVisuals } from '../utils/visualHelper';
 import toast from 'react-hot-toast';
 
 const Navbar = () => {
@@ -43,20 +43,31 @@ const Navbar = () => {
     }
   };
 
-  // Hàm xử lý lọc phim khi người dùng gõ chữ
+  // Debounce timer ref
+  const searchTimerRef = useRef(null);
+
+  // Hàm xử lý tìm kiếm phim từ backend
   const handleSearchChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
 
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+
     if (query.trim() === '') {
       setSearchResults([]);
-    } else {
-      // Tìm kiếm không phân biệt chữ hoa, chữ thường
-      const filtered = dummyShowsData.filter(movie => 
-        movie.title.toLowerCase().includes(query.toLowerCase())
-      );
-      setSearchResults(filtered);
+      return;
     }
+
+    searchTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await getMovies({ keyword: query.trim(), limit: 6 });
+        const movies = res?.data || res || [];
+        setSearchResults(Array.isArray(movies) ? movies : []);
+      } catch (err) {
+        console.error('Search error:', err);
+        setSearchResults([]);
+      }
+    }, 300);
   };
 
   return (
@@ -103,28 +114,31 @@ const Navbar = () => {
             {/* --- DROPDOWN HIỂN THỊ KẾT QUẢ TÌM KIẾM --- */}
             {searchResults.length > 0 && (
               <div className="absolute top-full left-0 mt-2 w-72 bg-[#020617]/95 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl z-50 max-h-80 overflow-y-auto flex flex-col text-left">
-                {searchResults.map((movie) => (
-                  <Link 
-                    key={movie._id} 
-                    to={`/movie/${movie._id}`}
-                    onClick={() => { setSearchQuery(''); setSearchResults([]); }} // Xóa chữ sau khi bấm để ẩn bảng
-                    className="flex items-center gap-3 p-3 hover:bg-white/10 border-b border-white/5 transition-colors group/item"
-                  >
-                    <img 
-                      src={movie.poster_path} 
-                      alt={movie.title} 
-                      className="w-10 h-14 object-cover rounded-md shrink-0 border border-white/10"
-                    />
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-white font-semibold text-sm truncate group-hover/item:text-(--btn-neon) transition-colors">
-                        {movie.title}
-                      </span>
-                      <span className="text-gray-400 text-xs mt-0.5">
-                        {movie.runtime} mins • {movie.release_date.split('-')[0]}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
+                {searchResults.map((movie, idx) => {
+                  const visuals = getMovieVisuals(movie, idx);
+                  return (
+                    <Link 
+                      key={movie.MaPhim} 
+                      to={`/movie/${movie.MaPhim}`}
+                      onClick={() => { setSearchQuery(''); setSearchResults([]); }}
+                      className="flex items-center gap-3 p-3 hover:bg-white/10 border-b border-white/5 transition-colors group/item"
+                    >
+                      <img 
+                        src={visuals.poster} 
+                        alt={movie.TenPhim} 
+                        className="w-10 h-14 object-cover rounded-md shrink-0 border border-white/10"
+                      />
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-white font-semibold text-sm truncate group-hover/item:text-(--btn-neon) transition-colors">
+                          {movie.TenPhim}
+                        </span>
+                        <span className="text-gray-400 text-xs mt-0.5">
+                          {movie.ThoiLuong} phút • {movie.TheLoai}
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             )}
             

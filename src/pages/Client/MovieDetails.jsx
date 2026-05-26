@@ -114,13 +114,23 @@ const MovieDetails = () => {
 
   const [isPaymentStage, setIsPaymentStage] = useState(false);
 
+  const hasShowtimes = showtimes.length > 0;
+
   const handleStartBooking = () => {
+    if (!hasShowtimes) {
+      toast.error("Hiện chưa có suất chiếu cho phim này.");
+      return;
+    }
     const token = localStorage.getItem("accessToken");
     const role = localStorage.getItem("userRole");
     
     if (!token || role !== "CUSTOMER") {
       toast.error("Vui lòng đăng nhập tài khoản khách hàng để đặt vé!");
       navigate("/login", { state: { from: `/movie/${id}` } });
+      return;
+    }
+    if (!currentSlot?.MaSuatChieu) {
+      toast.error("Vui lòng chọn suất chiếu trước.");
       return;
     }
     setIsBookingStage(true);
@@ -317,8 +327,14 @@ const MovieDetails = () => {
             >
               <Play size={16} fill="white"/> Xem Trailer
             </button>
-            <button onClick={handleStartBooking} className="bg-[#ff436e] hover:bg-[#e0325a] text-white font-bold px-8 py-3 rounded-xl transition-all shadow-[0_0_25px_rgba(255,67,110,0.4)] text-sm uppercase cursor-pointer">
-              Mua Vé Ngay
+            <button 
+              onClick={handleStartBooking} 
+              disabled={!hasShowtimes}
+              className={`bg-[#ff436e] hover:bg-[#e0325a] text-white font-bold px-8 py-3 rounded-xl transition-all text-sm uppercase cursor-pointer ${
+                !hasShowtimes ? 'opacity-40 cursor-not-allowed shadow-none' : 'shadow-[0_0_25px_rgba(255,67,110,0.4)]'
+              }`}
+            >
+              {hasShowtimes ? 'Mua Vé Ngay' : 'Chưa có suất chiếu'}
             </button>
             <button className="p-3 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-rose-500 hover:bg-white/10 transition-colors">
               <Heart size={20} />
@@ -390,16 +406,27 @@ const MovieDetails = () => {
           </div>
         )}
 
+          {realDates.length === 0 && (
+            <div className="w-full text-center py-4">
+              <p className="text-gray-400 italic text-sm">Hiện chưa có suất chiếu cho phim này.</p>
+            </div>
+          )}
+
+          {/* Ghi chú giá vé */}
+          {realDates.length > 0 && (
+            <p className="text-xs text-gray-500 italic mt-1">* Giá vé gốc hiển thị trên suất chiếu. Giá ghế cuối cùng đã bao gồm phụ thu loại ghế, phòng chiếu và ngày chiếu.</p>
+          )}
+
         {/* Nút hành động */}
         <div className="w-full flex justify-end border-t border-white/5 pt-6">
           <button 
-            disabled={realDates.length === 0}
+            disabled={!hasShowtimes}
             onClick={handleStartBooking}
             className={`w-full md:w-auto bg-[#ff436e] hover:bg-[#e0325a] text-white font-extrabold px-12 py-4 rounded-2xl transition-all text-base tracking-wider active:scale-98 whitespace-nowrap cursor-pointer ${
-              realDates.length === 0 ? 'opacity-40 cursor-not-allowed shadow-none' : 'shadow-[0_0_30px_rgba(255,67,110,0.4)]'
+              !hasShowtimes ? 'opacity-40 cursor-not-allowed shadow-none' : 'shadow-[0_0_30px_rgba(255,67,110,0.4)]'
             }`}
           >
-            ĐẶT VÉ NGAY
+            {hasShowtimes ? 'ĐẶT VÉ NGAY' : 'CHƯA CÓ SUẤT CHIẾU'}
           </button>
         </div>
       </div>

@@ -168,7 +168,8 @@ const SeatSelection = ({
           <p className="text-[10px] tracking-[0.3em] font-bold text-gray-500 uppercase">Màn Hình</p>
         </div>
 
-        <div className="flex flex-col gap-3 w-full max-w-3xl overflow-x-auto pb-4 items-center">
+        <div className="w-full max-w-3xl overflow-x-auto pb-4 rounded-xl" style={{ scrollbarGutter: 'stable' }}>
+          <div className="flex flex-col gap-3 items-center" style={{ minWidth: '580px' }}>
           {rows.map((row) => {
             const isFrontRow = row === 'A' || row === 'B';
             const totalCols = isFrontRow ? 9 : 18;
@@ -218,6 +219,7 @@ const SeatSelection = ({
               {Array.from({ length: 9 }, (_, i) => <span key={i} className="w-7 sm:w-8 text-center">{i+10}</span>)}
             </div>
           </div>
+        </div>
         </div>
 
         {/* KHỐI THÔNG TIN SUẤT CHIẾU & SỐ TIỀN ĐỘNG */}
