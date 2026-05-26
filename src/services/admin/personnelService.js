@@ -1,152 +1,75 @@
-import { STAFF, ACCOUNTS } from '../../constants/adminMockData';
+import axiosClient from '../../api/axiosClient';
 
-const delay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
+const mapUserToStaff = (u) => ({
+  MaNhanVien: u.NhanVien?.MaNhanVien || u.MaTaiKhoan,
+  MaTaiKhoan: u.MaTaiKhoan,
+  HoTen: u.HoTen,
+  Email: u.Email,
+  SoDienThoai: u.SoDienThoai,
+  NgaySinh: u.NgaySinh ? new Date(u.NgaySinh).toISOString().substring(0, 10) : '',
+  GioiTinh: u.GioiTinh ? 1 : 0,
+  ChucVu: u.NhanVien?.ChucVu || (u.VaiTro === 'ADMIN' ? 'Quản lý hệ thống' : 'Nhân viên'),
+  Role: u.VaiTro === 'ADMIN' ? 'Admin' : (u.NhanVien?.ChucVu?.toLowerCase().includes('quản lý') ? 'Manager' : 'Staff'),
+  KhaDung: u.KhaDung ? 1 : 0,
+  NgayTao: u.NgayTao ? new Date(u.NgayTao).toISOString().replace('T', ' ').substring(0, 19) : null,
+  NgayCapNhat: u.NgayCapNhat ? new Date(u.NgayCapNhat).toISOString().replace('T', ' ').substring(0, 19) : null,
+});
 
 const personnelService = {
   getStaff: async () => {
-    await delay();
-    return STAFF.map(s => {
-      const account = ACCOUNTS.find(a => a.MaTaiKhoan === s.MaTaiKhoan);
-      return {
-        ...account,
-        ...s,
-        KhaDung: s.KhaDung
-      };
-    });
+    const res = await axiosClient.get('/admin/nguoi-dung?limit=200');
+    const items = Array.isArray(res) ? res : (res && Array.isArray(res.data) ? res.data : []);
+    // Only return ADMIN and STAFF roles for Personnel module
+    return items
+      .filter(u => u.VaiTro === 'ADMIN' || u.VaiTro === 'STAFF')
+      .map(mapUserToStaff);
   },
+
   addStaff: async (person) => {
-    await delay();
-    if (!person.HoTen || person.HoTen.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Họ tên không được để trống!');
-    }
-    if (!person.Email || person.Email.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Email không được để trống!');
-    }
-    if (!person.SoDienThoai || person.SoDienThoai.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Số điện thoại không được để trống!');
-    }
-    if (!person.NgaySinh || person.NgaySinh.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Ngày sinh không được để trống!');
-    }
-    if (person.GioiTinh !== 0 && person.GioiTinh !== 1) {
-      throw new Error('Thông tin không hợp lệ: Giới tính không hợp lệ!');
-    }
-    if (!person.ChucVu || person.ChucVu.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Chức vụ không được để trống!');
-    }
-    if (!person.MatKhau || person.MatKhau.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Mật khẩu không được để trống!');
-    }
-
-    const emailExists = ACCOUNTS.some(a => a.Email.toLowerCase() === person.Email.toLowerCase() && a.KhaDung !== 0);
-    if (emailExists) {
-      throw new Error('Lỗi: Email đã được đăng ký bởi tài khoản khác!');
-    }
-
-    const phoneExists = ACCOUNTS.some(a => a.SoDienThoai === person.SoDienThoai && a.KhaDung !== 0);
-    if (phoneExists) {
-      throw new Error('Lỗi: Số điện thoại đã được đăng ký bởi tài khoản khác!');
-    }
-
-    const nextAccId = `TK${String(ACCOUNTS.length + 1).padStart(2, '0')}`;
-
-    const newAccount = {
-      MaTaiKhoan: nextAccId,
+    const payload = {
+      TenDangNhap: person.Email,
+      MatKhau: person.MatKhau || 'CinemaPlus@2026',
       HoTen: person.HoTen,
       Email: person.Email,
       SoDienThoai: person.SoDienThoai,
-      MatKhau: person.MatKhau,
-      NgaySinh: person.NgaySinh,
-      GioiTinh: person.GioiTinh,
-      Role: person.Role || 'Staff',
-      KhaDung: 1,
-      NgayTao: person.NgayTao || new Date().toISOString().replace('T', ' ').substring(0, 19),
-      NgayCapNhat: null
+      GioiTinh: person.GioiTinh === 1,
+      NgaySinh: person.NgaySinh || undefined,
+      VaiTro: person.Role === 'Admin' ? 'ADMIN' : 'STAFF',
+      ChucVu: person.ChucVu || 'Nhân viên',
     };
-    ACCOUNTS.push(newAccount);
-
-    const newStaff = {
-      MaNhanVien: person.MaNhanVien,
-      MaTaiKhoan: nextAccId,
-      ChucVu: person.ChucVu,
-      KhaDung: person.KhaDung !== undefined ? person.KhaDung : 1,
-      NgayTao: person.NgayTao || new Date().toISOString().replace('T', ' ').substring(0, 19),
-      NgayCapNhat: null
-    };
-    STAFF.push(newStaff);
-
-    return { ...newAccount, ...newStaff };
+    const data = await axiosClient.post('/admin/nguoi-dung', payload);
+    return mapUserToStaff(data);
   },
+
   updateStaff: async (maNhanVien, updates) => {
-    await delay();
-    const sIndex = STAFF.findIndex(s => s.MaNhanVien === maNhanVien);
-    if (sIndex === -1) {
-      throw new Error('Không tìm thấy nhân viên');
-    }
-    const staffItem = STAFF[sIndex];
-    const aIndex = ACCOUNTS.findIndex(a => a.MaTaiKhoan === staffItem.MaTaiKhoan);
-
-    if (updates.HoTen !== undefined && (!updates.HoTen || updates.HoTen.trim() === '')) {
-      throw new Error('Thông tin không hợp lệ: Họ tên không được để trống!');
-    }
-    if (updates.Email !== undefined && (!updates.Email || updates.Email.trim() === '')) {
-      throw new Error('Thông tin không hợp lệ: Email không được để trống!');
-    }
-    if (updates.SoDienThoai !== undefined && (!updates.SoDienThoai || updates.SoDienThoai.trim() === '')) {
-      throw new Error('Thông tin không hợp lệ: Số điện thoại không được để trống!');
-    }
-    if (updates.NgaySinh !== undefined && (!updates.NgaySinh || updates.NgaySinh.trim() === '')) {
-      throw new Error('Thông tin không hợp lệ: Ngày sinh không được để trống!');
-    }
-    if (updates.GioiTinh !== undefined && updates.GioiTinh !== 0 && updates.GioiTinh !== 1) {
-      throw new Error('Thông tin không hợp lệ: Giới tính không hợp lệ!');
-    }
-    if (updates.ChucVu !== undefined && (!updates.ChucVu || updates.ChucVu.trim() === '')) {
-      throw new Error('Thông tin không hợp lệ: Chức vụ không được để trống!');
+    // 1. Resolve maNhanVien to maTaiKhoan
+    const resList = await axiosClient.get('/admin/nguoi-dung?limit=200');
+    const users = Array.isArray(resList) ? resList : (resList && Array.isArray(resList.data) ? resList.data : []);
+    const user = users.find(u => u.NhanVien?.MaNhanVien === maNhanVien || u.MaTaiKhoan === maNhanVien);
+    if (!user) {
+      throw new Error(`Không tìm thấy tài khoản nhân viên với mã: ${maNhanVien}`);
     }
 
-    if (updates.Email && aIndex !== -1) {
-      const emailExists = ACCOUNTS.some(a => a.MaTaiKhoan !== staffItem.MaTaiKhoan && a.Email.toLowerCase() === updates.Email.toLowerCase() && a.KhaDung !== 0);
-      if (emailExists) {
-        throw new Error('Lỗi: Email đã được đăng ký bởi tài khoản khác!');
-      }
+    const maTaiKhoan = user.MaTaiKhoan;
+
+    // 2. Perform password update if provided and modified
+    if (updates.MatKhau && updates.MatKhau !== 'CinemaPlus@2026') {
+      await axiosClient.put(`/admin/nguoi-dung/${maTaiKhoan}/doi-mat-khau`, { MatKhau: updates.MatKhau });
     }
 
-    if (updates.SoDienThoai && aIndex !== -1) {
-      const phoneExists = ACCOUNTS.some(a => a.MaTaiKhoan !== staffItem.MaTaiKhoan && a.SoDienThoai === updates.SoDienThoai && a.KhaDung !== 0);
-      if (phoneExists) {
-        throw new Error('Lỗi: Số điện thoại đã được đăng ký bởi tài khoản khác!');
-      }
-    }
-
-    const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
-
-    STAFF[sIndex] = {
-      ...STAFF[sIndex],
-      ChucVu: updates.ChucVu !== undefined ? updates.ChucVu : STAFF[sIndex].ChucVu,
-      KhaDung: updates.KhaDung !== undefined ? updates.KhaDung : STAFF[sIndex].KhaDung,
-      NgayCapNhat: nowStr
+    // 3. Perform profile update
+    const payload = {
+      ...(updates.HoTen !== undefined && { HoTen: updates.HoTen }),
+      ...(updates.Email !== undefined && { Email: updates.Email }),
+      ...(updates.SoDienThoai !== undefined && { SoDienThoai: updates.SoDienThoai }),
+      ...(updates.GioiTinh !== undefined && { GioiTinh: updates.GioiTinh === 1 }),
+      ...(updates.NgaySinh !== undefined && { NgaySinh: updates.NgaySinh }),
+      ...(updates.KhaDung !== undefined && { KhaDung: updates.KhaDung === 1 }),
+      ...(updates.ChucVu !== undefined && { ChucVu: updates.ChucVu }),
     };
 
-    if (aIndex !== -1) {
-      ACCOUNTS[aIndex] = {
-        ...ACCOUNTS[aIndex],
-        HoTen: updates.HoTen !== undefined ? updates.HoTen : ACCOUNTS[aIndex].HoTen,
-        Email: updates.Email !== undefined ? updates.Email : ACCOUNTS[aIndex].Email,
-        SoDienThoai: updates.SoDienThoai !== undefined ? updates.SoDienThoai : ACCOUNTS[aIndex].SoDienThoai,
-        NgaySinh: updates.NgaySinh !== undefined ? updates.NgaySinh : ACCOUNTS[aIndex].NgaySinh,
-        GioiTinh: updates.GioiTinh !== undefined ? updates.GioiTinh : ACCOUNTS[aIndex].GioiTinh,
-        MatKhau: updates.MatKhau !== undefined ? updates.MatKhau : ACCOUNTS[aIndex].MatKhau,
-        Role: updates.Role !== undefined ? updates.Role : ACCOUNTS[aIndex].Role,
-        NgayCapNhat: nowStr
-      };
-    }
-
-    return {
-      ...(aIndex !== -1 ? ACCOUNTS[aIndex] : {}),
-      ...STAFF[sIndex],
-      KhaDung: STAFF[sIndex].KhaDung
-    };
+    const data = await axiosClient.put(`/admin/nguoi-dung/${maTaiKhoan}`, payload);
+    return mapUserToStaff(data);
   }
 };
 
