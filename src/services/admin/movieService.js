@@ -1,98 +1,70 @@
-import { ADMIN_MOVIES } from '../../constants/adminMockData';
+import axiosClient from '../../api/axiosClient';
 
-const delay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
+const mapMovie = (m) => ({
+  MaPhim: m.MaPhim,
+  TenPhim: m.TenPhim,
+  ThoiLuong: Number(m.ThoiLuong),
+  TheLoai: m.TheLoai,
+  NgayKhoiChieu: m.NgayKhoiChieu ? new Date(m.NgayKhoiChieu).toISOString().substring(0, 10) : '',
+  NgayKetThuc: m.NgayKetThuc ? new Date(m.NgayKetThuc).toISOString().substring(0, 10) : null,
+  DaoDien: m.DaoDien || '',
+  DienVien: m.DienVien || '',
+  GioiHanTuoi: m.GioiHanTuoi || 'P',
+  NoiDung: m.NoiDung || '',
+  Trailer: m.Trailer || '',
+  HinhAnh: m.HinhAnh || '',
+  KhaDung: m.KhaDung ? 1 : 0,
+  NgayTao: m.NgayTao ? new Date(m.NgayTao).toISOString().replace('T', ' ').substring(0, 19) : null,
+  NgayCapNhat: m.NgayCapNhat ? new Date(m.NgayCapNhat).toISOString().replace('T', ' ').substring(0, 19) : null,
+});
 
 const movieService = {
   getMovies: async () => {
-    await delay();
-    return [...ADMIN_MOVIES];
+    const res = await axiosClient.get('/phim?includeInactive=true&limit=100');
+    const items = Array.isArray(res) ? res : (res && Array.isArray(res.data) ? res.data : []);
+    return items.map(mapMovie);
   },
+
   addMovie: async (movie) => {
-    await delay();
-    if (!movie.TenPhim || movie.TenPhim.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Tên phim không được để trống!');
-    }
-    if (!movie.ThoiLuong || isNaN(movie.ThoiLuong) || movie.ThoiLuong <= 0) {
-      throw new Error('Thông tin không hợp lệ: Thời lượng phải là số nguyên dương!');
-    }
-    if (!movie.TheLoai || movie.TheLoai.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Thể loại phim không được để trống!');
-    }
-    if (!movie.NgayKhoiChieu || movie.NgayKhoiChieu.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Ngày khởi chiếu không được để trống!');
-    }
-    if (!movie.GioiHanTuoi || movie.GioiHanTuoi.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Giới hạn độ tuổi không được để trống!');
-    }
-    if (!movie.Trailer || movie.Trailer.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Trailer không được để trống!');
-    }
-
-    const exists = ADMIN_MOVIES.some(m => m.TenPhim.toLowerCase() === movie.TenPhim.toLowerCase() && m.KhaDung !== 0);
-    if (exists) {
-      throw new Error('Lỗi: Tên phim đã tồn tại trong hệ thống!');
-    }
-
-    const newMovie = {
-      ...movie,
-      KhaDung: movie.KhaDung !== undefined ? parseInt(movie.KhaDung, 10) : 1,
-      NgayTao: new Date().toISOString().replace('T', ' ').substring(0, 19),
-      NgayCapNhat: null
+    const payload = {
+      TenPhim: movie.TenPhim,
+      ThoiLuong: Number(movie.ThoiLuong),
+      TheLoai: movie.TheLoai,
+      NgayKhoiChieu: movie.NgayKhoiChieu,
+      NgayKetThuc: movie.NgayKetThuc || null,
+      DaoDien: movie.DaoDien || null,
+      DienVien: movie.DienVien || null,
+      GioiHanTuoi: movie.GioiHanTuoi,
+      NoiDung: movie.NoiDung || null,
+      Trailer: movie.Trailer,
+      HinhAnh: movie.HinhAnh || null,
+      KhaDung: movie.KhaDung !== undefined ? movie.KhaDung === 1 : true,
     };
-    ADMIN_MOVIES.push(newMovie);
-    return newMovie;
+    const data = await axiosClient.post('/admin/phim', payload);
+    return mapMovie(data);
   },
+
   updateMovie: async (maPhim, updates) => {
-    await delay();
-    if (updates.TenPhim !== undefined && (!updates.TenPhim || updates.TenPhim.trim() === '')) {
-      throw new Error('Thông tin không hợp lệ: Tên phim không được để trống!');
-    }
-    if (updates.ThoiLuong !== undefined && (!updates.ThoiLuong || isNaN(updates.ThoiLuong) || updates.ThoiLuong <= 0)) {
-      throw new Error('Thông tin không hợp lệ: Thời lượng phải là số nguyên dương!');
-    }
-    if (updates.TheLoai !== undefined && (!updates.TheLoai || updates.TheLoai.trim() === '')) {
-      throw new Error('Thông tin không hợp lệ: Thể loại phim không được để trống!');
-    }
-    if (updates.NgayKhoiChieu !== undefined && (!updates.NgayKhoiChieu || updates.NgayKhoiChieu.trim() === '')) {
-      throw new Error('Thông tin không hợp lệ: Ngày khởi chiếu không được để trống!');
-    }
-    if (updates.GioiHanTuoi !== undefined && (!updates.GioiHanTuoi || updates.GioiHanTuoi.trim() === '')) {
-      throw new Error('Thông tin không hợp lệ: Giới hạn độ tuổi không được để trống!');
-    }
-    if (updates.Trailer !== undefined && (!updates.Trailer || updates.Trailer.trim() === '')) {
-      throw new Error('Thông tin không hợp lệ: Trailer không được để trống!');
-    }
-
-    const index = ADMIN_MOVIES.findIndex(m => m.MaPhim === maPhim);
-    if (index === -1) {
-      throw new Error('Không tìm thấy phim');
-    }
-
-    if (updates.TenPhim) {
-      const exists = ADMIN_MOVIES.some(m => m.MaPhim !== maPhim && m.TenPhim.toLowerCase() === updates.TenPhim.toLowerCase() && m.KhaDung !== 0);
-      if (exists) {
-        throw new Error('Lỗi: Tên phim đã tồn tại trong hệ thống!');
-      }
-    }
-
-    ADMIN_MOVIES[index] = {
-      ...ADMIN_MOVIES[index],
-      ...updates,
-      KhaDung: updates.KhaDung !== undefined ? parseInt(updates.KhaDung, 10) : ADMIN_MOVIES[index].KhaDung,
-      NgayCapNhat: new Date().toISOString().replace('T', ' ').substring(0, 19)
+    const payload = {
+      ...(updates.TenPhim !== undefined && { TenPhim: updates.TenPhim }),
+      ...(updates.ThoiLuong !== undefined && { ThoiLuong: Number(updates.ThoiLuong) }),
+      ...(updates.TheLoai !== undefined && { TheLoai: updates.TheLoai }),
+      ...(updates.NgayKhoiChieu !== undefined && { NgayKhoiChieu: updates.NgayKhoiChieu }),
+      ...(updates.NgayKetThuc !== undefined && { NgayKetThuc: updates.NgayKetThuc || null }),
+      ...(updates.DaoDien !== undefined && { DaoDien: updates.DaoDien || null }),
+      ...(updates.DienVien !== undefined && { DienVien: updates.DienVien || null }),
+      ...(updates.GioiHanTuoi !== undefined && { GioiHanTuoi: updates.GioiHanTuoi }),
+      ...(updates.NoiDung !== undefined && { NoiDung: updates.NoiDung || null }),
+      ...(updates.Trailer !== undefined && { Trailer: updates.Trailer }),
+      ...(updates.HinhAnh !== undefined && { HinhAnh: updates.HinhAnh || null }),
+      ...(updates.KhaDung !== undefined && { KhaDung: updates.KhaDung === 1 }),
     };
-    return ADMIN_MOVIES[index];
+    const data = await axiosClient.put(`/admin/phim/${maPhim}`, payload);
+    return mapMovie(data);
   },
+
   deleteMovie: async (maPhim) => {
-    await delay();
-    const index = ADMIN_MOVIES.findIndex(m => m.MaPhim === maPhim);
-    if (index === -1) {
-      throw new Error('Không tìm thấy phim');
-    }
-    if (maPhim === 'M01' || maPhim === 'M02') {
-      throw new Error('Không thể xóa phim vì đã có suất chiếu được lên lịch cho bộ phim này (Kiểm tra trong bảng SUATCHIEU)!');
-    }
-    ADMIN_MOVIES.splice(index, 1);
+    await axiosClient.delete(`/admin/phim/${maPhim}`);
     return true;
   }
 };
