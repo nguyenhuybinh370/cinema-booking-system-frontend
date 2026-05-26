@@ -1,15 +1,54 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { User, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import axiosClient from '../../api/axiosClient';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Đăng nhập với dữ liệu:", formData);
-    // Xử lý logic đăng nhập tại đây
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const response = await axiosClient.post("/auth/login", {
+        TenDangNhap: formData.username,
+        MatKhau: formData.password,
+      });
+
+      const { taiKhoan, tokens } = response;
+
+      if (!taiKhoan || !tokens) {
+        throw new Error("Phản hồi đăng nhập không hợp lệ từ máy chủ");
+      }
+
+      // Store credentials
+      localStorage.setItem("accessToken", tokens.accessToken);
+      localStorage.setItem("refreshToken", tokens.refreshToken);
+      localStorage.setItem("userRole", taiKhoan.VaiTro);
+      localStorage.setItem("userName", taiKhoan.HoTen);
+      localStorage.setItem("userCode", taiKhoan.TenDangNhap);
+
+      // Redirect depending on role
+      if (taiKhoan.VaiTro === "ADMIN") {
+        navigate("/admin/rooms");
+      } else if (taiKhoan.VaiTro === "STAFF") {
+        navigate("/staff/dashboard");
+      } else {
+        navigate("/");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      const msg = err.response?.data?.message || err.message || "Đăng nhập thất bại. Vui lòng thử lại.";
+      setError(msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -25,22 +64,29 @@ const Login = () => {
           <p className="text-sm text-gray-400">Vui lòng đăng nhập để tiếp tục đặt vé</p>
         </div>
 
+        {error && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-400 text-sm font-semibold text-center animate-pulse">
+            ⚠️ {error}
+          </div>
+        )}
+
         {/* Form Nhập Liệu */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-5 text-left">
           
-          {/* Ô Nhập Email */}
+          {/* Ô Nhập Tên Đăng Nhập */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-gray-400 pl-1">địa chỉ email</label>
+            <label className="text-xs font-bold uppercase tracking-wider text-gray-400 pl-1">Tên đăng nhập</label>
             <div className="relative">
               <input 
-                type="email" 
+                type="text" 
                 required
-                placeholder="youremail@gmail.com"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-(--btn-neon) focus:bg-white/10 transition-all"
+                placeholder="Tên đăng nhập của bạn..."
+                value={formData.username}
+                onChange={(e) => setFormData({...formData, username: e.target.value})}
+                disabled={isLoading}
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-(--btn-neon) focus:bg-white/10 transition-all disabled:opacity-50"
               />
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             </div>
           </div>
 
@@ -57,7 +103,8 @@ const Login = () => {
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-11 text-sm text-white focus:outline-none focus:ring-2 focus:ring-(--btn-neon) focus:bg-white/10 transition-all"
+                disabled={isLoading}
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-11 text-sm text-white focus:outline-none focus:ring-2 focus:ring-(--btn-neon) focus:bg-white/10 transition-all disabled:opacity-50"
               />
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               
@@ -72,9 +119,9 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Nút Đăng Nhập (Dùng class của bạn) */}
-          <button type="submit" className="btn-bright mt-4 w-full flex items-center justify-center gap-2 cursor-pointer py-3.5 rounded-xl normal-case text-base tracking-normal">
-            <span>Đăng Nhập</span>
+          {/* Nút Đăng Nhập */}
+          <button type="submit" disabled={isLoading} className="btn-bright mt-4 w-full flex items-center justify-center gap-2 cursor-pointer py-3.5 rounded-xl normal-case text-base tracking-normal disabled:opacity-50 disabled:cursor-not-allowed">
+            <span>{isLoading ? "Đang Đăng Nhập..." : "Đăng Nhập"}</span>
             <ArrowRight size={18} />
           </button>
         </form>
