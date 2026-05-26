@@ -28,7 +28,19 @@ const SeatMaps = () => {
         if (!ignore && roomData) {
           setRoom(roomData);
           setSeatTypes(typesData);
-          setOverrides(roomData.Overrides || {});
+          
+          // Fetch current seats from backend
+          const seatsData = await adminService.getSeatsByRoom(roomId);
+          const initialOverrides = {};
+          seatsData.forEach(seat => {
+            const seatKey = `${roomData.MaPhongChieu}-${seat.ViTriDay}${seat.ViTriCot}`;
+            initialOverrides[seatKey] = {
+              MaGhe: seat.MaGhe,
+              MaLoaiGhe: seat.MaLoaiGhe,
+              KhaDung: seat.KhaDung
+            };
+          });
+          setOverrides(initialOverrides);
           
           const templateData = await adminService.getSeatMapByRoomId(roomId);
           if (!ignore) {
@@ -60,7 +72,7 @@ const SeatMaps = () => {
         const baseSeat = {
           MaChiTietSoDo: seatId,
           MaSoDoGhe: room.MaSoDoGhe,
-          MaLoaiGhe: 'LG01',
+          MaLoaiGhe: seatTypes[0]?.MaLoaiGhe || 'LG01',
           Hang: rowChar,
           Cot: c + 1,
           KhaDung: 1
@@ -71,7 +83,7 @@ const SeatMaps = () => {
       result.push(row);
     }
     return result;
-  }, [template, room, overrides]);
+  }, [template, room, overrides, seatTypes]);
 
   const handleSeatClick = (seatId, e) => {
     if (e.shiftKey) {
@@ -107,11 +119,15 @@ const SeatMaps = () => {
 
   const getSeatColor = (typeId, khaDung) => {
     if (khaDung === 0) return 'bg-slate-800 border-slate-700 text-slate-600 shadow-inner';
-    switch (typeId) {
-      case 'LG02': return 'bg-amber-500 border-amber-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.3)]';
-      case 'LG03': return 'bg-rose-500 border-rose-400 text-white shadow-[0_0_15px_rgba(244,63,94,0.3)]';
-      default: return 'bg-slate-700 border-slate-600 text-slate-300';
+    const type = seatTypes.find(t => t.MaLoaiGhe === typeId);
+    const typeName = type?.TenLoaiGhe || '';
+    if (typeName.includes('VIP')) {
+      return 'bg-amber-500 border-amber-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.3)]';
     }
+    if (typeName.includes('Sweetbox')) {
+      return 'bg-rose-500 border-rose-400 text-white shadow-[0_0_15px_rgba(244,63,94,0.3)]';
+    }
+    return 'bg-slate-700 border-slate-600 text-slate-300';
   };
 
   if (loading) return (
