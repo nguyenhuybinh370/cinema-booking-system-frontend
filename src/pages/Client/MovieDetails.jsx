@@ -6,7 +6,7 @@ import SeatSelection from './SeatSelection';
 import TicketConfirmation from './TicketConfirmation'; 
 import Payment from './Payment';
 import toast from 'react-hot-toast';
-import { getMovieDetail, getMovieReviews, getMovieShowtimes } from '../../api/movieApi';
+import { getMovieDetail, getMovieReviews, getMovieShowtimes, createReview } from '../../api/movieApi';
 import { formatVND } from '../../utils/formatHelper';
 import { getMovieVisuals } from '../../utils/visualHelper';
 import { cancelHeldSeats } from '../../api/bookingApi';
@@ -124,6 +124,90 @@ const MovieDetails = () => {
 
   const [bookingResult, setBookingResult] = useState(null);
   const [isPaymentStage, setIsPaymentStage] = useState(false);
+
+  // --- REVIEW STATE ---
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [hoverRating, setHoverRating] = useState(0);
+  const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
+
+  const movieTitle = movie?.title || movie?.TenPhim || '';
+
+  const handleOpenReviewModal = () => {
+    // Auth Check
+    const token = localStorage.getItem("accessToken");
+    const role = localStorage.getItem("userRole");
+
+    if (!token || role !== "CUSTOMER") {
+      toast.error("Vui lòng đăng nhập tài khoản khách hàng để đánh giá phim!");
+      navigate("/login", { state: { from: `/movie/${id}` } });
+      return;
+    }
+
+    setRating(5);
+    setComment("");
+    setIsReviewOpen(true);
+  };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+
+    // Check auth again (stale credentials guard)
+    const token = localStorage.getItem("accessToken");
+    const role = localStorage.getItem("userRole");
+
+    if (!token || role !== "CUSTOMER") {
+      toast.error("Phiên đăng nhập không hợp lệ hoặc bạn không phải là khách hàng!");
+      navigate("/login", { state: { from: `/movie/${id}` } });
+      return;
+    }
+
+    if (rating < 1 || rating > 5) {
+      toast.error("Số sao đánh giá phải từ 1 đến 5!");
+      return;
+    }
+
+    setIsReviewSubmitting(true);
+    const toastId = toast.loading("Đang gửi đánh giá...");
+    try {
+      const payload = {
+        MaPhim: movie.MaPhim || id,
+        SoSao: Number(rating)
+      };
+      if (comment.trim()) {
+        payload.BinhLuan = comment.trim();
+      }
+
+      await createReview(payload);
+      toast.success("Đánh giá phim thành công!");
+      setIsReviewOpen(false);
+      setComment("");
+      setRating(5);
+
+      // Concurrently refetch updated reviews list and movie details
+      const [reviewsRes, movieRes] = await Promise.all([
+        getMovieReviews(id),
+        getMovieDetail(id)
+      ]);
+
+      setReviews(reviewsRes?.data || []);
+      setRatingSummary(reviewsRes?.ratingSummary || { DiemTrungBinh: 0, SoLuongDanhGia: 0 });
+      setRawMovie(movieRes);
+    } catch (err) {
+      console.error("Lỗi khi gửi đánh giá:", err);
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        toast.error("Phiên đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.");
+        navigate("/login", { state: { from: `/movie/${id}` } });
+      } else {
+        const errMsg = err.response?.data?.message || err.message || "Gửi đánh giá thất bại.";
+        toast.error(errMsg);
+      }
+    } finally {
+      setIsReviewSubmitting(false);
+      toast.dismiss(toastId);
+    }
+  };
 
   const hasShowtimes = showtimes.length > 0;
 
@@ -571,7 +655,15 @@ const MovieDetails = () => {
 
       {/* SECTION ĐÁNH GIÁ (REVIEWS) */}
       <div className="w-full bg-[#1b1223]/60 backdrop-blur-md border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col gap-6 shadow-2xl text-left">
-        <h2 className="text-2xl font-bold uppercase italic tracking-wider text-white">Đánh Giá Từ Khách Hàng</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h2 className="text-2xl font-bold uppercase italic tracking-wider text-white">Đánh Giá Từ Khách Hàng</h2>
+          <button 
+            onClick={handleOpenReviewModal}
+            className="flex items-center gap-2 bg-gradient-to-r from-[#ff436e] to-[#e0325a] hover:from-[#e0325a] hover:to-[#c22048] text-white font-bold px-6 py-2.5 rounded-xl transition-all text-sm uppercase cursor-pointer shadow-[0_0_15px_rgba(255,67,110,0.3)] hover:shadow-[0_0_20px_rgba(255,67,110,0.5)] self-start sm:self-auto"
+          >
+            Viết đánh giá
+          </button>
+        </div>
         
         {/* Rating Stats Summary */}
         <div className="flex items-center gap-6 border-b border-white/5 pb-6">
@@ -634,6 +726,104 @@ const MovieDetails = () => {
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
             ></iframe>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL VIẾT ĐÁNH GIÁ (WRITE REVIEW MODAL) */}
+      {isReviewOpen && (
+        <div className="fixed inset-0 z-100 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="relative w-full max-w-lg bg-[#18101f] border border-white/10 rounded-3xl p-6 md:p-8 shadow-[0_0_50px_rgba(255,67,110,0.15)] flex flex-col gap-6 animate-in zoom-in-95 duration-200 text-left">
+            <button 
+              onClick={() => setIsReviewOpen(false)}
+              className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-red-600 rounded-full text-gray-400 hover:text-white transition-colors cursor-pointer group"
+            >
+              <X size={18} className="group-hover:scale-110 transition-transform" />
+            </button>
+
+            <div>
+              <span className="text-[#ff436e] font-bold text-xs uppercase tracking-wider">Viết Đánh Giá Phim</span>
+              <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight mt-1 line-clamp-1">{movieTitle}</h3>
+            </div>
+
+            <form onSubmit={handleReviewSubmit} className="flex flex-col gap-6">
+              {/* Star Rating Selection */}
+              <div className="flex flex-col gap-2 items-center justify-center py-4 bg-white/3 border border-white/5 rounded-2xl">
+                <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">Chọn số sao đánh giá</p>
+                <div className="flex items-center gap-2 mt-2">
+                  {[1, 2, 3, 4, 5].map((starNum) => {
+                    const isHighlighted = hoverRating >= starNum || (!hoverRating && rating >= starNum);
+                    return (
+                      <button
+                        key={starNum}
+                        type="button"
+                        onClick={() => setRating(starNum)}
+                        onMouseEnter={() => setHoverRating(starNum)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        className="text-yellow-400 hover:scale-115 active:scale-95 transition-transform cursor-pointer focus:outline-hidden"
+                      >
+                        <Star
+                          size={36}
+                          fill={isHighlighted ? "#facc15" : "none"}
+                          className={isHighlighted ? "text-yellow-400" : "text-gray-600 transition-colors duration-250"}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+                <span className="text-yellow-400 text-sm font-bold mt-2 tracking-wide uppercase">
+                  {rating === 1 && "Rất tệ 😡"}
+                  {rating === 2 && "Tệ 😞"}
+                  {rating === 3 && "Bình thường 😐"}
+                  {rating === 4 && "Hay 🙂"}
+                  {rating === 5 && "Tuyệt vời! 😍"}
+                </span>
+              </div>
+
+              {/* Comment Textarea */}
+              <div className="flex flex-col gap-2">
+                <label className="text-gray-400 text-xs font-bold uppercase tracking-wider">Bình luận phim</label>
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  maxLength={255}
+                  placeholder="Chia sẻ cảm nghĩ của bạn về bộ phim này... (Không bắt buộc, tối đa 255 ký tự)"
+                  className="w-full min-h-[120px] bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-sm focus:outline-hidden focus:border-[#ff436e] focus:ring-1 focus:ring-[#ff436e] transition-all resize-none leading-relaxed placeholder-gray-500"
+                />
+                <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
+                  <span>Tránh nội dung Spoil hoặc vi phạm tiêu chuẩn cộng đồng.</span>
+                  <span className={comment.length >= 240 ? "text-[#ff436e] font-bold" : ""}>
+                    {comment.length}/255
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-3 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsReviewOpen(false)}
+                  disabled={isReviewSubmitting}
+                  className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white font-bold transition-all text-sm uppercase cursor-pointer"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  disabled={isReviewSubmitting}
+                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-[#ff436e] to-[#e0325a] hover:from-[#e0325a] hover:to-[#c22048] text-white font-bold transition-all text-sm uppercase cursor-pointer flex items-center gap-2 justify-center shadow-[0_0_20px_rgba(255,67,110,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isReviewSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                      Đang gửi...
+                    </>
+                  ) : (
+                    "Gửi đánh giá"
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

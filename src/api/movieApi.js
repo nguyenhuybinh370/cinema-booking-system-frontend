@@ -15,3 +15,7 @@ export const getMovieReviews = (maPhim, params) => {
 export const getMovieShowtimes = (maPhim) => {
   return axiosClient.get(`/phim/${maPhim}/suat-chieu`);
 };
+
+export const createReview = (payload) => {
+  return axiosClient.post('/danh-gia', payload);
+};
