@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 // Bỏ icon IdCard không dùng tới nữa
 import { User, Calendar, Phone, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import axiosClient from '../../api/axiosClient';
+import toast from 'react-hot-toast';
 
 const Register = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -15,15 +18,59 @@ const Register = () => {
     password: '',
     confirmPassword: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      alert("Mật khẩu xác nhận không trùng khớp!");
+      toast.error("Mật khẩu xác nhận không trùng khớp!");
       return;
     }
-    console.log("Đăng ký với dữ liệu (Đã có Giới tính):", formData);
-    // Xử lý logic đăng ký tại đây
+    
+    setIsLoading(true);
+    try {
+      let gioiTinh = null;
+      if (formData.gender === "Nam") {
+        gioiTinh = true;
+      } else if (formData.gender === "Nữ") {
+        gioiTinh = false;
+      }
+
+      const response = await axiosClient.post("/auth/register", {
+        TenDangNhap: formData.username,
+        MatKhau: formData.password,
+        XacNhanMatKhau: formData.confirmPassword,
+        HoTen: formData.name,
+        Email: formData.email,
+        SoDienThoai: formData.phone,
+        GioiTinh: gioiTinh,
+        NgaySinh: formData.dob || undefined,
+      });
+
+      const tokens = response?.tokens;
+      const taiKhoan = response?.taiKhoan;
+
+      if (tokens && tokens.accessToken && tokens.refreshToken && taiKhoan) {
+        localStorage.setItem("accessToken", tokens.accessToken);
+        localStorage.setItem("refreshToken", tokens.refreshToken);
+        localStorage.setItem("userRole", taiKhoan.VaiTro);
+        localStorage.setItem("userName", taiKhoan.HoTen);
+        localStorage.setItem("userCode", taiKhoan.TenDangNhap);
+        localStorage.setItem("userInfo", JSON.stringify(taiKhoan));
+
+        toast.success("Đăng ký tài khoản và đăng nhập thành công!");
+        navigate("/");
+      } else {
+        toast.success("Đăng ký tài khoản thành công! Vui lòng đăng nhập.");
+        navigate("/login");
+      }
+    } catch (err) {
+      console.error("Register error:", err);
+      const msg = err.response?.data?.message || err.message || "Đăng ký thất bại. Vui lòng thử lại.";
+      toast.error(msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -180,8 +227,8 @@ const Register = () => {
           </div>
 
           {/* Nút Đăng Ký */}
-          <button type="submit" className="btn-bright mt-4 w-full flex items-center justify-center gap-2 cursor-pointer py-3.5 rounded-xl normal-case text-base tracking-normal">
-            <span>Đăng Ký Ngay</span>
+          <button type="submit" disabled={isLoading} className="btn-bright mt-4 w-full flex items-center justify-center gap-2 cursor-pointer py-3.5 rounded-xl normal-case text-base tracking-normal disabled:opacity-50">
+            <span>{isLoading ? "Đang xử lý..." : "Đăng Ký Ngay"}</span>
             <ArrowRight size={18} />
           </button>
         </form>

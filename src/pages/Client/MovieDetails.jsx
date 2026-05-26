@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Play, Heart, ChevronLeft, ChevronRight, Star, X } from 'lucide-react';
 import { dummyShowsData, dummyDateTimeData, dummyDashboardData, dummyTrailers } from '../../assets/assets'; 
 import SeatSelection from './SeatSelection';
 import TicketConfirmation from './TicketConfirmation'; // Import component vé mới tạo
 import Payment from './Payment';
+import toast from 'react-hot-toast';
 
 const MovieDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   
   const movie = dummyShowsData.find(m => m._id === id || m.id?.toString() === id) || dummyShowsData[0];
 
@@ -31,6 +33,18 @@ const MovieDetails = () => {
   const [confirmedSeats, setConfirmedSeats] = useState([]);
 
   const [isPaymentStage, setIsPaymentStage] = useState(false);
+
+  const handleStartBooking = () => {
+    const token = localStorage.getItem("accessToken");
+    const role = localStorage.getItem("userRole");
+    
+    if (!token || role !== "CUSTOMER") {
+      toast.error("Vui lòng đăng nhập tài khoản khách hàng để đặt vé!");
+      navigate("/login", { state: { from: `/movie/${id}` } });
+      return;
+    }
+    setIsBookingStage(true);
+  };
 
   const availableSlots = dummyDateTimeData[selectedDateId] || [];
   const currentSlot = availableSlots[selectedSlotIndex];
@@ -190,7 +204,7 @@ const MovieDetails = () => {
             >
               <Play size={16} fill="white"/> Xem Trailer
             </button>
-            <button onClick={() => setIsBookingStage(true)} className="bg-[#ff436e] hover:bg-[#e0325a] text-white font-bold px-8 py-3 rounded-xl transition-all shadow-[0_0_25px_rgba(255,67,110,0.4)] text-sm uppercase cursor-pointer">
+            <button onClick={handleStartBooking} className="bg-[#ff436e] hover:bg-[#e0325a] text-white font-bold px-8 py-3 rounded-xl transition-all shadow-[0_0_25px_rgba(255,67,110,0.4)] text-sm uppercase cursor-pointer">
               Mua Vé Ngay
             </button>
             <button className="p-3 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-rose-500 hover:bg-white/10 transition-colors">
@@ -229,7 +243,7 @@ const MovieDetails = () => {
         </div>
 
         <button 
-          onClick={() => setIsBookingStage(true)}
+          onClick={handleStartBooking}
           className="w-full md:w-auto bg-[#ff436e] hover:bg-[#e0325a] text-white font-extrabold px-12 py-4 rounded-2xl transition-all shadow-[0_0_30px_rgba(255,67,110,0.4)] text-base tracking-wider active:scale-98 whitespace-nowrap cursor-pointer"
         >
           ĐẶT VÉ NGAY

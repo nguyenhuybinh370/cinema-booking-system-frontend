@@ -36,7 +36,11 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/movie/:id" element={<MovieDetails />} />
-        <Route path="/profile" element={<ClientProfile />} />
+        {/* === CUSTOMER PROTECTED ROUTES === */}
+        <Route element={<ProtectedRoute allowedRoles={["CUSTOMER"]} />}>
+          <Route path="/profile" element={<ClientProfile />} />
+        </Route>
+
         <Route path="/movies/now-showing" element={<MoviesPage key="now" initialType="now" />} />
         <Route path="/movies/coming-soon" element={<MoviesPage key="soon" initialType="soon" />} />
 

@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { Ticket, History, Star, MessageSquare, X, Calendar, MapPin, CreditCard, User, LogOut} from 'lucide-react';
 import { assets, dummyBookingData } from '../../assets/assets';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import axiosClient from '../../api/axiosClient';
 
 const Profile = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('account'); 
   
   // --- STATE QUẢN LÝ BIỂU MẪU ĐÁNH GIÁ ---
@@ -14,11 +17,27 @@ const Profile = () => {
   const [hoverRating, setHoverRating] = useState(0);
 
   // --- STATE QUẢN LÝ ĐỔI THÔNG TIN VÀ MẬT KHẨU ---
-  const [userInfo, setUserInfo] = useState({
-    name: 'Nguyễn Huy Bình',
-    dob: '2024-11-12',
-    phone: '0383104705',
-    email: 'nguyenhuybinh370@gmail.com'
+  const [userInfo, setUserInfo] = useState(() => {
+    try {
+      const stored = localStorage.getItem("userInfo");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return {
+          name: parsed.HoTen || parsed.name || 'Nguyễn Huy Bình',
+          dob: parsed.NgaySinh ? new Date(parsed.NgaySinh).toISOString().split('T')[0] : (parsed.dob || '2024-11-12'),
+          phone: parsed.SoDienThoai || parsed.phone || '0383104705',
+          email: parsed.Email || parsed.email || 'nguyenhuybinh370@gmail.com'
+        };
+      }
+    } catch (e) {
+      console.error("Error parsing stored userInfo:", e);
+    }
+    return {
+      name: 'Nguyễn Huy Bình',
+      dob: '2024-11-12',
+      phone: '0383104705',
+      email: 'nguyenhuybinh370@gmail.com'
+    };
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -51,12 +70,27 @@ const Profile = () => {
   };
 
   // Xử lý Đăng xuất
-  const handleLogout = () => {
+  const handleLogout = async () => {
     toast.loading("Đang đăng xuất...");
-    setTimeout(() => {
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (refreshToken) {
+        await axiosClient.post("/auth/logout", { refreshToken });
+      }
+    } catch (e) {
+      console.error("Logout API error:", e);
+    } finally {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("userRole");
+      localStorage.removeItem("userName");
+      localStorage.removeItem("userCode");
+      localStorage.removeItem("userInfo");
+      
       toast.dismiss();
       toast.success("Đã đăng xuất tài khoản!");
-    }, 1000);
+      navigate("/login");
+    }
   };
 
   const openReviewModal = (movie) => {
