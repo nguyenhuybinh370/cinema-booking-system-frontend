@@ -142,13 +142,9 @@ const Personnel = () => {
         });
         alert("Cập nhật hồ sơ nhân viên thành công!");
       } else {
-        const newId = getNextId(staff, 'NV');
         await adminService.addStaff({
-          MaNhanVien: newId,
           ...formData,
-          Status: formData.KhaDung === 1 ? 'Active' : 'Inactive', // compatibility mapping
-          NgayTao: new Date().toISOString().replace('T', ' ').substring(0, 19),
-          NgayCapNhat: null
+          Status: formData.KhaDung === 1 ? 'Active' : 'Inactive'
         });
         alert("Thêm nhân viên mới thành công!");
       }
