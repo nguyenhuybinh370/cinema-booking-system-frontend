@@ -1,92 +1,50 @@
-import { 
-  SHOWTIMES, 
-  ROOMS, 
-  TICKET_RECEIPTS, 
-  TICKET_DETAILS, 
-  SHOWTIME_SEATS, 
-  TRANSACTIONS, 
-  ADMIN_MOVIES 
-} from '../../constants/adminMockData';
-
-const delay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
+import axiosClient from '../../api/axiosClient';
 
 const statsService = {
   getRevenueStats: async (filters = {}) => {
-    await delay();
-    const { startDate, endDate, maPhim, maPhongChieu } = filters;
+    const { startDate, endDate, maPhim } = filters;
+    const params = {
+      ...(startDate && { tuNgay: startDate }),
+      ...(endDate && { denNgay: endDate }),
+      ...(maPhim && { maPhim }),
+    };
 
-    // Filter showtimes
-    let filteredShowtimes = SHOWTIMES.filter(st => {
-      if (maPhim && st.MaPhim !== maPhim) return false;
-      if (maPhongChieu && st.MaPhongChieu !== maPhongChieu) return false;
-      if (startDate && st.NgayChieu < startDate) return false;
-      if (endDate && st.NgayChieu > endDate) return false;
-      return true;
-    });
+    const [revData, fillData, resReceipts] = await Promise.all([
+      axiosClient.get('/admin/thong-ke/doanh-thu', { params }),
+      axiosClient.get('/admin/thong-ke/ti-le-ghe', { params: { tuNgay: startDate, denNgay: endDate } }),
+      axiosClient.get('/admin/giao-dich/phieu-dat?limit=1000')
+    ]);
 
-    const showtimeIds = new Set(filteredShowtimes.map(st => st.MaSuatChieu));
+    const receipts = Array.isArray(resReceipts) ? resReceipts : (resReceipts?.data || []);
 
-    // Get ticket receipts that match date filter
-    let filteredReceipts = TICKET_RECEIPTS.filter(r => {
-      const dateStr = r.NgayDat.substring(0, 10);
-      if (startDate && dateStr < startDate) return false;
-      if (endDate && dateStr > endDate) return false;
-      return true;
-    });
+    // 1. Core Metrics
+    const totalRevenue = revData?.TongDoanhThu || 0;
+    const ticketsSold = revData?.DoanhThuTheoPhim?.reduce((sum, p) => sum + p.SoVeBanRa, 0) || 0;
 
-    const receiptIds = new Set(filteredReceipts.map(r => r.MaPhieuDatVe));
+    const totalOccupied = fillData?.reduce((sum, item) => sum + item.SoGheDaDat, 0) || 0;
+    const totalCapacity = fillData?.reduce((sum, item) => sum + item.TongSoGhe, 0) || 0;
+    const occupancyRate = totalCapacity > 0 ? ((totalOccupied / totalCapacity) * 100).toFixed(1) : '0.0';
 
-    // Get matching details
-    let matchingDetails = TICKET_DETAILS.filter(d => {
-      if (!receiptIds.has(d.MaPhieuDatVe)) return false;
-      
-      const showtimeSeat = SHOWTIME_SEATS.find(s => s.MaGheSuatChieu === d.MaGheSuatChieu);
-      if (!showtimeSeat || !showtimeIds.has(showtimeSeat.MaSuatChieu)) return false;
-      
-      return true;
-    });
+    let hotMovie = 'N/A';
+    if (revData?.DoanhThuTheoPhim && revData.DoanhThuTheoPhim.length > 0) {
+      const sorted = [...revData.DoanhThuTheoPhim].sort((a, b) => b.DoanhThu - a.DoanhThu);
+      hotMovie = sorted[0].TenPhim;
+    }
 
-    // Calculate metrics
-    let totalRevenue = 0;
-    let ticketsSold = 0;
-
-    matchingDetails.forEach(d => {
-      const receipt = TICKET_RECEIPTS.find(r => r.MaPhieuDatVe === d.MaPhieuDatVe);
-      if (receipt && receipt.TrangThai === 'Đã TT') {
-        totalRevenue += parseFloat(d.GiaVe);
-        ticketsSold += 1;
-      }
-    });
-
-    // Deduct refunds
-    const matchingReceiptIds = new Set(matchingDetails.map(d => d.MaPhieuDatVe));
-    const refunds = TRANSACTIONS.filter(t => t.TrangThai === 'Refunded' && matchingReceiptIds.has(t.MaPhieuDatVe));
-    const refundAmount = refunds.reduce((sum, r) => sum + parseFloat(r.SoTien), 0);
-    totalRevenue = Math.max(0, totalRevenue - refundAmount);
-
-    // Calculate total capacity
-    let totalCapacity = 0;
-    filteredShowtimes.forEach(st => {
-      const room = ROOMS.find(r => r.MaPhongChieu === st.MaPhongChieu);
-      totalCapacity += room ? room.SoGhe : 100;
-    });
-
-    const occupancyRate = totalCapacity > 0 ? ((ticketsSold / totalCapacity) * 100).toFixed(1) : '0.0';
-
-    // Daily Revenue Chart Data
+    // 2. Daily Revenue Chart Data
     const dailyMap = {};
-    matchingDetails.forEach(d => {
-      const receipt = TICKET_RECEIPTS.find(r => r.MaPhieuDatVe === d.MaPhieuDatVe);
-      if (receipt && receipt.TrangThai === 'Đã TT') {
-        const dateParts = receipt.NgayDat.substring(0, 10).split('-');
-        const formattedDay = `${dateParts[2]}/${dateParts[1]}`;
-        dailyMap[formattedDay] = (dailyMap[formattedDay] || 0) + parseFloat(d.GiaVe);
+    receipts.forEach(p => {
+      if (p.TrangThai === 'DA_THANH_TOAN') {
+        const dateStr = p.NgayTao ? new Date(p.NgayTao).toISOString().substring(0, 10) : '';
+        if (startDate && dateStr < startDate) return;
+        if (endDate && dateStr > endDate) return;
+
+        const dateParts = dateStr.split('-');
+        if (dateParts.length === 3) {
+          const formattedDay = `${dateParts[2]}/${dateParts[1]}`;
+          dailyMap[formattedDay] = (dailyMap[formattedDay] || 0) + parseFloat(p.TongTien);
+        }
       }
-    });
-    refunds.forEach(ref => {
-      const dateParts = ref.NgayGiaoDich.substring(0, 10).split('-');
-      const formattedDay = `${dateParts[2]}/${dateParts[1]}`;
-      dailyMap[formattedDay] = Math.max(0, (dailyMap[formattedDay] || 0) - parseFloat(ref.SoTien));
     });
 
     const dailyRevenueData = Object.entries(dailyMap).map(([day, revenue]) => ({
@@ -98,121 +56,50 @@ const statsService = {
       return new Date(2026, ma - 1, da) - new Date(2026, mb - 1, db);
     });
 
-    // Movie Revenue Chart Data
-    const movieMap = {};
-    matchingDetails.forEach(d => {
-      const receipt = TICKET_RECEIPTS.find(r => r.MaPhieuDatVe === d.MaPhieuDatVe);
-      if (receipt && receipt.TrangThai === 'Đã TT') {
-        const showtimeSeat = SHOWTIME_SEATS.find(s => s.MaGheSuatChieu === d.MaGheSuatChieu);
-        if (showtimeSeat) {
-          const showtime = SHOWTIMES.find(st => st.MaSuatChieu === showtimeSeat.MaSuatChieu);
-          if (showtime) {
-            const movie = ADMIN_MOVIES.find(m => m.MaPhim === showtime.MaPhim);
-            if (movie) {
-              movieMap[movie.TenPhim] = (movieMap[movie.TenPhim] || 0) + parseFloat(d.GiaVe);
-            }
-          }
-        }
-      }
-    });
-    refunds.forEach(ref => {
-      const receipt = TICKET_RECEIPTS.find(r => r.MaPhieuDatVe === ref.MaPhieuDatVe);
-      if (receipt) {
-        const detail = TICKET_DETAILS.find(d => d.MaPhieuDatVe === receipt.MaPhieuDatVe);
-        if (detail) {
-          const showtimeSeat = SHOWTIME_SEATS.find(s => s.MaGheSuatChieu === detail.MaGheSuatChieu);
-          if (showtimeSeat) {
-            const showtime = SHOWTIMES.find(st => st.MaSuatChieu === showtimeSeat.MaSuatChieu);
-            if (showtime) {
-              const movie = ADMIN_MOVIES.find(m => m.MaPhim === showtime.MaPhim);
-              if (movie) {
-                movieMap[movie.TenPhim] = Math.max(0, (movieMap[movie.TenPhim] || 0) - parseFloat(ref.SoTien));
-              }
-            }
-          }
-        }
-      }
-    });
+    // 3. Movie Revenue Chart Data
+    const movieRevenueData = (revData?.DoanhThuTheoPhim || [])
+      .map(p => ({
+        name: p.TenPhim,
+        value: p.DoanhThu
+      }))
+      .sort((a, b) => b.value - a.value);
 
-    const movieRevenueData = Object.entries(movieMap).map(([name, value]) => ({
-      name,
-      value
-    })).sort((a, b) => b.value - a.value);
-
-    // Room Occupancy Data
+    // 4. Room Occupancy Chart Data
     const roomMap = {};
-    ROOMS.forEach(r => {
-      roomMap[r.TenPhong] = { tickets: 0, capacity: 0 };
-    });
-
-    filteredShowtimes.forEach(st => {
-      const room = ROOMS.find(r => r.MaPhongChieu === st.MaPhongChieu);
-      if (room) {
-        roomMap[room.TenPhong].capacity += room.SoGhe;
+    (fillData || []).forEach(item => {
+      const name = item.TenPhong;
+      if (!roomMap[name]) {
+        roomMap[name] = { tickets: 0, capacity: 0 };
       }
-    });
-
-    matchingDetails.forEach(d => {
-      const receipt = TICKET_RECEIPTS.find(r => r.MaPhieuDatVe === d.MaPhieuDatVe);
-      if (receipt && receipt.TrangThai === 'Đã TT') {
-        const showtimeSeat = SHOWTIME_SEATS.find(s => s.MaGheSuatChieu === d.MaGheSuatChieu);
-        if (showtimeSeat) {
-          const showtime = SHOWTIMES.find(st => st.MaSuatChieu === showtimeSeat.MaSuatChieu);
-          if (showtime) {
-            const room = ROOMS.find(r => r.MaPhongChieu === showtime.MaPhongChieu);
-            if (room) {
-              roomMap[room.TenPhong].tickets += 1;
-            }
-          }
-        }
-      }
+      roomMap[name].tickets += item.SoGheDaDat;
+      roomMap[name].capacity += item.TongSoGhe;
     });
 
     const roomOccupancyData = Object.entries(roomMap)
-      .filter(([_, data]) => data.capacity > 0)
-      .map(([name, data]) => ({
+      .filter(([_, d]) => d.capacity > 0)
+      .map(([name, d]) => ({
         name,
-        value: Math.round((data.tickets / data.capacity) * 100)
+        value: Math.round((d.tickets / d.capacity) * 100)
       }));
 
-    // Performance Details Table
-    const performanceDetails = ADMIN_MOVIES.map(movie => {
-      const showsCount = filteredShowtimes.filter(st => st.MaPhim === movie.MaPhim).length;
-      let movieTickets = 0;
-      let movieCapacity = 0;
+    // 5. Performance Details Table
+    const moviePerformance = {};
+    (fillData || []).forEach(item => {
+      const name = item.TenPhim;
+      if (!moviePerformance[name]) {
+        moviePerformance[name] = { shows: 0, tickets: 0, capacity: 0 };
+      }
+      moviePerformance[name].shows += 1;
+      moviePerformance[name].tickets += item.SoGheDaDat;
+      moviePerformance[name].capacity += item.TongSoGhe;
+    });
 
-      filteredShowtimes.filter(st => st.MaPhim === movie.MaPhim).forEach(st => {
-        const room = ROOMS.find(r => r.MaPhongChieu === st.MaPhongChieu);
-        movieCapacity += room ? room.SoGhe : 100;
-      });
-
-      matchingDetails.forEach(d => {
-        const receipt = TICKET_RECEIPTS.find(r => r.MaPhieuDatVe === d.MaPhieuDatVe);
-        if (receipt && receipt.TrangThai === 'Đã TT') {
-          const showtimeSeat = SHOWTIME_SEATS.find(s => s.MaGheSuatChieu === d.MaGheSuatChieu);
-          if (showtimeSeat) {
-            const showtime = SHOWTIMES.find(st => st.MaSuatChieu === showtimeSeat.MaSuatChieu);
-            if (showtime && showtime.MaPhim === movie.MaPhim) {
-              movieTickets += 1;
-            }
-          }
-        }
-      });
-
-      const fill = movieCapacity > 0 ? Math.round((movieTickets / movieCapacity) * 100) : 0;
-
-      return {
-        name: movie.TenPhim,
-        shows: showsCount,
-        tickets: movieTickets,
-        fill: `${fill}%`
-      };
-    }).filter(p => p.shows > 0);
-
-    let hotMovie = 'N/A';
-    if (movieRevenueData.length > 0) {
-      hotMovie = movieRevenueData[0].name;
-    }
+    const performanceDetails = Object.entries(moviePerformance).map(([name, d]) => ({
+      name,
+      shows: d.shows,
+      tickets: d.tickets,
+      fill: d.capacity > 0 ? `${Math.round((d.tickets / d.capacity) * 100)}%` : '0%'
+    }));
 
     return {
       totalRevenue,
@@ -227,6 +114,7 @@ const statsService = {
   },
 
   exportRevenueReport: async (format, filters = {}) => {
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
     await delay(1200);
     return {
       success: true,
