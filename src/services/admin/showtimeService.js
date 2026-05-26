@@ -1,257 +1,107 @@
-import { ADMIN_MOVIES, ROOMS, SEAT_MAPS, DAY_TYPES, SHOWTIMES, SHOWTIME_SEATS } from '../../constants/adminMockData';
-
-const delay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
+import axiosClient from '../../api/axiosClient';
 
 const showtimeService = {
   getShowtimes: async () => {
-    await delay();
-
-    SHOWTIMES.forEach(st => {
-      const existingCount = SHOWTIME_SEATS.filter(s => s.MaSuatChieu === st.MaSuatChieu).length;
-      if (existingCount === 0) {
-        const room = ROOMS.find(r => r.MaPhongChieu === st.MaPhongChieu);
-        if (room) {
-          const map = SEAT_MAPS.find(m => m.MaSoDoGhe === room.MaSoDoGhe);
-          if (map) {
-            const overrides = room.Overrides || {};
-            const rows = map.TongHang;
-            const cols = map.TongCot;
-            for (let r = 0; r < rows; r++) {
-              const rowChar = String.fromCharCode(65 + r);
-              for (let c = 0; c < cols; c++) {
-                const seatId = `${room.MaPhongChieu}-${rowChar}${c + 1}`;
-                const seatOverride = overrides[seatId] || {};
-
-                const exists = SHOWTIME_SEATS.some(s => s.MaSuatChieu === st.MaSuatChieu && s.MaGhe === seatId);
-                if (!exists) {
-                  SHOWTIME_SEATS.push({
-                    MaGheSuatChieu: `GSC_${st.MaSuatChieu}_${rowChar}${c + 1}`,
-                    MaSuatChieu: st.MaSuatChieu,
-                    MaGhe: seatId,
-                    TrangThai: 0,
-                    KhaDung: seatOverride.KhaDung !== undefined ? seatOverride.KhaDung : 1,
-                    NgayTao: '2026-05-01 09:00:00',
-                    NgayCapNhat: null
-                  });
-                }
-              }
-            }
-          }
-        }
+    const data = await axiosClient.get('/admin/suat-chieu');
+    
+    // Concurrently fetch seat statuses to calculate booked vs total seats
+    const results = await Promise.all(data.map(async (st) => {
+      let gheList = [];
+      try {
+        gheList = await axiosClient.get(`/admin/suat-chieu/${st.MaSuatChieu}/ghe`);
+      } catch (err) {
+        console.error('Error fetching seats for showtime:', st.MaSuatChieu, err);
       }
-    });
 
-    return SHOWTIMES.map(st => {
-      const movie = ADMIN_MOVIES.find(m => m.MaPhim === st.MaPhim);
-      const room = ROOMS.find(r => r.MaPhongChieu === st.MaPhongChieu);
-      const dayType = DAY_TYPES.find(d => d.MaLoaiNgay === st.MaLoaiNgay);
-
-      const seats = SHOWTIME_SEATS.filter(s => s.MaSuatChieu === st.MaSuatChieu);
-      const bookedCount = seats.filter(s => s.TrangThai === 1 || s.TrangThai === 2).length;
+      const bookedCount = gheList.filter(g => g.TrangThai === 'DA_DAT' || g.TrangThai === 'DANG_GIU').length;
+      
+      const startLocal = st.GioChieu ? new Date(st.GioChieu) : null;
+      let endLocalStr = '';
+      if (startLocal && st.Phim?.ThoiLuong) {
+        const endLocal = new Date(startLocal.getTime() + st.Phim.ThoiLuong * 60 * 1000);
+        endLocalStr = endLocal.toISOString().split('T')[1].substring(0, 8);
+      }
 
       return {
-        ...st,
-        TenPhim: movie ? movie.TenPhim : 'N/A',
-        HinhAnh: movie ? movie.HinhAnh : '',
-        ThoiLuong: movie ? movie.ThoiLuong : 120,
-        TenPhong: room ? room.TenPhong : 'N/A',
-        TenLoaiNgay: dayType ? dayType.TenLoaiNgay : 'N/A',
-        TongSoGhe: seats.length,
+        MaSuatChieu: st.MaSuatChieu,
+        MaPhim: st.MaPhim,
+        MaPhongChieu: st.MaPhong,
+        NgayChieu: st.NgayChieu ? new Date(st.NgayChieu).toISOString().substring(0, 10) : '',
+        GioChieu: st.GioChieu ? new Date(st.GioChieu).toISOString().split('T')[1].substring(0, 8) : '',
+        GioKetThuc: endLocalStr,
+        MaLoaiNgay: st.MaLoaiNgay,
+        GiaVeCoBan: parseFloat(st.GiaVeGoc),
+        KhaDung: st.KhaDung ? 1 : 0,
+        TenPhim: st.Phim?.TenPhim || 'N/A',
+        HinhAnh: st.Phim?.HinhAnh || '',
+        ThoiLuong: st.Phim?.ThoiLuong || 120,
+        TenPhong: st.PhongChieu?.TenPhong || 'N/A',
+        TenLoaiNgay: st.LoaiNgay?.TenLoaiNgay || 'N/A',
+        TongSoGhe: gheList.length,
         DaDat: bookedCount
       };
-    });
+    }));
+
+    return results;
   },
+
   addShowtime: async (showtime) => {
-    await delay();
-    if (!showtime.MaPhim) throw new Error('Thông tin không hợp lệ: Chưa chọn phim!');
-    if (!showtime.MaPhongChieu) throw new Error('Thông tin không hợp lệ: Chưa chọn phòng chiếu!');
-    if (!showtime.NgayChieu) throw new Error('Thông tin không hợp lệ: Chưa chọn ngày chiếu!');
-    if (!showtime.GioChieu) throw new Error('Thông tin không hợp lệ: Chưa chọn giờ bắt đầu!');
-    if (!showtime.GioKetThuc) throw new Error('Thông tin không hợp lệ: Chưa chọn giờ kết thúc!');
-    if (!showtime.MaLoaiNgay) throw new Error('Thông tin không hợp lệ: Chưa chọn loại ngày!');
-    if (showtime.GiaVeCoBan === undefined || isNaN(showtime.GiaVeCoBan) || parseFloat(showtime.GiaVeCoBan) < 0) {
-      throw new Error('Thông tin không hợp lệ: Giá vé cơ bản không hợp lệ!');
-    }
+    // Align with backend getCombinedDateTime logic by passing correct ISO strings
+    const ngayChieuUTC = new Date(`${showtime.NgayChieu}T00:00:00Z`);
+    const gioChieuUTC = new Date(`${showtime.NgayChieu}T${showtime.GioChieu.substring(0, 5)}:00Z`);
 
-    const tStart = showtime.GioChieu.length === 5 ? `${showtime.GioChieu}:00` : showtime.GioChieu;
-    const tEnd = showtime.GioKetThuc.length === 5 ? `${showtime.GioKetThuc}:00` : showtime.GioKetThuc;
-
-    const conflicts = SHOWTIMES.filter(st =>
-      st.MaPhongChieu === showtime.MaPhongChieu &&
-      st.NgayChieu === showtime.NgayChieu &&
-      st.KhaDung === 1 &&
-      ((tStart < st.GioKetThuc && tEnd > st.GioChieu))
-    );
-
-    if (conflicts.length > 0) {
-      const conflict = conflicts[0];
-      const confMovie = ADMIN_MOVIES.find(m => m.MaPhim === conflict.MaPhim);
-      throw new Error(`Lỗi trùng lịch chiếu: Phòng chiếu này đã có suất chiếu từ ${conflict.GioChieu.substring(0, 5)} đến ${conflict.GioKetThuc.substring(0, 5)} cho phim "${confMovie?.TenPhim || 'Chưa rõ'}"!`);
-    }
-
-    const idNum = SHOWTIMES.reduce((max, s) => {
-      const num = parseInt(s.MaSuatChieu.substring(2), 10);
-      return isNaN(num) ? max : Math.max(max, num);
-    }, 0);
-    const nextId = `ST${String(idNum + 1).padStart(2, '0')}`;
-
-    const newShowtime = {
-      MaSuatChieu: nextId,
+    const payload = {
       MaPhim: showtime.MaPhim,
-      MaPhongChieu: showtime.MaPhongChieu,
-      NgayChieu: showtime.NgayChieu,
-      GioChieu: tStart,
-      GioKetThuc: tEnd,
+      MaPhong: showtime.MaPhongChieu,
       MaLoaiNgay: showtime.MaLoaiNgay,
-      GiaVeCoBan: parseFloat(showtime.GiaVeCoBan),
-      KhaDung: showtime.KhaDung !== undefined ? parseInt(showtime.KhaDung, 10) : 1,
-      NgayTao: new Date().toISOString().replace('T', ' ').substring(0, 19),
-      NgayCapNhat: null
+      NgayChieu: ngayChieuUTC.toISOString(),
+      GioChieu: gioChieuUTC.toISOString(),
+      GiaVeGoc: parseFloat(showtime.GiaVeCoBan),
+      KhaDung: showtime.KhaDung === 1,
     };
 
-    SHOWTIMES.push(newShowtime);
-
-    const room = ROOMS.find(r => r.MaPhongChieu === showtime.MaPhongChieu);
-    if (room) {
-      const map = SEAT_MAPS.find(m => m.MaSoDoGhe === room.MaSoDoGhe);
-      if (map) {
-        const overrides = room.Overrides || {};
-        const rows = map.TongHang;
-        const cols = map.TongCot;
-        for (let r = 0; r < rows; r++) {
-          const rowChar = String.fromCharCode(65 + r);
-          for (let c = 0; c < cols; c++) {
-            const seatId = `${room.MaPhongChieu}-${rowChar}${c + 1}`;
-            const seatOverride = overrides[seatId] || {};
-
-            SHOWTIME_SEATS.push({
-              MaGheSuatChieu: `GSC_${nextId}_${rowChar}${c + 1}`,
-              MaSuatChieu: nextId,
-              MaGhe: seatId,
-              TrangThai: 0,
-              KhaDung: seatOverride.KhaDung !== undefined ? seatOverride.KhaDung : 1,
-              NgayTao: new Date().toISOString().replace('T', ' ').substring(0, 19),
-              NgayCapNhat: null
-            });
-          }
-        }
-      }
-    }
-
-    return newShowtime;
+    const data = await axiosClient.post('/admin/suat-chieu', payload);
+    return data;
   },
+
   updateShowtime: async (id, updates) => {
-    await delay();
-    const index = SHOWTIMES.findIndex(s => s.MaSuatChieu === id);
-    if (index === -1) throw new Error('Không tìm thấy suất chiếu!');
+    const payload = {};
+    if (updates.MaPhim !== undefined) payload.MaPhim = updates.MaPhim;
+    if (updates.MaPhongChieu !== undefined) payload.MaPhong = updates.MaPhongChieu;
+    if (updates.MaLoaiNgay !== undefined) payload.MaLoaiNgay = updates.MaLoaiNgay;
+    if (updates.GiaVeCoBan !== undefined) payload.GiaVeGoc = parseFloat(updates.GiaVeCoBan);
+    if (updates.KhaDung !== undefined) payload.KhaDung = updates.KhaDung === 1;
 
-    const showtime = SHOWTIMES[index];
+    // Convert date / time parameters if updated
+    const ngay = updates.NgayChieu;
+    const gio = updates.GioChieu;
 
-    const hasBookings = SHOWTIME_SEATS.some(s => s.MaSuatChieu === id && (s.TrangThai === 1 || s.TrangThai === 2));
-    if (hasBookings) {
-      throw new Error('Lỗi ràng buộc: Không thể chỉnh sửa suất chiếu này vì đã có vé bán ra hoặc khách hàng đang giữ ghế (Kiểm tra trong bảng GHE_SUATCHIEU)!');
+    if (ngay !== undefined) {
+      payload.NgayChieu = new Date(`${ngay}T00:00:00Z`).toISOString();
+    }
+    if (gio !== undefined) {
+      const refDate = ngay || '1970-01-01';
+      payload.GioChieu = new Date(`${refDate}T${gio.substring(0, 5)}:00Z`).toISOString();
     }
 
-    const tStart = updates.GioChieu !== undefined
-      ? (updates.GioChieu.length === 5 ? `${updates.GioChieu}:00` : updates.GioChieu)
-      : showtime.GioChieu;
-    const tEnd = updates.GioKetThuc !== undefined
-      ? (updates.GioKetThuc.length === 5 ? `${updates.GioKetThuc}:00` : updates.GioKetThuc)
-      : showtime.GioKetThuc;
-    const room = updates.MaPhongChieu !== undefined ? updates.MaPhongChieu : showtime.MaPhongChieu;
-    const date = updates.NgayChieu !== undefined ? updates.NgayChieu : showtime.NgayChieu;
-    const khaDung = updates.KhaDung !== undefined ? parseInt(updates.KhaDung, 10) : showtime.KhaDung;
-
-    if (khaDung === 1) {
-      const conflicts = SHOWTIMES.filter(st =>
-        st.MaSuatChieu !== id &&
-        st.MaPhongChieu === room &&
-        st.NgayChieu === date &&
-        st.KhaDung === 1 &&
-        ((tStart < st.GioKetThuc && tEnd > st.GioChieu))
-      );
-
-      if (conflicts.length > 0) {
-        const conflict = conflicts[0];
-        const confMovie = ADMIN_MOVIES.find(m => m.MaPhim === conflict.MaPhim);
-        throw new Error(`Lỗi trùng lịch chiếu: Phòng chiếu này đã có suất chiếu từ ${conflict.GioChieu.substring(0, 5)} đến ${conflict.GioKetThuc.substring(0, 5)} cho phim "${confMovie?.TenPhim || 'Chưa rõ'}"!`);
-      }
-    }
-
-    if (updates.MaPhongChieu !== undefined && updates.MaPhongChieu !== showtime.MaPhongChieu) {
-      const oldSeatIndices = [];
-      SHOWTIME_SEATS.forEach((s, idx) => {
-        if (s.MaSuatChieu === id) oldSeatIndices.push(idx);
-      });
-      for (let i = oldSeatIndices.length - 1; i >= 0; i--) {
-        SHOWTIME_SEATS.splice(oldSeatIndices[i], 1);
-      }
-
-      const newRoom = ROOMS.find(r => r.MaPhongChieu === updates.MaPhongChieu);
-      if (newRoom) {
-        const map = SEAT_MAPS.find(m => m.MaSoDoGhe === newRoom.MaSoDoGhe);
-        if (map) {
-          const overrides = newRoom.Overrides || {};
-          const rows = map.TongHang;
-          const cols = map.TongCot;
-          for (let r = 0; r < rows; r++) {
-            const rowChar = String.fromCharCode(65 + r);
-            for (let c = 0; c < cols; c++) {
-              const seatId = `${newRoom.MaPhongChieu}-${rowChar}${c + 1}`;
-              const seatOverride = overrides[seatId] || {};
-
-              SHOWTIME_SEATS.push({
-                MaGheSuatChieu: `GSC_${id}_${rowChar}${c + 1}`,
-                MaSuatChieu: id,
-                MaGhe: seatId,
-                TrangThai: 0,
-                KhaDung: seatOverride.KhaDung !== undefined ? seatOverride.KhaDung : 1,
-                NgayTao: new Date().toISOString().replace('T', ' ').substring(0, 19),
-                NgayCapNhat: null
-              });
-            }
-          }
-        }
-      }
-    }
-
-    SHOWTIMES[index] = {
-      ...showtime,
-      ...updates,
-      GioChieu: tStart,
-      GioKetThuc: tEnd,
-      GiaVeCoBan: updates.GiaVeCoBan !== undefined ? parseFloat(updates.GiaVeCoBan) : showtime.GiaVeCoBan,
-      KhaDung: khaDung,
-      NgayCapNhat: new Date().toISOString().replace('T', ' ').substring(0, 19)
-    };
-
-    return SHOWTIMES[index];
+    const data = await axiosClient.put(`/admin/suat-chieu/${id}`, payload);
+    return data;
   },
+
   deleteShowtime: async (id) => {
-    await delay();
-    const index = SHOWTIMES.findIndex(s => s.MaSuatChieu === id);
-    if (index === -1) throw new Error('Không tìm thấy suất chiếu!');
-
-    const hasBookings = SHOWTIME_SEATS.some(s => s.MaSuatChieu === id && (s.TrangThai === 1 || s.TrangThai === 2));
-    if (hasBookings) {
-      throw new Error('Lỗi ràng buộc: Không thể xóa suất chiếu này vì đã có vé bán ra hoặc khách hàng đang giữ ghế (Kiểm tra trong bảng GHE_SUATCHIEU / CHITIETDATVE)!');
-    }
-
-    SHOWTIMES.splice(index, 1);
-
-    const oldSeatIndices = [];
-    SHOWTIME_SEATS.forEach((s, idx) => {
-      if (s.MaSuatChieu === id) oldSeatIndices.push(idx);
-    });
-    for (let i = oldSeatIndices.length - 1; i >= 0; i--) {
-      SHOWTIME_SEATS.splice(oldSeatIndices[i], 1);
-    }
-
+    await axiosClient.delete(`/admin/suat-chieu/${id}`);
     return true;
   },
+
   getShowtimeSeats: async (maSuatChieu) => {
-    await delay();
-    return SHOWTIME_SEATS.filter(s => s.MaSuatChieu === maSuatChieu);
+    const data = await axiosClient.get(`/admin/suat-chieu/${maSuatChieu}/ghe`);
+    return data.map(gsc => ({
+      MaGheSuatChieu: gsc.MaGheSuatChieu,
+      MaSuatChieu: gsc.MaSuatChieu,
+      MaGhe: `${gsc.Ghe?.MaPhong}-${gsc.Ghe?.ViTriDay}${gsc.Ghe?.ViTriCot}`,
+      TrangThai: gsc.TrangThai === 'DA_DAT' ? 1 : (gsc.TrangThai === 'DANG_GIU' ? 2 : 0),
+      KhaDung: gsc.KhaDung ? 1 : 0,
+    }));
   }
 };
 
