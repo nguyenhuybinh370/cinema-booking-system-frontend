@@ -6,8 +6,7 @@ const ProtectedRoute = ({ allowedRoles }) => {
   const userRole = localStorage.getItem('userRole'); 
 
   if (!token) {
-    const isStaffOrAdmin = window.location.pathname.startsWith('/staff') || window.location.pathname.startsWith('/admin');
-    return <Navigate to={isStaffOrAdmin ? "/staff/login" : "/login"} replace />;
+    return <Navigate to="/login" replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(userRole)) {
