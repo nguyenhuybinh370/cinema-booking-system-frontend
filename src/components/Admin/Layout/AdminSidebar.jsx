@@ -39,7 +39,7 @@ const AdminSidebar = () => {
     localStorage.removeItem("userRole");
     localStorage.removeItem("userName");
     localStorage.removeItem("userCode");
-    window.location.href = "/staff/login";
+    window.location.href = "/login";
   };
 
   const menuItems = [
