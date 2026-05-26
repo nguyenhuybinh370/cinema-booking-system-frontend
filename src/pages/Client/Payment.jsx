@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { ChevronLeft, ShieldCheck } from 'lucide-react';
 import { formatVND } from '../../utils/formatHelper';
+import toast from 'react-hot-toast';
+import { simulatedCheckout } from '../../api/bookingApi';
+import { getBookingDetail } from '../../api/bookingHistoryApi';
 
 const Payment = ({ 
   movie, 
@@ -11,14 +14,64 @@ const Payment = ({
   formatTime, 
   timeLeft = 600, 
   onBack, 
-  onPaymentSuccess 
+  onPaymentSuccess,
+  maSuatChieu,
+  heldSeatIds
 }) => {
-  const [paymentMethod, setPaymentMethod] = useState('momo'); // 'momo' hoặc 'vnpay'
+  const [paymentMethod, setPaymentMethod] = useState('vnpay'); // Default to vnpay as Momo is disabled
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formatTimeSeconds = (seconds) => {
     const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
     const remainingSeconds = (seconds % 60).toString().padStart(2, '0');
     return `${minutes}:${remainingSeconds}`;
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!maSuatChieu) {
+      toast.error("Không tìm thấy thông tin suất chiếu!");
+      return;
+    }
+    if (!heldSeatIds || heldSeatIds.length === 0) {
+      toast.error("Không tìm thấy danh sách ghế đang giữ!");
+      return;
+    }
+
+    setIsSubmitting(true);
+    const toastId = toast.loading("Đang xử lý thanh toán giả lập...");
+    try {
+      // Map to backend allowed enum PhuongThucThanhToan: 'VNPAY' | 'TIEN_MAT'
+      const PhuongThucThanhToan = 'VNPAY';
+
+      const checkoutPayload = {
+        MaSuatChieu: maSuatChieu,
+        DanhSachMaGheSuatChieu: heldSeatIds,
+        PhuongThucThanhToan,
+        KetQuaThanhToan: 'THANH_CONG',
+      };
+
+      const checkoutRes = await simulatedCheckout(checkoutPayload);
+      toast.success("Thanh toán giả lập thành công!");
+
+      // Attempt to load full ticket details with MaChiTietDat
+      try {
+        const detailData = await getBookingDetail(checkoutRes.MaPhieuDat);
+        toast.dismiss(toastId);
+        onPaymentSuccess(detailData, checkoutRes);
+      } catch (detailErr) {
+        console.error("Lỗi khi tải chi tiết vé vừa đặt:", detailErr);
+        toast.error("Không thể tải chi tiết mã vé từ máy chủ. Đang chuyển sang màn hình xác nhận fallback...");
+        toast.dismiss(toastId);
+        onPaymentSuccess(null, checkoutRes);
+      }
+    } catch (err) {
+      console.error("Simulated checkout error:", err);
+      const errMsg = err.response?.data?.message || err.message || "Thanh toán giả lập thất bại. Vui lòng thử lại.";
+      toast.error(errMsg);
+      toast.dismiss(toastId);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -47,27 +100,25 @@ const Payment = ({
         {/* CỘT TRÁI: PHƯƠNG THỨC THANH TOÁN */}
         <div className="flex flex-col gap-4 w-full">
           
-          {/* Phương thức 1: MoMo */}
-          <label 
-            onClick={() => setPaymentMethod('momo')}
-            className={`flex items-center gap-4 p-5 rounded-xl border transition-all cursor-pointer ${
-              paymentMethod === 'momo' 
-                ? 'bg-white/5 border-pink-500 shadow-[0_0_15px_rgba(239,68,110,0.15)]' 
-                : 'bg-white/5 border-white/10 hover:border-white/20'
-            }`}
+          {/* Phương thức 1: MoMo (Vô hiệu hóa) */}
+          <div 
+            className="flex items-center gap-4 p-5 rounded-xl border bg-white/5 border-white/5 opacity-50 cursor-not-allowed relative overflow-hidden"
+            title="Phương thức Momo chưa hỗ trợ thanh toán giả lập"
           >
             <input 
               type="radio" 
               name="payment" 
-              checked={paymentMethod === 'momo'} 
-              onChange={() => {}} 
-              className="accent-pink-500 w-4 h-4 cursor-pointer"
+              disabled
+              checked={false} 
+              className="w-4 h-4 cursor-not-allowed"
+              onChange={() => {}}
             />
-            <div className="w-8 h-8 bg-[#a50064] rounded-lg flex items-center justify-center text-white text-xs font-black select-none">
+            <div className="w-8 h-8 bg-gray-600 rounded-lg flex items-center justify-center text-white text-xs font-black select-none">
               mo
             </div>
-            <span className="text-white font-bold text-sm md:text-base">Momo</span>
-          </label>
+            <span className="text-gray-400 font-bold text-sm md:text-base flex-1">Momo</span>
+            <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-bold px-2 py-0.5 rounded">Sắp hỗ trợ</span>
+          </div>
 
           {/* Phương thức 2: VNPAY */}
           <label 
@@ -88,15 +139,16 @@ const Payment = ({
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-[10px] font-black tracking-tighter select-none">
               VN
             </div>
-            <span className="text-white font-bold text-sm md:text-base">VNPAY</span>
+            <span className="text-white font-bold text-sm md:text-base">VNPAY (Simulated)</span>
           </label>
 
           {/* NÚT THANH TOÁN CHỦ ĐẠO */}
           <button 
-            onClick={onPaymentSuccess}
-            className="w-full bg-linear-to-r from-[#ff436e] to-[#e0325a] hover:from-[#e0325a] hover:to-[#b81d43] text-white font-black py-4 rounded-xl transition-all shadow-[0_0_30px_rgba(255,67,110,0.3)] text-base tracking-widest uppercase mt-4 cursor-pointer text-center active:scale-[0.99]"
+            onClick={handleConfirmPayment}
+            disabled={isSubmitting}
+            className={`w-full bg-linear-to-r from-[#ff436e] to-[#e0325a] hover:from-[#e0325a] hover:to-[#b81d43] text-white font-black py-4 rounded-xl transition-all shadow-[0_0_30px_rgba(255,67,110,0.3)] text-base tracking-widest uppercase mt-4 cursor-pointer text-center active:scale-[0.99] ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            Xác Nhận Thanh Toán
+            {isSubmitting ? 'Đang xử lý...' : 'Xác Nhận Thanh Toán'}
           </button>
         </div>
 
@@ -122,7 +174,7 @@ const Payment = ({
               </p>
               <p className="flex flex-col gap-0.5">
                 <span className="text-blue-200/70 font-bold uppercase tracking-wider text-[10px]">Phòng chiếu & Số Vé</span>
-                <span className="text-white font-bold text-sm">Phòng 02 • {selectedSeats.length} Vé</span>
+                <span className="text-white font-bold text-sm">Phòng {currentSlot?.TenPhong || '02'} • {selectedSeats.length} Vé</span>
               </p>
             </div>
 

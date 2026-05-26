@@ -3,7 +3,7 @@ import { Ticket, History, Star, MessageSquare, X, Calendar, MapPin, CreditCard, 
 import { assets } from '../../assets/assets';
 import { formatVND } from '../../utils/formatHelper';
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axiosClient from '../../api/axiosClient';
 import { getCustomerProfile, updateCustomerProfile, changeCustomerPassword } from '../../api/accountApi';
 import { getBookingHistory, getBookingDetail } from '../../api/bookingHistoryApi';
@@ -11,6 +11,7 @@ import { getMovieVisuals } from '../../utils/visualHelper';
 
 const Profile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('account'); 
   
   // --- STATE QUẢN LÝ BIỂU MẪU ĐÁNH GIÁ ---
@@ -103,7 +104,14 @@ const Profile = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [location.key]);
+
+  // Sync activeTab from navigation state (e.g. from TicketConfirmation screen)
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
 
   // Helper to open details modal
   const handleOpenDetail = async (maPhieuDat) => {

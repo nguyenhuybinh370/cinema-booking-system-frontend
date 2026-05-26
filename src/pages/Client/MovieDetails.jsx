@@ -120,7 +120,9 @@ const MovieDetails = () => {
   const hasActiveHoldRef = useRef(false);
   const heldSeatIdsRef = useRef([]);
   const maSuatChieuRef = useRef("");
+  const isPaymentSuccessRef = useRef(false);
 
+  const [bookingResult, setBookingResult] = useState(null);
   const [isPaymentStage, setIsPaymentStage] = useState(false);
 
   const hasShowtimes = showtimes.length > 0;
@@ -195,7 +197,7 @@ const MovieDetails = () => {
   // Unmount cleanup hook
   useEffect(() => {
     return () => {
-      if (hasActiveHoldRef.current && heldSeatIdsRef.current.length > 0 && maSuatChieuRef.current) {
+      if (hasActiveHoldRef.current && !isPaymentSuccessRef.current && heldSeatIdsRef.current.length > 0 && maSuatChieuRef.current) {
         const seatIds = heldSeatIdsRef.current;
         const maSuatChieu = maSuatChieuRef.current;
         console.log("Unmount cleanup: releasing held seats", seatIds);
@@ -275,12 +277,15 @@ const MovieDetails = () => {
         currentSlot={currentSlot}
         selectedSeats={confirmedSeats}
         formatTime={formatTime}
+        bookingResult={bookingResult}
         onHome={() => {
           setIsTicketStage(false);
           setIsPaymentStage(false);
           setIsBookingStage(false);
           setConfirmedSeats([]);
           setConfirmedTotalPrice(0);
+          setBookingResult(null);
+          isPaymentSuccessRef.current = false;
         }}
       />
     );
@@ -297,6 +302,8 @@ const MovieDetails = () => {
         amount={confirmedTotalPrice} // Truyền số tiền đã tính toán từ SeatSelection sang
         formatTime={formatTime}
         timeLeft={timeLeft} // Truyền thời gian giữ ghế còn lại
+        maSuatChieu={maSuatChieuRef.current}
+        heldSeatIds={heldSeatIds}
         onBack={async () => {
           // Release held seats on backend before returning
           const seatIds = heldSeatIds;
@@ -318,15 +325,24 @@ const MovieDetails = () => {
             }
           }
         }}
-        onPaymentSuccess={() => {
-          // Release active hold reference (since booking is complete/mocked)
+        onPaymentSuccess={(bookingDetail, checkoutRes) => {
+          // Set payment success ref first BEFORE changing route/stage
+          isPaymentSuccessRef.current = true;
+
+          // Store real backend result
+          setBookingResult(bookingDetail || checkoutRes);
+
+          // Release active hold reference
           hasActiveHoldRef.current = false;
+          
+          // Clear states only after marking payment success
           setHeldSeatIds([]);
           setConfirmedSeats([]);
           setConfirmedTotalPrice(0);
+          
+          // Transition stage
           setIsPaymentStage(false);
-          setIsBookingStage(false);
-          toast.success("Đặt vé và thanh toán thành công (giả lập)!");
+          setIsTicketStage(true);
         }}
       />
     );
