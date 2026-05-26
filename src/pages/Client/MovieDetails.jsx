@@ -111,6 +111,7 @@ const MovieDetails = () => {
 
   const [isTicketStage, setIsTicketStage] = useState(false);
   const [confirmedSeats, setConfirmedSeats] = useState([]);
+  const [confirmedTotalPrice, setConfirmedTotalPrice] = useState(0);
 
   const [isPaymentStage, setIsPaymentStage] = useState(false);
 
@@ -198,6 +199,7 @@ const MovieDetails = () => {
           setIsPaymentStage(false);
           setIsBookingStage(false);
           setConfirmedSeats([]);
+          setConfirmedTotalPrice(0);
         }}
       />
     );
@@ -211,7 +213,7 @@ const MovieDetails = () => {
         selectedDateId={selectedDateId}
         currentSlot={currentSlot}
         selectedSeats={confirmedSeats}
-        amount={calculateTotalAmount(confirmedSeats)} // Truyền số tiền đã tính toán sang bên trang thanh toán
+        amount={confirmedTotalPrice} // Truyền số tiền đã tính toán từ SeatSelection sang
         formatTime={formatTime}
         onBack={() => {
           setIsPaymentStage(false); // Bấm quay lại thì ẩn trang thanh toán, đưa về giao diện chọn ghế
@@ -233,12 +235,11 @@ const MovieDetails = () => {
           availableSlots={availableSlots}
           selectedSlotIndex={selectedSlotIndex}
           setSelectedSlotIndex={setSelectedSlotIndex}
-          occupiedSeats={occupiedSeats}
           formatTime={formatTime}
           onBack={() => setIsBookingStage(false)}
-          // ĐÃ SỬA: Khi bấm chọn ghế xong, lưu danh sách ghế và kích hoạt màn hình PAYMENT trước thay vì ra thẳng hóa đơn
-          onConfirmBooking={(seats) => {
+          onConfirmBooking={(seats, totalPrice) => {
             setConfirmedSeats(seats);
+            setConfirmedTotalPrice(totalPrice);
             setIsBookingStage(false);
             setIsPaymentStage(true); // Kích hoạt nhảy sang bước chọn MoMo / VNPAY
           }}
