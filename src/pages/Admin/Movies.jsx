@@ -59,11 +59,7 @@ const Movies = () => {
       await adminService.updateMovie(editingMovie.MaPhim, processedData);
       alert("Cập nhật thông tin phim thành công!");
     } else {
-      const newMovie = {
-        MaPhim: `M${String(movies.length + 1).padStart(2, '0')}`,
-        ...processedData
-      };
-      await adminService.addMovie(newMovie);
+      await adminService.addMovie(processedData);
       alert("Thêm phim mới thành công!");
     }
     await loadMovies();
