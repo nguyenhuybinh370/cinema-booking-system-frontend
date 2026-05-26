@@ -5,20 +5,6 @@ import AdminTable from '../../components/Admin/Common/AdminTable';
 import adminService from '../../services/adminService';
 import { Search, ShieldCheck, UserX, UserCheck, Edit2, X } from 'lucide-react';
 
-const getNextId = (list, prefix) => {
-  const nums = list
-    .map(item => {
-      const id = item.MaNhanVien;
-      if (id && id.startsWith(prefix)) {
-        const numPart = parseInt(id.substring(prefix.length), 10);
-        return isNaN(numPart) ? 0 : numPart;
-      }
-      return 0;
-    });
-  const max = nums.length > 0 ? Math.max(...nums) : 0;
-  return `${prefix}${String(max + 1).padStart(2, '0')}`;
-};
-
 const Personnel = () => {
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);

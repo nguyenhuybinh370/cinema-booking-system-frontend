@@ -8,19 +8,6 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 };
 
-const getNextId = (list, prefix) => {
-  const nums = list
-    .map(item => {
-      const id = item.MaLoaiPhong || item.MaLoaiGhe || item.MaLoaiNgay;
-      if (id && id.startsWith(prefix)) {
-        const numPart = parseInt(id.substring(prefix.length), 10);
-        return isNaN(numPart) ? 0 : numPart;
-      }
-      return 0;
-    });
-  const max = nums.length > 0 ? Math.max(...nums) : 0;
-  return `${prefix}${String(max + 1).padStart(2, '0')}`;
-};
 
 const PriceTable = ({ title, data, typeKey, nameKey, onAdd, onEdit, onDelete }) => (
   <div className="bg-[#0f1117] border border-white/5 rounded-3xl overflow-hidden shadow-xl flex flex-col w-full">
