@@ -45,10 +45,20 @@ const Profile = () => {
       setProfileLoading(true);
       setProfileError(null);
       try {
+        const parseDate = (dStr) => {
+          if (!dStr) return '';
+          const d = new Date(dStr);
+          if (isNaN(d.getTime())) return '';
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          return `${yyyy}-${mm}-${dd}`;
+        };
+
         const data = await getCustomerProfile();
         const mapped = {
           name: data.HoTen || '',
-          dob: data.NgaySinh ? new Date(data.NgaySinh).toISOString().split('T')[0] : '',
+          dob: parseDate(data.NgaySinh),
           phone: data.SoDienThoai || '',
           email: data.Email || '',
           username: data.TenDangNhap || '',
@@ -79,19 +89,37 @@ const Profile = () => {
     setSaving(true);
     try {
       const payload = {
-        HoTen: userInfo.name,
-        Email: userInfo.email,
-        SoDienThoai: userInfo.phone,
-        GioiTinh: userInfo.gender === 'Nam' ? true : userInfo.gender === 'Nữ' ? false : null,
-        NgaySinh: userInfo.dob || null
+        HoTen: userInfo.name || undefined,
+        Email: userInfo.email || undefined,
+        SoDienThoai: userInfo.phone || undefined,
       };
 
+      if (userInfo.gender === 'Nam') {
+        payload.GioiTinh = true;
+      } else if (userInfo.gender === 'Nữ') {
+        payload.GioiTinh = false;
+      }
+
+      if (userInfo.dob) {
+        payload.NgaySinh = userInfo.dob;
+      }
+
       const updated = await updateCustomerProfile(payload);
+
+      const parseDate = (dStr) => {
+        if (!dStr) return '';
+        const d = new Date(dStr);
+        if (isNaN(d.getTime())) return '';
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+      };
 
       // Re-map response back to local state
       setUserInfo({
         name: updated.HoTen || '',
-        dob: updated.NgaySinh ? new Date(updated.NgaySinh).toISOString().split('T')[0] : '',
+        dob: parseDate(updated.NgaySinh),
         phone: updated.SoDienThoai || '',
         email: updated.Email || '',
         username: updated.TenDangNhap || userInfo.username,
