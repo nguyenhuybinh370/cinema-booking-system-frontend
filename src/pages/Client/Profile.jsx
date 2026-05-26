@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Ticket, History, Star, MessageSquare, X, Calendar, MapPin, CreditCard, User, LogOut, Copy, Check, ExternalLink } from 'lucide-react';
+import { Ticket, History, Star, MessageSquare, X, Calendar, MapPin, CreditCard, User, LogOut, Copy, Check, ExternalLink, RotateCcw } from 'lucide-react';
 import { assets } from '../../assets/assets';
 import { formatVND } from '../../utils/formatHelper';
 import toast from 'react-hot-toast';
@@ -7,6 +7,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axiosClient from '../../api/axiosClient';
 import { getCustomerProfile, updateCustomerProfile, changeCustomerPassword } from '../../api/accountApi';
 import { getBookingHistory, getBookingDetail } from '../../api/bookingHistoryApi';
+import { cancelBooking, requestRefund, getMyRefundRequests } from '../../api/refundApi';
 import { getMovieVisuals } from '../../utils/visualHelper';
 
 // Helper to correctly parse showtime date/time from backend booking detail/history response
@@ -113,6 +114,41 @@ const Profile = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [copiedTicketId, setCopiedTicketId] = useState("");
 
+  // --- STATE QUẢN LÝ HOÀN TIỀN ---
+  const [refundRequests, setRefundRequests] = useState([]);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [isSubmittingCancel, setIsSubmittingCancel] = useState(false);
+
+  const [isRefundRequestOpen, setIsRefundRequestOpen] = useState(false);
+  const [refundReason, setRefundReason] = useState("");
+  const [isSubmittingRefund, setIsSubmittingRefund] = useState(false);
+
+  const [selectedBookingId, setSelectedBookingId] = useState(null);
+
+  // Reusable helper to fetch both booking history and refund requests
+  const fetchBookingsAndRefunds = async (showLoading = true) => {
+    if (showLoading) {
+      setBookingsLoading(true);
+    }
+    setBookingsError(null);
+    try {
+      const [bookingsRes, refundsRes] = await Promise.all([
+        getBookingHistory({ page: 1, limit: 100 }),
+        getMyRefundRequests({ page: 1, limit: 100 })
+      ]);
+      setBookings(bookingsRes.data || []);
+      setRefundRequests(refundsRes.data || []);
+    } catch (err) {
+      console.error("Lỗi khi tải lịch sử đặt vé hoặc hoàn tiền:", err);
+      setBookingsError(err?.message || "Không thể tải dữ liệu đặt vé.");
+    } finally {
+      if (showLoading) {
+        setBookingsLoading(false);
+      }
+    }
+  };
+
   // --- FETCH PROFILE & BOOKINGS FROM BACKEND ON MOUNT ---
   useEffect(() => {
     const fetchData = async () => {
@@ -151,21 +187,94 @@ const Profile = () => {
         setProfileLoading(false);
       }
 
-      // Fetch Booking History
-      setBookingsLoading(true);
-      setBookingsError(null);
-      try {
-        const res = await getBookingHistory({ page: 1, limit: 100 });
-        setBookings(res.data || []);
-      } catch (err) {
-        console.error("Lỗi khi tải lịch sử đặt vé:", err);
-        setBookingsError(err?.message || "Không thể tải lịch sử đặt vé.");
-      } finally {
-        setBookingsLoading(false);
-      }
+      // Fetch Bookings & Refunds
+      await fetchBookingsAndRefunds(true);
     };
     fetchData();
   }, [location.key]);
+
+  // --- HANDLER HỦY VÉ & HOÀN TIỀN ---
+  const handleOpenCancelModal = (maPhieuDat) => {
+    setSelectedBookingId(maPhieuDat);
+    setCancelReason("");
+    setIsCancelModalOpen(true);
+  };
+
+  const handleCancelBookingSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedBookingId) return;
+
+    setIsSubmittingCancel(true);
+    const toastId = toast.loading("Đang xử lý hủy vé...");
+    try {
+      const payload = {};
+      if (cancelReason.trim()) {
+        payload.LyDoHoan = cancelReason.trim();
+      }
+      
+      await cancelBooking(selectedBookingId, payload);
+      toast.success("Hủy vé thành công, yêu cầu hoàn tiền đang chờ duyệt!");
+      setIsCancelModalOpen(false);
+      
+      // Refresh listings
+      await fetchBookingsAndRefunds(false);
+
+      // Refresh detail modal if open
+      if (isDetailOpen && bookingDetail?.MaPhieuDat === selectedBookingId) {
+        handleOpenDetail(selectedBookingId);
+      }
+    } catch (err) {
+      console.error("Lỗi khi hủy vé:", err);
+      toast.error(err.response?.data?.message || err.message || "Hủy vé thất bại.");
+    } finally {
+      setIsSubmittingCancel(false);
+      toast.dismiss(toastId);
+    }
+  };
+
+  // --- HANDLER YÊU CẦU HOÀN TIỀN ---
+  const handleOpenRefundModal = (maPhieuDat) => {
+    setSelectedBookingId(maPhieuDat);
+    setRefundReason("");
+    setIsRefundRequestOpen(true);
+  };
+
+  const handleRefundSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedBookingId) return;
+
+    if (!refundReason.trim()) {
+      toast.error("Vui lòng nhập lý do hoàn tiền.");
+      return;
+    }
+
+    setIsSubmittingRefund(true);
+    const toastId = toast.loading("Đang gửi yêu cầu hoàn tiền...");
+    try {
+      const payload = {
+        MaPhieuDat: selectedBookingId,
+        LyDo: refundReason.trim()
+      };
+      
+      await requestRefund(payload);
+      toast.success("Gửi yêu cầu hoàn tiền thành công!");
+      setIsRefundRequestOpen(false);
+
+      // Refresh listings
+      await fetchBookingsAndRefunds(false);
+
+      // Refresh detail modal if open
+      if (isDetailOpen && bookingDetail?.MaPhieuDat === selectedBookingId) {
+        handleOpenDetail(selectedBookingId);
+      }
+    } catch (err) {
+      console.error("Lỗi khi yêu cầu hoàn tiền:", err);
+      toast.error(err.response?.data?.message || err.message || "Gửi yêu cầu hoàn tiền thất bại.");
+    } finally {
+      setIsSubmittingRefund(false);
+      toast.dismiss(toastId);
+    }
+  };
 
   // Sync activeTab from navigation state (e.g. from TicketConfirmation screen)
   useEffect(() => {
@@ -230,8 +339,30 @@ const Profile = () => {
     }
   };
 
+  const getRefundStatusLabel = (status) => {
+    switch (status) {
+      case 'CHO_XU_LY': 
+        return { text: 'Chờ hoàn tiền', css: 'bg-amber-500/10 text-amber-400 border border-amber-500/20' };
+      case 'DA_HOAN': 
+        return { text: 'Đã hoàn tiền', css: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' };
+      case 'TU_CHOI': 
+        return { text: 'Từ chối hoàn tiền', css: 'bg-rose-500/10 text-rose-400 border border-rose-500/20' };
+      default: 
+        return { text: status, css: 'bg-white/5 text-gray-400 border border-white/5' };
+    }
+  };
+
+
   // Filter bookings using timezone-safe Date comparisons and status
   const now = new Date();
+
+  const detailShowtimeStart = bookingDetail ? getShowtimeStartFromBooking(bookingDetail) : null;
+  const detailIsFuture = detailShowtimeStart && detailShowtimeStart >= now;
+  const detailRefundReq = bookingDetail ? refundRequests.find(r => r.PhieuDatVe?.MaPhieuDat === bookingDetail.MaPhieuDat) : null;
+  const detailHasRefundRecord = !!detailRefundReq;
+
+  const detailCanCancel = bookingDetail && bookingDetail.TrangThai === 'DA_THANH_TOAN' && detailIsFuture && !detailHasRefundRecord;
+  const detailCanRequestRefund = bookingDetail && bookingDetail.TrangThai === 'DA_HUY' && detailIsFuture && !detailHasRefundRecord;
   const upcomingTickets = bookings.filter(item => {
     const showtimeStart = getShowtimeStartFromBooking(item);
     return item.TrangThai === 'DA_THANH_TOAN' && showtimeStart && showtimeStart >= now;
@@ -440,6 +571,16 @@ const Profile = () => {
             <span className="whitespace-nowrap">Lịch sử mua hàng ({pastTickets.length})</span>
           </button>
 
+          <button 
+            onClick={() => setActiveTab('refunds')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+              activeTab === 'refunds' ? 'bg-white/10 text-yellow-400 font-bold' : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <RotateCcw size={18} className="shrink-0" />
+            <span className="whitespace-nowrap">Yêu cầu hoàn tiền ({refundRequests.length})</span>
+          </button>
+
           <div className="w-full h-px bg-white/5 my-2"></div>
 
           {/* NÚT ĐĂNG XUẤT TÀI KHOẢN */}
@@ -610,7 +751,7 @@ const Profile = () => {
         )}
 
         {/* ================= TAB 2 & 3: DANH SÁCH VÉ ================= */}
-        {activeTab !== 'account' && (
+        {(activeTab === 'upcoming' || activeTab === 'past') && (
           <div className="flex flex-col gap-6 animate-in fade-in duration-300">
             <h2 className="text-2xl font-black uppercase tracking-wider italic">
               {activeTab === 'upcoming' ? 'Danh sách vé sắp xem' : 'Lịch sử phim đã xem'}
@@ -632,6 +773,15 @@ const Profile = () => {
                   const statusLabel = getBookingStatusLabel(booking.TrangThai);
                   const reconstructedMovie = { title: booking.Phim?.TenPhim };
 
+                  const showtimeStart = getShowtimeStartFromBooking(booking);
+                  const isFuture = showtimeStart && showtimeStart >= now;
+                  const refundReq = refundRequests.find(r => r.PhieuDatVe?.MaPhieuDat === booking.MaPhieuDat);
+                  const refundStatusLabel = refundReq ? getRefundStatusLabel(refundReq.TrangThai) : null;
+                  const hasRefundRecord = !!refundReq;
+
+                  const canCancel = booking.TrangThai === 'DA_THANH_TOAN' && isFuture && !hasRefundRecord;
+                  const canRequestRefund = booking.TrangThai === 'DA_HUY' && isFuture && !hasRefundRecord;
+
                   return (
                     <div key={booking.MaPhieuDat} className="glass-effect rounded-2xl border border-white/5 p-5 flex flex-col md:flex-row items-center gap-6 hover:border-white/10 transition-all">
                       <img 
@@ -647,6 +797,11 @@ const Profile = () => {
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${statusLabel.css}`}>
                             {statusLabel.text}
                           </span>
+                          {refundStatusLabel && (
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${refundStatusLabel.css}`}>
+                              {refundStatusLabel.text}
+                            </span>
+                          )}
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-400">
                           <p className="flex items-center gap-1.5"><Calendar size={14} className="text-gray-500" />Suất: {getShowtimeStartFromBooking(booking) ? formatDateTime(getShowtimeStartFromBooking(booking)) : "Không xác định"}</p>
@@ -663,6 +818,22 @@ const Profile = () => {
                         >
                           <ExternalLink size={14} /><span>Xem chi tiết</span>
                         </button>
+                        {canCancel && (
+                          <button 
+                            onClick={() => handleOpenCancelModal(booking.MaPhieuDat)}
+                            className="w-full sm:w-auto bg-rose-600 hover:bg-rose-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer whitespace-nowrap shadow-[0_0_15px_rgba(225,29,72,0.3)] animate-in fade-in duration-200"
+                          >
+                            <X size={14} /><span>Hủy vé & Hoàn tiền</span>
+                          </button>
+                        )}
+                        {canRequestRefund && (
+                          <button 
+                            onClick={() => handleOpenRefundModal(booking.MaPhieuDat)}
+                            className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer whitespace-nowrap shadow-[0_0_15px_rgba(217,119,6,0.3)] animate-in fade-in duration-200"
+                          >
+                            <RotateCcw size={14} /><span>Yêu cầu hoàn tiền</span>
+                          </button>
+                        )}
                         {activeTab === 'past' && booking.TrangThai === 'DA_THANH_TOAN' && (
                           <button 
                             onClick={() => openReviewModal(reconstructedMovie)}
@@ -681,6 +852,75 @@ const Profile = () => {
                     Bạn hiện chưa có lịch sử đặt vé mục này...
                   </div>
                 )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ================= TAB 4: DANH SÁCH YÊU CẦU HOÀN TIỀN ================= */}
+        {activeTab === 'refunds' && (
+          <div className="flex flex-col gap-6 animate-in fade-in duration-300">
+            <h2 className="text-2xl font-black uppercase tracking-wider italic">
+              Danh sách yêu cầu hoàn tiền
+            </h2>
+
+            {bookingsLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#ff436e]"></div>
+                <p className="text-gray-400 ml-4">Đang tải danh sách hoàn tiền...</p>
+              </div>
+            ) : refundRequests.length === 0 ? (
+              <div className="glass-effect rounded-2xl border border-white/5 p-12 text-center text-gray-400 text-sm">
+                Bạn chưa gửi yêu cầu hoàn tiền nào...
+              </div>
+            ) : (
+              <div className="flex flex-col gap-5">
+                {refundRequests.map((refund) => {
+                  const statusLabel = getRefundStatusLabel(refund.TrangThai);
+                  const movie = refund.PhieuDatVe?.Movie;
+                  const visuals = getMovieVisuals({ TenPhim: movie?.TenPhim });
+
+                  return (
+                    <div key={refund.MaHoanTien} className="glass-effect rounded-2xl border border-white/5 p-5 flex flex-col md:flex-row items-center gap-6 hover:border-white/10 transition-all">
+                      <img 
+                        src={visuals?.poster || assets.profile} 
+                        alt={movie?.TenPhim || 'Movie Poster'} 
+                        className="w-20 h-28 object-cover rounded-xl border border-white/10 shrink-0"
+                      />
+                      <div className="flex-1 min-w-0 flex flex-col gap-2 w-full">
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-white font-bold text-lg uppercase truncate tracking-tight text-glow">
+                            {movie?.TenPhim || 'Yêu cầu hoàn tiền'}
+                          </h3>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${statusLabel.css}`}>
+                            {statusLabel.text}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-400">
+                          <p className="flex items-center gap-1.5"><Calendar size={14} className="text-gray-500" />Suất: {movie?.NgayChieu ? formatDateTime(getShowtimeStartFromBooking({ ChiTietDatVes: [{ SuatChieu: { NgayChieu: movie.NgayChieu, GioChieu: movie.GioChieu } }] })) : "Không xác định"}</p>
+                          <p className="flex items-center gap-1.5"><CreditCard size={14} className="text-gray-500" />Số tiền hoàn: <span className="text-yellow-400 font-bold">{formatVND(refund.SoTienHoan)}</span></p>
+                          <p className="flex items-center gap-1.5">Ngày yêu cầu: <span className="text-gray-300 font-medium">{formatDateTime(refund.NgayTao)}</span></p>
+                          {refund.NgayHoanTien && (
+                            <p className="flex items-center gap-1.5">Ngày duyệt: <span className="text-gray-300 font-medium">{formatDateTime(refund.NgayHoanTien)}</span></p>
+                          )}
+                          <p className="flex items-center gap-1.5 col-span-2">Mã hoàn tiền: <span className="text-gray-300 font-mono select-all">{refund.MaHoanTien}</span></p>
+                          <p className="flex flex-col gap-1 col-span-2 mt-1 border-t border-white/5 pt-2">
+                            <span className="font-bold text-gray-500">Lý do hoàn tiền:</span>
+                            <span className="text-white italic">"{refund.LyDo}"</span>
+                          </p>
+                        </div>
+                      </div>
+                      <div className="w-full md:w-auto shrink-0 pt-4 md:pt-0 border-t md:border-t-0 md:border-l border-white/5 md:pl-6 flex flex-col items-center justify-center gap-2">
+                        <button 
+                          onClick={() => handleOpenDetail(refund.PhieuDatVe?.MaPhieuDat)}
+                          className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white font-bold px-5 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                        >
+                          <ExternalLink size={14} /><span>Xem chi tiết vé</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -821,10 +1061,69 @@ const Profile = () => {
                         <span className="font-bold text-white">Tổng tiền:</span>
                         <span className="text-lg font-black text-yellow-400">{formatVND(bookingDetail.TongTien)}</span>
                       </div>
+
+                      {/* Refund Details */}
+                      {detailRefundReq && (
+                        <div className="flex flex-col gap-3 bg-white/5 border border-white/10 p-3.5 rounded-xl mt-3.5 text-left animate-in fade-in duration-200">
+                          <h4 className="text-[11px] font-bold text-yellow-400 uppercase tracking-wider border-b border-white/5 pb-2">Thông tin hoàn tiền</h4>
+                          <div className="flex flex-col gap-2 text-[11px] text-gray-400">
+                            <div className="flex justify-between">
+                              <span>Mã hoàn tiền:</span>
+                              <span className="text-white font-mono truncate max-w-[120px] select-all" title={detailRefundReq.MaHoanTien}>{detailRefundReq.MaHoanTien}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Số tiền hoàn:</span>
+                              <span className="text-yellow-400 font-bold">{formatVND(detailRefundReq.SoTienHoan)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Trạng thái:</span>
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${getRefundStatusLabel(detailRefundReq.TrangThai).css}`}>
+                                {getRefundStatusLabel(detailRefundReq.TrangThai).text}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Ngày yêu cầu:</span>
+                              <span className="text-white">{formatDateTime(detailRefundReq.NgayTao)}</span>
+                            </div>
+                            {detailRefundReq.NgayHoanTien && (
+                              <div className="flex justify-between">
+                                <span>Ngày xử lý:</span>
+                                <span className="text-white">{formatDateTime(detailRefundReq.NgayHoanTien)}</span>
+                              </div>
+                            )}
+                            <div className="flex flex-col gap-1 mt-1 border-t border-white/5 pt-2">
+                              <span className="font-bold text-gray-500">Lý do:</span>
+                              <p className="text-white italic leading-relaxed">"{detailRefundReq.LyDo}"</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                 </div>
+
+                {/* Modal Footer Actions */}
+                {(detailCanCancel || detailCanRequestRefund) && (
+                  <div className="flex items-center justify-end gap-3 mt-4 border-t border-white/5 pt-4">
+                    {detailCanCancel && (
+                      <button 
+                        onClick={() => handleOpenCancelModal(bookingDetail.MaPhieuDat)}
+                        className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer whitespace-nowrap shadow-[0_0_15px_rgba(225,29,72,0.3)] animate-in fade-in duration-200"
+                      >
+                        <X size={14} /><span>Hủy vé & Hoàn tiền</span>
+                      </button>
+                    )}
+                    {detailCanRequestRefund && (
+                      <button 
+                        onClick={() => handleOpenRefundModal(bookingDetail.MaPhieuDat)}
+                        className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer whitespace-nowrap shadow-[0_0_15px_rgba(217,119,6,0.3)] animate-in fade-in duration-200"
+                      >
+                        <RotateCcw size={14} /><span>Yêu cầu hoàn tiền</span>
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -862,6 +1161,105 @@ const Profile = () => {
                 <textarea required rows="4" placeholder="Hãy chia sẻ cảm nghĩ của bạn về nội dung bộ phim, diễn xuất, âm thanh kỹ xảo nhé..." value={comment} onChange={(e) => setComment(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:bg-white/10 transition-all resize-none leading-relaxed"/>
               </div>
               <button type="submit" className="btn-bright w-full py-3 rounded-xl normal-case font-bold text-base shadow-[0_0_20px_rgba(253,224,71,0.3)] cursor-pointer mt-2">Gửi Đánh Giá Ngay</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* POPUP MODAL HỦY VÉ & HOÀN TIỀN */}
+      {isCancelModalOpen && (
+        <div className="fixed inset-0 z-100 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="relative w-full max-w-md bg-[#020617]/95 backdrop-blur-xl border border-white/10 p-6 rounded-3xl shadow-2xl animate-in zoom-in-95 duration-300 text-left">
+            <button 
+              onClick={() => setIsCancelModalOpen(false)} 
+              className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-red-600 rounded-full text-white transition-colors cursor-pointer"
+            >
+              <X size={16} />
+            </button>
+            <div className="mb-4">
+              <h3 className="text-xl font-bold text-white uppercase tracking-tight mb-1">Xác nhận hủy vé</h3>
+              <p className="text-xs text-red-400 font-semibold leading-relaxed mt-1">
+                Lưu ý: Thao tác này sẽ hủy vé xem phim của bạn. Một yêu cầu hoàn tiền tương ứng sẽ tự động được gửi tới ban quản trị để duyệt.
+              </p>
+            </div>
+            <form onSubmit={handleCancelBookingSubmit} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-gray-400 pl-1">Lý do hủy vé (Không bắt buộc)</label>
+                <textarea 
+                  rows="3" 
+                  placeholder="Nhập lý do hủy vé của bạn..." 
+                  value={cancelReason} 
+                  onChange={(e) => setCancelReason(e.target.value)} 
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white/10 transition-all resize-none leading-relaxed"
+                />
+              </div>
+              <div className="flex justify-end gap-3 mt-2">
+                <button 
+                  type="button" 
+                  onClick={() => setIsCancelModalOpen(false)}
+                  disabled={isSubmittingCancel}
+                  className="px-5 py-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-all cursor-pointer"
+                >
+                  Hủy bỏ
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isSubmittingCancel}
+                  className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all active:scale-95 cursor-pointer shadow-[0_0_15px_rgba(225,29,72,0.4)]"
+                >
+                  {isSubmittingCancel ? "Đang xử lý..." : "Xác nhận hủy"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* POPUP MODAL YÊU CẦU HOÀN TIỀN (CHO VÉ ĐÃ HỦY) */}
+      {isRefundRequestOpen && (
+        <div className="fixed inset-0 z-100 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="relative w-full max-w-md bg-[#020617]/95 backdrop-blur-xl border border-white/10 p-6 rounded-3xl shadow-2xl animate-in zoom-in-95 duration-300 text-left">
+            <button 
+              onClick={() => setIsRefundRequestOpen(false)} 
+              className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-red-600 rounded-full text-white transition-colors cursor-pointer"
+            >
+              <X size={16} />
+            </button>
+            <div className="mb-4">
+              <h3 className="text-xl font-bold text-white uppercase tracking-tight mb-1">Yêu cầu hoàn tiền</h3>
+              <p className="text-xs text-gray-400 leading-relaxed mt-1">
+                Yêu cầu hoàn tiền cho vé đã hủy của bạn. Quản trị viên rạp phim sẽ xem xét và xử lý yêu cầu này.
+              </p>
+            </div>
+            <form onSubmit={handleRefundSubmit} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-gray-400 pl-1">Lý do hoàn tiền <span className="text-rose-500">*</span></label>
+                <textarea 
+                  required 
+                  rows="4" 
+                  placeholder="Vui lòng nhập lý do hoàn tiền cụ thể..." 
+                  value={refundReason} 
+                  onChange={(e) => setRefundReason(e.target.value)} 
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white/10 transition-all resize-none leading-relaxed"
+                />
+              </div>
+              <div className="flex justify-end gap-3 mt-2">
+                <button 
+                  type="button" 
+                  onClick={() => setIsRefundRequestOpen(false)}
+                  disabled={isSubmittingRefund}
+                  className="px-5 py-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-all cursor-pointer"
+                >
+                  Hủy bỏ
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isSubmittingRefund}
+                  className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all active:scale-95 cursor-pointer shadow-[0_0_15px_rgba(217,119,6,0.4)]"
+                >
+                  {isSubmittingRefund ? "Đang gửi..." : "Gửi yêu cầu"}
+                </button>
+              </div>
             </form>
           </div>
         </div>
