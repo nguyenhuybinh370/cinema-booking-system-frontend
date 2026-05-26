@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Clock, Armchair, DollarSign } from 'lucide-react';
 import { formatVND } from '../../utils/formatHelper';
-import { getSeatMap } from '../../api/bookingApi';
+import { getSeatMap, holdSeats } from '../../api/bookingApi';
 import toast from 'react-hot-toast';
 
 // --- SVGs FOR SEATS FROM STAFF SECTION ---
@@ -31,67 +32,18 @@ const CoupleSeatIcon = ({ className, strokeClassName }) => (
   </svg>
 );
 
-// --- COUNTDOWN TIMER COMPONENT ---
-const CountdownTimer = ({ selectedSeatsCount, onTimeout }) => {
-  const timeSecondsRef = useRef(600);
-  const displayRef = useRef(null);
-  const intervalRef = useRef(null);
-
-  useEffect(() => {
-    const updateDisplay = (seconds) => {
-      if (!displayRef.current) return;
-      const minutes = Math.floor(seconds / 60);
-      const remainingSeconds = seconds % 60;
-      displayRef.current.innerText = `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-    };
-
-    if (selectedSeatsCount > 0) {
-      if (!intervalRef.current) {
-        intervalRef.current = setInterval(() => {
-          timeSecondsRef.current -= 1;
-          updateDisplay(timeSecondsRef.current);
-
-          if (timeSecondsRef.current <= 0) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-            timeSecondsRef.current = 600;
-            onTimeout();
-          }
-        }, 1000);
-      }
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      timeSecondsRef.current = 600;
-      updateDisplay(600);
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [selectedSeatsCount, onTimeout]);
-
-  return (
-    <div className={`flex items-center gap-2 px-4 py-3 rounded-xl border mb-4 font-black transition-all ${
-      selectedSeatsCount === 0
-        ? 'bg-white/5 border-white/5 text-gray-500 opacity-60'
-        : 'bg-white/5 border-white/10 text-yellow-400'
-    }`}>
-      <Clock size={16} />
-      <span className="text-xs uppercase tracking-wider flex-1 font-bold">
-        {selectedSeatsCount === 0 ? 'Chưa chọn ghế' : 'Thời gian giữ ghế:'}
-      </span>
-      <span ref={displayRef} className="text-base font-mono font-black tracking-widest">
-        10:00
-      </span>
-    </div>
-  );
-};
+// --- STATIC HOLD INDICATOR FOR SELECTION PAGE ---
+const SeatHoldIndicator = () => (
+  <div className="flex items-center gap-2 px-4 py-3 rounded-xl border mb-4 font-black transition-all bg-white/5 border-white/5 text-gray-500 opacity-60">
+    <Clock size={16} />
+    <span className="text-xs uppercase tracking-wider flex-1 font-bold">
+      Thời gian giữ ghế:
+    </span>
+    <span className="text-base font-mono font-black tracking-widest">
+      10:00
+    </span>
+  </div>
+);
 
 // --- MAIN SEAT SELECTION COMPONENT ---
 const SeatSelection = ({ 
@@ -100,11 +52,16 @@ const SeatSelection = ({
   setSelectedSlotIndex, 
   onBack, 
   formatTime,
-  onConfirmBooking 
+  onConfirmBooking,
+  shouldReloadSeatMap
 }) => {
+  const navigate = useNavigate();
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [seatMapData, setSeatMapData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isHolding, setIsHolding] = useState(false);
+
+  const lastMaSuatChieuRef = useRef("");
 
   useEffect(() => {
     const fetchSeats = async () => {
@@ -116,7 +73,12 @@ const SeatSelection = ({
         setIsLoading(true);
         const res = await getSeatMap(maSuatChieu);
         setSeatMapData(res);
-        setSelectedSeats([]); // Reset selected seats when switching showtime
+        
+        // Reset only when the showtime actually changes
+        if (lastMaSuatChieuRef.current !== maSuatChieu) {
+          setSelectedSeats([]);
+          lastMaSuatChieuRef.current = maSuatChieu;
+        }
       } catch (err) {
         console.error("Error fetching seat map:", err);
         toast.error("Không thể tải sơ đồ ghế của suất chiếu này.");
@@ -125,38 +87,71 @@ const SeatSelection = ({
       }
     };
     fetchSeats();
-  }, [selectedSlotIndex, availableSlots]);
-
-  const handleTimeout = () => {
-    alert("Hết thời gian giữ ghế! Các ghế bạn chọn đã được giải phóng, vui lòng thao tác chọn lại.");
-    setSelectedSeats([]);
-  };
-
-  const getSeatByTenGhe = (tenGhe) => {
-    if (!seatMapData || !seatMapData.Ghe) return null;
-    return seatMapData.Ghe.find((g) => g.TenGhe === tenGhe);
-  };
+  }, [selectedSlotIndex, availableSlots, shouldReloadSeatMap]);
 
   const calculateTotalAmount = () => {
-    return selectedSeats.reduce((total, tenGhe) => {
-      const seat = getSeatByTenGhe(tenGhe);
-      return total + (seat ? seat.GiaVeTinhToan : 0);
-    }, 0);
+    return selectedSeats.reduce((total, seat) => total + seat.GiaVeTinhToan, 0);
   };
 
   const handleSeatClick = (seat) => {
     if (seat.TrangThai !== "TRONG") return;
 
-    if (selectedSeats.includes(seat.TenGhe)) {
-      setSelectedSeats(selectedSeats.filter(name => name !== seat.TenGhe));
+    if (selectedSeats.some(s => s.MaGheSuatChieu === seat.MaGheSuatChieu)) {
+      setSelectedSeats(selectedSeats.filter(s => s.MaGheSuatChieu !== seat.MaGheSuatChieu));
     } else {
-      setSelectedSeats([...selectedSeats, seat.TenGhe]);
+      setSelectedSeats([...selectedSeats, seat]);
     }
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (selectedSeats.length === 0) return;
-    onConfirmBooking(selectedSeats, calculateTotalAmount());
+    
+    // Auth Guard
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      toast.error("Vui lòng đăng nhập tài khoản khách hàng để thực hiện đặt vé!");
+      const currentSlot = availableSlots[selectedSlotIndex];
+      navigate("/login", { state: { from: `/movie/${currentSlot?.MaPhim}` } });
+      return;
+    }
+
+    const currentSlot = availableSlots[selectedSlotIndex];
+    const maSuatChieu = currentSlot?.MaSuatChieu || currentSlot?.showId;
+    if (!maSuatChieu) {
+      toast.error("Không tìm thấy thông tin suất chiếu.");
+      return;
+    }
+
+    try {
+      setIsHolding(true);
+      const seatIds = selectedSeats.map(s => s.MaGheSuatChieu);
+      
+      await holdSeats(maSuatChieu, seatIds);
+      
+      // On success, proceed to visual payment step
+      onConfirmBooking(selectedSeats, calculateTotalAmount(), seatIds, maSuatChieu);
+    } catch (err) {
+      console.error("Hold seats error:", err);
+      if (err.response?.status === 401) {
+        toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        navigate("/login", { state: { from: `/movie/${currentSlot?.MaPhim}` } });
+      } else if (err.response?.status === 403) {
+        toast.error("Tài khoản không có quyền giữ ghế");
+      } else {
+        const errMsg = err.response?.data?.message || err.message || "Giữ ghế thất bại, vui lòng chọn ghế khác.";
+        toast.error(errMsg);
+      }
+      
+      // Reload seat map on failure
+      try {
+        const res = await getSeatMap(maSuatChieu);
+        setSeatMapData(res);
+      } catch (reloadErr) {
+        console.error("Error reloading seat map after hold failure:", reloadErr);
+      }
+    } finally {
+      setIsHolding(false);
+    }
   };
 
   // Group and sort seats logic (copied from staff implementation)
@@ -231,7 +226,7 @@ const SeatSelection = ({
 
                   const isSold = seat.TrangThai === "DA_DAT";
                   const isHeld = seat.TrangThai === "DANG_GIU";
-                  const isSelected = selectedSeats.includes(seat.TenGhe);
+                  const isSelected = selectedSeats.some(s => s.MaGheSuatChieu === seat.MaGheSuatChieu);
                   const isVIP = seat.TenLoaiGhe.toUpperCase().includes("VIP");
                   const isCouple = seat.TenLoaiGhe.toUpperCase().includes("ĐÔI") || seat.TenLoaiGhe.toUpperCase().includes("COUPLE");
 
@@ -314,10 +309,7 @@ const SeatSelection = ({
             <ChevronLeft size={16}/> Quay lại chi tiết
           </button>
           
-          <CountdownTimer 
-            selectedSeatsCount={selectedSeats.length} 
-            onTimeout={handleTimeout} 
-          />
+          <SeatHoldIndicator />
 
           <h3 className="text-gray-400 font-bold text-xs uppercase tracking-wider mb-4">Khung Giờ Trống</h3>
         </div>
@@ -427,7 +419,9 @@ const SeatSelection = ({
               <div className="w-10 h-10 bg-yellow-400/10 rounded-xl flex items-center justify-center text-yellow-400"><Armchair size={18} /></div>
               <div className="min-w-0 flex-1">
                 <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">Ghế Đã Chọn</p>
-                <p className="text-white font-extrabold text-base mt-0.5 truncate">{selectedSeats.join(', ')}</p>
+                <p className="text-white font-extrabold text-base mt-0.5 truncate">
+                  {selectedSeats.map(s => s.TenGhe).join(', ')}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3 pl-0 md:pl-2">
@@ -442,13 +436,13 @@ const SeatSelection = ({
 
         {/* NÚT TIẾP TỤC THANH TOÁN */}
         <button 
-          disabled={selectedSeats.length === 0}
+          disabled={selectedSeats.length === 0 || isHolding}
           onClick={handleConfirm}
           className={`bg-[#ff436e] hover:bg-[#e0325a] text-white font-extrabold px-10 py-3.5 rounded-full transition-all flex items-center gap-2 text-sm uppercase tracking-wider cursor-pointer ${
-            selectedSeats.length === 0 ? 'opacity-40 cursor-not-allowed shadow-none' : 'shadow-[0_0_30px_rgba(255,67,110,0.4)] active:scale-95'
+            (selectedSeats.length === 0 || isHolding) ? 'opacity-40 cursor-not-allowed shadow-none' : 'shadow-[0_0_30px_rgba(255,67,110,0.4)] active:scale-95'
           }`}
         >
-          <span>Tiếp tục thanh toán ({selectedSeats.length} ghế)</span>
+          <span>{isHolding ? 'Đang xử lý...' : `Tiếp tục thanh toán (${selectedSeats.length} ghế)`}</span>
           <ChevronRight size={16} />
         </button>
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Play, Heart, ChevronLeft, ChevronRight, Star, X } from 'lucide-react';
 import { dummyShowsData, dummyDateTimeData, dummyDashboardData, dummyTrailers } from '../../assets/assets'; 
@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { getMovieDetail, getMovieReviews, getMovieShowtimes } from '../../api/movieApi';
 import { formatVND } from '../../utils/formatHelper';
 import { getMovieVisuals } from '../../utils/visualHelper';
+import { cancelHeldSeats } from '../../api/bookingApi';
 
 const MovieDetails = () => {
   const { id } = useParams();
@@ -112,6 +113,13 @@ const MovieDetails = () => {
   const [isTicketStage, setIsTicketStage] = useState(false);
   const [confirmedSeats, setConfirmedSeats] = useState([]);
   const [confirmedTotalPrice, setConfirmedTotalPrice] = useState(0);
+  const [heldSeatIds, setHeldSeatIds] = useState([]);
+  const [timeLeft, setTimeLeft] = useState(600);
+  const [shouldReloadSeatMap, setShouldReloadSeatMap] = useState(0);
+
+  const hasActiveHoldRef = useRef(false);
+  const heldSeatIdsRef = useRef([]);
+  const maSuatChieuRef = useRef("");
 
   const [isPaymentStage, setIsPaymentStage] = useState(false);
 
@@ -175,6 +183,79 @@ const MovieDetails = () => {
     return () => { document.body.style.overflow = 'unset'; };
   }, [trailerUrl]);
 
+  // Keep refs synchronized for interval and unmount cleanup
+  useEffect(() => {
+    heldSeatIdsRef.current = heldSeatIds;
+  }, [heldSeatIds]);
+
+  useEffect(() => {
+    maSuatChieuRef.current = currentSlot?.MaSuatChieu || currentSlot?.showId || "";
+  }, [currentSlot]);
+
+  // Unmount cleanup hook
+  useEffect(() => {
+    return () => {
+      if (hasActiveHoldRef.current && heldSeatIdsRef.current.length > 0 && maSuatChieuRef.current) {
+        const seatIds = heldSeatIdsRef.current;
+        const maSuatChieu = maSuatChieuRef.current;
+        console.log("Unmount cleanup: releasing held seats", seatIds);
+        cancelHeldSeats(maSuatChieu, seatIds).catch(err => {
+          console.error("Unmount cleanup: Failed to release held seats:", err);
+        });
+      }
+    };
+  }, []);
+
+  // Hold timer interval hook
+  useEffect(() => {
+    let timerId = null;
+
+    if (heldSeatIds.length > 0) {
+      timerId = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(timerId);
+            handleHoldExpiry();
+            return 600;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      setTimeLeft(600);
+    }
+
+    return () => {
+      if (timerId) clearInterval(timerId);
+    };
+  }, [heldSeatIds]);
+
+  const handleHoldExpiry = async () => {
+    const seatIds = heldSeatIdsRef.current;
+    const maSuatChieu = maSuatChieuRef.current;
+    
+    // Clear active hold flag immediately to prevent double-canceling
+    hasActiveHoldRef.current = false;
+    setHeldSeatIds([]);
+    setConfirmedSeats([]);
+    setConfirmedTotalPrice(0);
+    
+    alert("Thời gian giữ ghế đã hết. Các ghế bạn chọn đã được giải phóng.");
+
+    // Redirect back to seat map
+    setIsPaymentStage(false);
+    setIsBookingStage(true);
+    setShouldReloadSeatMap(Date.now()); // Trigger reload in SeatSelection
+
+    if (seatIds.length > 0 && maSuatChieu) {
+      try {
+        await cancelHeldSeats(maSuatChieu, seatIds);
+      } catch (err) {
+        console.error("Expired hold cleanup failed:", err);
+      }
+    }
+  };
+
   // --- LOGIC ĐIỀU KIỆN RENDER MÀN HÌNH VÉ ĐÃ ĐẶT ---
   const calculateTotalAmount = (seats) => {
     const basePrice = Number(currentSlot?.GiaVeGoc) || 90000;
@@ -215,13 +296,37 @@ const MovieDetails = () => {
         selectedSeats={confirmedSeats}
         amount={confirmedTotalPrice} // Truyền số tiền đã tính toán từ SeatSelection sang
         formatTime={formatTime}
-        onBack={() => {
-          setIsPaymentStage(false); // Bấm quay lại thì ẩn trang thanh toán, đưa về giao diện chọn ghế
+        timeLeft={timeLeft} // Truyền thời gian giữ ghế còn lại
+        onBack={async () => {
+          // Release held seats on backend before returning
+          const seatIds = heldSeatIds;
+          const maSuatChieu = maSuatChieuRef.current;
+          
+          hasActiveHoldRef.current = false;
+          setHeldSeatIds([]);
+          setConfirmedTotalPrice(0);
+          
+          setIsPaymentStage(false);
           setIsBookingStage(true);
+          setShouldReloadSeatMap(Date.now()); // Trigger reload in SeatSelection
+
+          if (seatIds.length > 0 && maSuatChieu) {
+            try {
+              await cancelHeldSeats(maSuatChieu, seatIds);
+            } catch (err) {
+              console.error("Failed to cancel hold when backing to seat selection:", err);
+            }
+          }
         }}
         onPaymentSuccess={() => {
+          // Release active hold reference (since booking is complete/mocked)
+          hasActiveHoldRef.current = false;
+          setHeldSeatIds([]);
+          setConfirmedSeats([]);
+          setConfirmedTotalPrice(0);
           setIsPaymentStage(false);
-          setIsTicketStage(true);   // Bấm thanh toán thành công thì nhảy ra trang hóa đơn vé điện tử QR Code
+          setIsBookingStage(false);
+          toast.success("Đặt vé và thanh toán thành công (giả lập)!");
         }}
       />
     );
@@ -236,13 +341,33 @@ const MovieDetails = () => {
           selectedSlotIndex={selectedSlotIndex}
           setSelectedSlotIndex={setSelectedSlotIndex}
           formatTime={formatTime}
-          onBack={() => setIsBookingStage(false)}
-          onConfirmBooking={(seats, totalPrice) => {
+          onBack={() => {
+            // Also cleanup just in case
+            if (hasActiveHoldRef.current && heldSeatIds.length > 0) {
+              const seatIds = heldSeatIds;
+              const maSuatChieu = maSuatChieuRef.current;
+              hasActiveHoldRef.current = false;
+              setHeldSeatIds([]);
+              setConfirmedSeats([]);
+              setConfirmedTotalPrice(0);
+              if (maSuatChieu && seatIds.length > 0) {
+                cancelHeldSeats(maSuatChieu, seatIds).catch(err => {
+                  console.error("Failed to release held seats on exit:", err);
+                });
+              }
+            }
+            setIsBookingStage(false);
+          }}
+          onConfirmBooking={(seats, totalPrice, heldIds) => {
             setConfirmedSeats(seats);
             setConfirmedTotalPrice(totalPrice);
+            setHeldSeatIds(heldIds);
+            hasActiveHoldRef.current = true;
+            setTimeLeft(600); // Reset timer to 10 minutes
             setIsBookingStage(false);
             setIsPaymentStage(true); // Kích hoạt nhảy sang bước chọn MoMo / VNPAY
           }}
+          shouldReloadSeatMap={shouldReloadSeatMap}
         />
       </div>
     );

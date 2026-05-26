@@ -2,21 +2,43 @@ import { useState } from 'react';
 import { ChevronLeft, ShieldCheck } from 'lucide-react';
 import { formatVND } from '../../utils/formatHelper';
 
-const Payment = ({ movie, selectedDateId, currentSlot, selectedSeats, amount, formatTime, onBack, onPaymentSuccess }) => {
+const Payment = ({ 
+  movie, 
+  selectedDateId, 
+  currentSlot, 
+  selectedSeats, 
+  amount, 
+  formatTime, 
+  timeLeft = 600, 
+  onBack, 
+  onPaymentSuccess 
+}) => {
   const [paymentMethod, setPaymentMethod] = useState('momo'); // 'momo' hoặc 'vnpay'
+
+  const formatTimeSeconds = (seconds) => {
+    const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const remainingSeconds = (seconds % 60).toString().padStart(2, '0');
+    return `${minutes}:${remainingSeconds}`;
+  };
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 md:px-16 max-w-7xl mx-auto flex flex-col gap-8 animate-in fade-in duration-500 text-left">
       
-      {/* Tiêu đề trang */}
-      <div className="flex flex-col gap-2">
-        <button 
-          onClick={onBack}
-          className="text-sm font-semibold text-gray-400 hover:text-white flex items-center gap-1 transition-colors cursor-pointer w-fit"
-        >
-          <ChevronLeft size={16}/> Quay lại chọn ghế
-        </button>
-        <h1 className="text-3xl font-black uppercase tracking-wider italic text-white mt-2">Trang Thanh Toán</h1>
+      {/* Tiêu đề trang & Thời gian giữ ghế */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <button 
+            onClick={onBack}
+            className="text-sm font-semibold text-gray-400 hover:text-white flex items-center gap-1 transition-colors cursor-pointer w-fit"
+          >
+            <ChevronLeft size={16}/> Quay lại chọn ghế
+          </button>
+          <h1 className="text-3xl font-black uppercase tracking-wider italic text-white mt-2">Trang Thanh Toán</h1>
+        </div>
+
+        <div className="flex items-center gap-2 px-4 py-2 bg-red-950/20 border border-red-500/20 text-red-400 rounded-xl text-sm font-bold font-mono animate-pulse w-fit">
+          ⏱ Thời gian giữ ghế: {formatTimeSeconds(timeLeft)}
+        </div>
       </div>
 
       {/* Bố cục Grid 2 cột */}
@@ -82,7 +104,6 @@ const Payment = ({ movie, selectedDateId, currentSlot, selectedSeats, amount, fo
         <div className="w-full bg-blue-600/90 backdrop-blur-md rounded-2xl p-6 border border-white/10 flex flex-col gap-4 text-white shadow-2xl">
           <div>
             <h3 className="text-xl font-black uppercase tracking-tight truncate text-glow">{movie.title}</h3>
-            {/* GIỮ NGUYÊN: Dòng chi tiết phim cảnh báo độ tuổi màu vàng chuẩn UI của bạn */}
             <p className="text-xs text-yellow-300 font-semibold mt-1 leading-relaxed">
               Phim dành cho khán giả từ dưới 13 tuổi với điều kiện xem cùng cha, mẹ hoặc người giám hộ
             </p>
@@ -95,7 +116,9 @@ const Payment = ({ movie, selectedDateId, currentSlot, selectedSeats, amount, fo
             <div className="grid grid-cols-2 gap-4">
               <p className="flex flex-col gap-0.5">
                 <span className="text-blue-200/70 font-bold uppercase tracking-wider text-[10px]">Thời Gian Suất Chiếu</span>
-                <span className="text-white font-bold text-sm">{formatTime(currentSlot?.time)} - {selectedDateId}</span>
+                <span className="text-white font-bold text-sm">
+                  {formatTime(currentSlot?.GioChieu || currentSlot?.time)} - {selectedDateId}
+                </span>
               </p>
               <p className="flex flex-col gap-0.5">
                 <span className="text-blue-200/70 font-bold uppercase tracking-wider text-[10px]">Phòng chiếu & Số Vé</span>
@@ -110,7 +133,9 @@ const Payment = ({ movie, selectedDateId, currentSlot, selectedSeats, amount, fo
               </p>
               <p className="flex flex-col gap-0.5">
                 <span className="text-blue-200/70 font-bold uppercase tracking-wider text-[10px]">Vị Trí Số Ghế</span>
-                <span className="text-yellow-300 font-black text-base tracking-wide">{selectedSeats.join(', ')}</span>
+                <span className="text-yellow-300 font-black text-base tracking-wide">
+                  {selectedSeats.map(s => typeof s === 'object' ? s.TenGhe : s).join(', ')}
+                </span>
               </p>
             </div>
           </div>
