@@ -14,7 +14,6 @@ import TicketConfirmation from './pages/Client/TicketConfirmation';
 
 // Auth Pages
 import ClientLogin from './pages/Auth/Login';
-import StaffLogin from './pages/Client/Login';
 import Register from './pages/Auth/Register';
 import ForgotPassword from './pages/Auth/ForgotPassword';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
@@ -43,7 +42,7 @@ import TransactionHistory from './pages/Staff/TransactionHistory';
 
 function App() {
   const isAdminRoute = useLocation().pathname.startsWith('/admin');
-  const isStaffRoute = useLocation().pathname.startsWith('/staff') && useLocation().pathname !== '/staff/login';
+  const isStaffRoute = useLocation().pathname.startsWith('/staff');
 
   const hideNavAndFooter = isAdminRoute || isStaffRoute;
 
@@ -69,9 +68,6 @@ function App() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/ticket-confirmation" element={<TicketConfirmation />} />
         </Route>
-
-        {/* === STAFF/ADMIN LOGIN ROUTE === */}
-        <Route path="/staff/login" element={<StaffLogin />} />
 
         {/* === STAFF ROUTES (Role: STAFF) === */}
         <Route element={<ProtectedRoute allowedRoles={["STAFF"]} />}>
