@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Ticket, History, Star, MessageSquare, X, Calendar, MapPin, CreditCard, User, LogOut} from 'lucide-react';
 import { assets, dummyBookingData } from '../../assets/assets';
 import { formatVND } from '../../utils/formatHelper';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import axiosClient from '../../api/axiosClient';
+import { getCustomerProfile, updateCustomerProfile, changeCustomerPassword } from '../../api/accountApi';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -17,28 +18,19 @@ const Profile = () => {
   const [comment, setComment] = useState('');
   const [hoverRating, setHoverRating] = useState(0);
 
-  // --- STATE QUẢN LÝ ĐỔI THÔNG TIN VÀ MẬT KHẨU ---
-  const [userInfo, setUserInfo] = useState(() => {
-    try {
-      const stored = localStorage.getItem("userInfo");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        return {
-          name: parsed.HoTen || parsed.name || 'Nguyễn Huy Bình',
-          dob: parsed.NgaySinh ? new Date(parsed.NgaySinh).toISOString().split('T')[0] : (parsed.dob || '2024-11-12'),
-          phone: parsed.SoDienThoai || parsed.phone || '0383104705',
-          email: parsed.Email || parsed.email || 'nguyenhuybinh370@gmail.com'
-        };
-      }
-    } catch (e) {
-      console.error("Error parsing stored userInfo:", e);
-    }
-    return {
-      name: 'Nguyễn Huy Bình',
-      dob: '2024-11-12',
-      phone: '0383104705',
-      email: 'nguyenhuybinh370@gmail.com'
-    };
+  // --- STATE QUẢN LÝ PROFILE TỪ BACKEND ---
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+
+  const [userInfo, setUserInfo] = useState({
+    name: '',
+    dob: '',
+    phone: '',
+    email: '',
+    username: '',
+    gender: ''
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -47,27 +39,122 @@ const Profile = () => {
     confirmPassword: ''
   });
 
+  // --- FETCH PROFILE FROM BACKEND ON MOUNT ---
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setProfileLoading(true);
+      setProfileError(null);
+      try {
+        const data = await getCustomerProfile();
+        const mapped = {
+          name: data.HoTen || '',
+          dob: data.NgaySinh ? new Date(data.NgaySinh).toISOString().split('T')[0] : '',
+          phone: data.SoDienThoai || '',
+          email: data.Email || '',
+          username: data.TenDangNhap || '',
+          gender: data.GioiTinh === true ? 'Nam' : data.GioiTinh === false ? 'Nữ' : ''
+        };
+        setUserInfo(mapped);
+
+        // Sync localStorage for Navbar display
+        localStorage.setItem("userName", data.HoTen || '');
+        localStorage.setItem("userInfo", JSON.stringify(data));
+      } catch (err) {
+        console.error("Lỗi khi lấy thông tin tài khoản:", err);
+        setProfileError(err?.message || "Không thể tải thông tin tài khoản.");
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
   // Phân chia dữ liệu dựa trên thuộc tính isPaid từ dummyBookingData
   const upcomingTickets = dummyBookingData.filter(booking => !booking.isPaid);
   const pastTickets = dummyBookingData.filter(booking => booking.isPaid);
 
   // Xử lý Lưu thông tin cá nhân
-  const handleSaveInfo = (e) => {
+  const handleSaveInfo = async (e) => {
     e.preventDefault();
-    console.log("Cập nhật thông tin:", userInfo);
-    toast.success("Lưu thông tin khách hàng thành công!");
+    setSaving(true);
+    try {
+      const payload = {
+        HoTen: userInfo.name,
+        Email: userInfo.email,
+        SoDienThoai: userInfo.phone,
+        GioiTinh: userInfo.gender === 'Nam' ? true : userInfo.gender === 'Nữ' ? false : null,
+        NgaySinh: userInfo.dob || null
+      };
+
+      const updated = await updateCustomerProfile(payload);
+
+      // Re-map response back to local state
+      setUserInfo({
+        name: updated.HoTen || '',
+        dob: updated.NgaySinh ? new Date(updated.NgaySinh).toISOString().split('T')[0] : '',
+        phone: updated.SoDienThoai || '',
+        email: updated.Email || '',
+        username: updated.TenDangNhap || userInfo.username,
+        gender: updated.GioiTinh === true ? 'Nam' : updated.GioiTinh === false ? 'Nữ' : ''
+      });
+
+      // Sync localStorage for Navbar display
+      localStorage.setItem("userName", updated.HoTen || '');
+      localStorage.setItem("userInfo", JSON.stringify(updated));
+
+      toast.success("Lưu thông tin khách hàng thành công!");
+    } catch (err) {
+      console.error("Lỗi cập nhật thông tin:", err);
+      toast.error(err?.message || "Cập nhật thông tin thất bại!");
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Xử lý Đổi mật khẩu
-  const handleUpdatePassword = (e) => {
+  const handleUpdatePassword = async (e) => {
     e.preventDefault();
+
+    if (passwordData.newPassword.length < 6) {
+      toast.error("Mật khẩu mới phải có ít nhất 6 ký tự!");
+      return;
+    }
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error("Mật khẩu xác thực mới không trùng khớp!");
       return;
     }
-    console.log("Đổi mật khẩu:", passwordData);
-    toast.success("Thay đổi mật khẩu thành công!");
-    setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+    if (passwordData.newPassword === passwordData.oldPassword) {
+      toast.error("Mật khẩu mới phải khác mật khẩu cũ!");
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      await changeCustomerPassword({
+        MatKhauCu: passwordData.oldPassword,
+        MatKhauMoi: passwordData.newPassword,
+        XacNhanMatKhauMoi: passwordData.confirmPassword
+      });
+
+      toast.success("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
+      setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+
+      // Backend revokes refresh tokens on password change, so log out
+      setTimeout(() => {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("userRole");
+        localStorage.removeItem("userName");
+        localStorage.removeItem("userCode");
+        localStorage.removeItem("userInfo");
+        navigate("/login");
+      }, 1500);
+    } catch (err) {
+      console.error("Lỗi đổi mật khẩu:", err);
+      toast.error(err?.message || "Đổi mật khẩu thất bại!");
+    } finally {
+      setChangingPassword(false);
+    }
   };
 
   // Xử lý Đăng xuất
@@ -128,10 +215,8 @@ const Profile = () => {
           />
         </div>
         <div className="text-center w-full mb-2">
-          <h2 className="text-xl font-bold text-white tracking-wide truncate">{userInfo.name}</h2>
-          <button className="text-[10px] font-semibold text-gray-400 hover:text-yellow-400 mt-1 transition-colors underline underline-offset-2 cursor-pointer">
-            Thay đổi ảnh đại diện
-          </button>
+          <h2 className="text-xl font-bold text-white tracking-wide truncate">{userInfo.name || 'Đang tải...'}</h2>
+          <p className="text-[10px] text-gray-500 font-medium mt-0.5">@{userInfo.username}</p>
         </div>
         
         <div className="w-full h-px bg-white/5 my-1"></div>
@@ -189,107 +274,151 @@ const Profile = () => {
           <div className="flex flex-col gap-8 animate-in fade-in duration-300">
             <h2 className="text-3xl font-black uppercase tracking-wider italic text-white">Thông Tin Khách Hàng</h2>
             
-            {/* KHỐI A: THÔNG TIN CÁ NHÂN */}
-            <div className="bg-white p-6 rounded-2xl flex flex-col gap-6 text-slate-900 shadow-xl">
-              <h3 className="text-xl font-extrabold border-b border-gray-100 pb-2 uppercase tracking-tight">Thông tin cá nhân</h3>
-              
-              <form onSubmit={handleSaveInfo} className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-gray-700">Họ và tên</label>
-                  <input 
-                    type="text" 
-                    value={userInfo.name}
-                    onChange={(e) => setUserInfo({...userInfo, name: e.target.value})}
-                    className="w-full border border-gray-300 bg-gray-50 rounded-lg p-3 text-sm focus:outline-none focus:border-slate-900 font-medium"
-                  />
+            {profileLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#ff436e]"></div>
+                <p className="text-gray-400 ml-4">Đang tải thông tin...</p>
+              </div>
+            ) : profileError ? (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-6 text-center">
+                <p className="text-red-400 font-bold">{profileError}</p>
+              </div>
+            ) : (
+              <>
+                {/* KHỐI A: THÔNG TIN CÁ NHÂN */}
+                <div className="bg-white p-6 rounded-2xl flex flex-col gap-6 text-slate-900 shadow-xl">
+                  <h3 className="text-xl font-extrabold border-b border-gray-100 pb-2 uppercase tracking-tight">Thông tin cá nhân</h3>
+                  
+                  <form onSubmit={handleSaveInfo} className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-gray-700">Họ và tên</label>
+                      <input 
+                        type="text" 
+                        value={userInfo.name}
+                        onChange={(e) => setUserInfo({...userInfo, name: e.target.value})}
+                        className="w-full border border-gray-300 bg-gray-50 rounded-lg p-3 text-sm focus:outline-none focus:border-slate-900 font-medium"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-gray-700">Ngày sinh</label>
+                      <input 
+                        type="date" 
+                        value={userInfo.dob}
+                        onChange={(e) => setUserInfo({...userInfo, dob: e.target.value})}
+                        className="w-full border border-gray-300 bg-gray-50 rounded-lg p-3 text-sm focus:outline-none focus:border-slate-900 font-medium"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-gray-700">Số điện thoại</label>
+                      <input 
+                        type="tel" 
+                        value={userInfo.phone}
+                        onChange={(e) => setUserInfo({...userInfo, phone: e.target.value})}
+                        className="w-full border border-gray-300 bg-gray-50 rounded-lg p-3 text-sm focus:outline-none focus:border-slate-900 font-medium"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-gray-700">Email</label>
+                      <input 
+                        type="email" 
+                        value={userInfo.email}
+                        onChange={(e) => setUserInfo({...userInfo, email: e.target.value})}
+                        className="w-full border border-gray-300 bg-gray-50 rounded-lg p-3 text-sm focus:outline-none focus:border-slate-900 font-medium"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-gray-700">Giới tính</label>
+                      <select
+                        value={userInfo.gender}
+                        onChange={(e) => setUserInfo({...userInfo, gender: e.target.value})}
+                        className="w-full border border-gray-300 bg-gray-50 rounded-lg p-3 text-sm focus:outline-none focus:border-slate-900 font-medium"
+                      >
+                        <option value="">Chưa cập nhật</option>
+                        <option value="Nam">Nam</option>
+                        <option value="Nữ">Nữ</option>
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-gray-700">Tên đăng nhập</label>
+                      <input 
+                        type="text" 
+                        value={userInfo.username}
+                        disabled
+                        className="w-full border border-gray-200 bg-gray-100 text-gray-500 rounded-lg p-3 text-sm font-medium cursor-not-allowed"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2 text-left mt-2">
+                      <button 
+                        type="submit" 
+                        disabled={saving}
+                        className={`bg-slate-900 hover:bg-slate-800 text-white font-extrabold px-6 py-3 rounded-lg text-sm uppercase tracking-wider transition-all active:scale-95 cursor-pointer ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        {saving ? 'Đang lưu...' : 'Lưu thông tin'}
+                      </button>
+                    </div>
+                  </form>
                 </div>
 
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-gray-700">Ngày sinh</label>
-                  <input 
-                    type="date" 
-                    value={userInfo.dob}
-                    onChange={(e) => setUserInfo({...userInfo, dob: e.target.value})}
-                    className="w-full border border-gray-300 bg-gray-50 rounded-lg p-3 text-sm focus:outline-none focus:border-slate-900 font-medium"
-                  />
-                </div>
+                {/* KHỐI B: ĐỔI MẬT KHẨU */}
+                <div className="bg-white p-6 rounded-2xl flex flex-col gap-6 text-slate-900 shadow-xl">
+                  <h3 className="text-xl font-extrabold border-b border-gray-100 pb-2 uppercase tracking-tight">Đổi mật khẩu</h3>
+                  
+                  <form onSubmit={handleUpdatePassword} className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-gray-700">Mật khẩu cũ <span className="text-rose-500">*</span></label>
+                      <input 
+                        type="password" 
+                        required
+                        placeholder="Nhập mật khẩu cũ"
+                        value={passwordData.oldPassword}
+                        onChange={(e) => setPasswordData({...passwordData, oldPassword: e.target.value})}
+                        className="w-full border border-gray-300 bg-gray-50 rounded-lg p-3 text-sm focus:outline-none focus:border-slate-900 font-medium"
+                      />
+                    </div>
 
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-gray-700">Số điện thoại</label>
-                  <input 
-                    type="tel" 
-                    value={userInfo.phone}
-                    onChange={(e) => setUserInfo({...userInfo, phone: e.target.value})}
-                    className="w-full border border-gray-300 bg-gray-50 rounded-lg p-3 text-sm focus:outline-none focus:border-slate-900 font-medium"
-                  />
-                </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-gray-700">Mật khẩu mới <span className="text-rose-500">*</span></label>
+                      <input 
+                        type="password" 
+                        required
+                        placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
+                        value={passwordData.newPassword}
+                        onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                        className="w-full border border-gray-300 bg-gray-50 rounded-lg p-3 text-sm focus:outline-none focus:border-slate-900 font-medium"
+                      />
+                    </div>
 
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-gray-700">Email</label>
-                  <input 
-                    type="email" 
-                    value={userInfo.email}
-                    disabled
-                    className="w-full border border-gray-200 bg-gray-100 text-gray-500 rounded-lg p-3 text-sm font-medium cursor-not-allowed"
-                  />
-                </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-gray-700">Xác thực mật khẩu <span className="text-rose-500">*</span></label>
+                      <input 
+                        type="password" 
+                        required
+                        placeholder="Nhập lại mật khẩu mới"
+                        value={passwordData.confirmPassword}
+                        onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                        className="w-full border border-gray-300 bg-gray-50 rounded-lg p-3 text-sm focus:outline-none focus:border-slate-900 font-medium"
+                      />
+                    </div>
 
-                <div className="md:col-span-2 text-left mt-2">
-                  <button type="submit" className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold px-6 py-3 rounded-lg text-sm uppercase tracking-wider transition-all active:scale-95 cursor-pointer">
-                    Lưu thông tin
-                  </button>
+                    <div className="text-left mt-2">
+                      <button 
+                        type="submit" 
+                        disabled={changingPassword}
+                        className={`bg-slate-900 hover:bg-slate-800 text-white font-extrabold px-6 py-3 rounded-lg text-sm uppercase tracking-wider transition-all active:scale-95 cursor-pointer ${changingPassword ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        {changingPassword ? 'Đang xử lý...' : 'Đổi mật khẩu'}
+                      </button>
+                    </div>
+                  </form>
                 </div>
-              </form>
-            </div>
-
-            {/* KHỐI B: ĐỔI MẬT KHẨU */}
-            <div className="bg-white p-6 rounded-2xl flex flex-col gap-6 text-slate-900 shadow-xl">
-              <h3 className="text-xl font-extrabold border-b border-gray-100 pb-2 uppercase tracking-tight">Đổi mật khẩu</h3>
-              
-              <form onSubmit={handleUpdatePassword} className="flex flex-col gap-4">
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-gray-700">Mật khẩu cũ <span className="text-rose-500">*</span></label>
-                  <input 
-                    type="password" 
-                    required
-                    placeholder="Nhập mật khẩu cũ"
-                    value={passwordData.oldPassword}
-                    onChange={(e) => setPasswordData({...passwordData, oldPassword: e.target.value})}
-                    className="w-full border border-gray-300 bg-gray-50 rounded-lg p-3 text-sm focus:outline-none focus:border-slate-900 font-medium"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-gray-700">Mật khẩu mới <span className="text-rose-500">*</span></label>
-                  <input 
-                    type="password" 
-                    required
-                    placeholder="Nhập mật khẩu mới"
-                    value={passwordData.newPassword}
-                    onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-                    className="w-full border border-gray-300 bg-gray-50 rounded-lg p-3 text-sm focus:outline-none focus:border-slate-900 font-medium"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-gray-700">Xác thực mật khẩu <span className="text-rose-500">*</span></label>
-                  <input 
-                    type="password" 
-                    required
-                    placeholder="Nhập lại mật khẩu mới"
-                    value={passwordData.confirmPassword}
-                    onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                    className="w-full border border-gray-300 bg-gray-50 rounded-lg p-3 text-sm focus:outline-none focus:border-slate-900 font-medium"
-                  />
-                </div>
-
-                <div className="text-left mt-2">
-                  <button type="submit" className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold px-6 py-3 rounded-lg text-sm uppercase tracking-wider transition-all active:scale-95 cursor-pointer">
-                    Đổi mật khẩu
-                  </button>
-                </div>
-              </form>
-            </div>
+              </>
+            )}
           </div>
         )}
 
