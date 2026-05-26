@@ -1,12 +1,23 @@
 import { useMemo, useState } from 'react';
-import { Ticket, Calendar, Clock, MapPin, CheckCircle, ArrowLeft, Copy, Check, Info } from 'lucide-react';
+import { Ticket, Calendar, Clock, MapPin, CheckCircle, Copy, Check, Info } from 'lucide-react';
 import { formatVND } from '../../utils/formatHelper';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { getMovieVisuals } from '../../utils/visualHelper';
 
 const TicketConfirmation = ({ movie, selectedDateId, currentSlot, selectedSeats, formatTime, onHome, bookingResult }) => {
   const navigate = useNavigate();
   const [copiedId, setCopiedId] = useState("");
+
+  const movieTitle = movie?.title || movie?.TenPhim || '';
+  const visuals = useMemo(() => getMovieVisuals({ TenPhim: movieTitle }), [movieTitle]);
+  const [imageSrc, setImageSrc] = useState(movie?.poster_path || movie?.HinhAnh || visuals?.poster);
+
+  const handleImageError = () => {
+    if (imageSrc !== visuals?.poster) {
+      setImageSrc(visuals?.poster);
+    }
+  };
 
   const handleCopyCode = (code) => {
     navigator.clipboard.writeText(code);
@@ -80,22 +91,18 @@ const TicketConfirmation = ({ movie, selectedDateId, currentSlot, selectedSeats,
       {/* THẺ VÉ THIẾT KẾ RẠP PHIM CHUYÊN NGHIỆP */}
       <div className="w-full max-w-md bg-[#1b1223]/90 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative">
         
-        {/* Đường cắt răng cưa giả lập vết xé vé */}
-        <div className="absolute left-0 right-0 top-[52%] h-0.5 border-t-2 border-dashed border-white/20 z-10"></div>
-        <div className="absolute -left-4 top-[52%] -translate-y-1/2 w-8 h-8 bg-[#020617] rounded-full border-r border-white/10 z-10"></div>
-        <div className="absolute -right-4 top-[52%] -translate-y-1/2 w-8 h-8 bg-[#020617] rounded-full border-l border-white/10 z-10"></div>
-
         {/* PHẦN TRÊN VÉ: THÔNG TIN PHIM */}
         <div className="p-8 pb-6 flex flex-col gap-5 text-left">
           <div className="flex gap-4 items-center">
             <img 
-              src={movie.poster_path} 
-              alt={movie.title} 
-              className="w-16 h-24 object-cover rounded-xl border border-white/10 shadow-md" 
+              src={imageSrc} 
+              alt={movieTitle} 
+              onError={handleImageError}
+              className="w-16 h-24 object-cover rounded-xl border border-white/10 shadow-md shrink-0" 
             />
             <div className="flex flex-col gap-1">
               <span className="text-[10px] font-bold text-rose-500 tracking-widest uppercase">Vé điện tử</span>
-              <h3 className="text-lg font-black text-white uppercase leading-tight line-clamp-2 tracking-tight">{movie.title}</h3>
+              <h3 className="text-lg font-black text-white uppercase leading-tight line-clamp-2 tracking-tight">{movieTitle}</h3>
               <span className="text-xs text-gray-400 font-medium">
                 {movie.runtime || '120'} phút • {movie.genres?.map(g => g.name).join(', ') || 'Hành động'}
               </span>
@@ -163,6 +170,18 @@ const TicketConfirmation = ({ movie, selectedDateId, currentSlot, selectedSeats,
               </div>
             </div>
           ))}
+        </div>
+
+        {/* PHẦN TỔNG TIỀN VÀ TRẠNG THÁI GIAO DỊCH CHUYÊN NGHIỆP */}
+        <div className="px-8 py-4 flex flex-col gap-1.5 text-xs text-gray-400 bg-white/5 border-b border-white/5 text-left">
+          <div className="flex justify-between">
+            <span>Trạng thái thanh toán:</span>
+            <span className="text-emerald-400 font-extrabold uppercase tracking-wider text-[10px]">Thành công</span>
+          </div>
+          <div className="flex justify-between items-center mt-1">
+            <span className="font-bold text-white uppercase text-[9px] tracking-widest">Tổng tiền cần thanh toán:</span>
+            <span className="text-lg font-black text-yellow-400 drop-shadow-md">{formatVND(bookingResult?.TongTien)}</span>
+          </div>
         </div>
 
         {/* PHẦN DƯỚI VÉ: MÃ QR QUÉT CODE */}
