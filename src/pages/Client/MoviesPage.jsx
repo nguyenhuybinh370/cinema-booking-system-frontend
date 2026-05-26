@@ -3,6 +3,7 @@ import { Play, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { dummyShowsData, dummyTrailers } from '../../assets/assets';
 import { getMovies } from '../../api/movieApi';
+import { getMovieVisuals } from '../../utils/visualHelper';
 
 const MoviesPage = ({ initialType }) => {
   const [movieType, setMovieType] = useState(initialType); // 'now' hoặc 'soon'
@@ -167,8 +168,7 @@ const MoviesPage = ({ initialType }) => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10 min-h-[40vh]">
           {movies.map((movie, idx) => {
-            const finalPoster = movie.HinhAnh || dummyShowsData[idx % dummyShowsData.length]?.poster_path;
-            const finalTrailer = movie.Trailer || dummyTrailers[idx % dummyTrailers.length]?.videoUrl;
+            const { poster: finalPoster, trailer: finalTrailer } = getMovieVisuals(movie, idx);
 
             return (
               <div key={movie.MaPhim} className="movie-card bg-transparent rounded-lg overflow-hidden border border-white/5 shadow-none transition-all duration-300 hover:-translate-y-2 flex flex-col">
@@ -179,6 +179,10 @@ const MoviesPage = ({ initialType }) => {
                     src={finalPoster}
                     alt={movie.TenPhim}
                     className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = dummyShowsData[idx % dummyShowsData.length]?.poster_path;
+                    }}
                   />
                   <div className="absolute top-2 left-2 flex gap-1">
                     <span className="bg-orange-500 text-white text-[10px] font-bold px-1 rounded">2D</span>

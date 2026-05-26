@@ -92,7 +92,8 @@ const SeatSelection = ({
   };
 
   const getSeatPrice = (row) => {
-    return (row === 'A' || row === 'B') ? 90000 : 120000;
+    const basePrice = Number(availableSlots[selectedSlotIndex]?.GiaVeGoc) || 90000;
+    return (row === 'A' || row === 'B') ? basePrice : basePrice + 30000;
   };
 
   const calculateTotalAmount = () => {

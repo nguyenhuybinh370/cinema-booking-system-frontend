@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Ticket, History, Star, MessageSquare, X, Calendar, MapPin, CreditCard, User, LogOut} from 'lucide-react';
 import { assets, dummyBookingData } from '../../assets/assets';
+import { formatVND } from '../../utils/formatHelper';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import axiosClient from '../../api/axiosClient';
@@ -316,7 +317,7 @@ const Profile = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-400">
                         <p className="flex items-center gap-1.5"><Calendar size={14} className="text-gray-500" />Suất: {formatDateTime(booking.show?.showDateTime)}</p>
                         <p className="flex items-center gap-1.5"><MapPin size={14} className="text-gray-500" />Ghế ngồi: <span className="text-white font-bold">{booking.bookedSeats?.join(', ')}</span></p>
-                        <p className="flex items-center gap-1.5"><CreditCard size={14} className="text-gray-500" />Tổng tiền: <span className="text-yellow-400 font-bold">${booking.amount}</span></p>
+                        <p className="flex items-center gap-1.5"><CreditCard size={14} className="text-gray-500" />Tổng tiền: <span className="text-yellow-400 font-bold">{formatVND(booking.amount)}</span></p>
                         <p className="flex items-center gap-1.5">Mã vé: <span className="text-gray-300 font-mono select-all">QS-{booking._id?.slice(-6).toUpperCase()}</span></p>
                       </div>
                     </div>

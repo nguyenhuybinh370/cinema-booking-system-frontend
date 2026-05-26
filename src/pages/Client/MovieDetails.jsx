@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Play, Heart, ChevronLeft, ChevronRight, Star, X } from 'lucide-react';
 import { dummyShowsData, dummyDateTimeData, dummyDashboardData, dummyTrailers } from '../../assets/assets'; 
@@ -6,7 +6,9 @@ import SeatSelection from './SeatSelection';
 import TicketConfirmation from './TicketConfirmation'; 
 import Payment from './Payment';
 import toast from 'react-hot-toast';
-import { getMovieDetail, getMovieReviews } from '../../api/movieApi';
+import { getMovieDetail, getMovieReviews, getMovieShowtimes } from '../../api/movieApi';
+import { formatVND } from '../../utils/formatHelper';
+import { getMovieVisuals } from '../../utils/visualHelper';
 
 const MovieDetails = () => {
   const { id } = useParams();
@@ -16,20 +18,23 @@ const MovieDetails = () => {
   const [rawMovie, setRawMovie] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [ratingSummary, setRatingSummary] = useState({ DiemTrungBinh: 0, SoLuongDanhGia: 0 });
+  const [showtimes, setShowtimes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // --- FETCH MOVIE AND REVIEWS CONCURRENTLY ---
+  // --- FETCH MOVIE, REVIEWS, AND SHOWTIMES CONCURRENTLY ---
   useEffect(() => {
     const fetchMovieData = async () => {
       setLoading(true);
       try {
-        const [movieRes, reviewsRes] = await Promise.all([
+        const [movieRes, reviewsRes, showtimesRes] = await Promise.all([
           getMovieDetail(id),
-          getMovieReviews(id)
+          getMovieReviews(id),
+          getMovieShowtimes(id)
         ]);
         setRawMovie(movieRes);
         setReviews(reviewsRes?.data || []);
         setRatingSummary(reviewsRes?.ratingSummary || { DiemTrungBinh: 0, SoLuongDanhGia: 0 });
+        setShowtimes(showtimesRes || []);
       } catch (err) {
         console.error('Lỗi khi tải chi tiết phim:', err);
         toast.error('Không thể tải thông tin bộ phim!');
@@ -41,31 +46,67 @@ const MovieDetails = () => {
   }, [id]);
 
   // Construct backward-compatible merged movie object
-  const movie = rawMovie ? {
-    ...rawMovie,
-    _id: rawMovie.MaPhim,
-    id: rawMovie.MaPhim,
-    title: rawMovie.TenPhim,
-    poster_path: rawMovie.HinhAnh || dummyShowsData[0].poster_path,
-    backdrop_path: rawMovie.HinhAnh || dummyShowsData[0].backdrop_path,
-    release_date: rawMovie.NgayKhoiChieu ? new Date(rawMovie.NgayKhoiChieu).toLocaleDateString('vi-VN') : '',
-    runtime: rawMovie.ThoiLuong,
-    genres: rawMovie.TheLoai ? rawMovie.TheLoai.split(',').map(g => ({ name: g.trim() })) : []
-  } : null;
+  const movie = useMemo(() => {
+    if (!rawMovie) return null;
+    const visuals = getMovieVisuals(rawMovie, 0);
+    return {
+      ...rawMovie,
+      _id: rawMovie.MaPhim,
+      id: rawMovie.MaPhim,
+      title: rawMovie.TenPhim,
+      poster_path: visuals.poster,
+      backdrop_path: visuals.backdrop,
+      release_date: rawMovie.NgayKhoiChieu ? new Date(rawMovie.NgayKhoiChieu).toLocaleDateString('vi-VN') : '',
+      runtime: rawMovie.ThoiLuong,
+      genres: rawMovie.TheLoai ? rawMovie.TheLoai.split(',').map(g => ({ name: g.trim() })) : [],
+      videoUrl: visuals.trailer
+    };
+  }, [rawMovie]);
+
+  // Group showtimes by date (YYYY-MM-DD)
+  const groupedShowtimes = useMemo(() => {
+    const groups = {};
+    if (Array.isArray(showtimes)) {
+      showtimes.forEach((st) => {
+        const d = new Date(st.NgayChieu);
+        const dateStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+        if (!groups[dateStr]) {
+          groups[dateStr] = [];
+        }
+        groups[dateStr].push(st);
+      });
+    }
+    return groups;
+  }, [showtimes]);
 
   const daysOfWeek = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
-  const realDates = Object.keys(dummyDateTimeData).map((dateStr) => {
-    const dateObj = new Date(dateStr);
-    return {
-      id: dateStr,
-      dayName: daysOfWeek[dateObj.getDay()],
-      dateNum: dateObj.getDate()
-    };
-  });
-  
-  const [selectedDateId, setSelectedDateId] = useState(realDates[0]?.id || "");
-  const [isBookingStage, setIsBookingStage] = useState(false);
+  const realDates = useMemo(() => {
+    return Object.keys(groupedShowtimes).sort().map((dateStr) => {
+      const dateObj = new Date(dateStr);
+      return {
+        id: dateStr,
+        dayName: daysOfWeek[dateObj.getDay()],
+        dateNum: dateObj.getDate()
+      };
+    });
+  }, [groupedShowtimes]);
+
+  const [selectedDateId, setSelectedDateId] = useState("");
   const [selectedSlotIndex, setSelectedSlotIndex] = useState(0);
+  
+  // Sync selectedDateId when realDates loads
+  useEffect(() => {
+    if (realDates.length > 0) {
+      if (!selectedDateId || !realDates.some(rd => rd.id === selectedDateId)) {
+        setSelectedDateId(realDates[0].id);
+        setSelectedSlotIndex(0);
+      }
+    } else {
+      setSelectedDateId("");
+    }
+  }, [realDates, selectedDateId]);
+
+  const [isBookingStage, setIsBookingStage] = useState(false);
   const [trailerUrl, setTrailerUrl] = useState(null); 
 
   const [isTicketStage, setIsTicketStage] = useState(false);
@@ -85,11 +126,19 @@ const MovieDetails = () => {
     setIsBookingStage(true);
   };
 
-  const availableSlots = dummyDateTimeData[selectedDateId] || [];
+  const availableSlots = useMemo(() => {
+    const rawSlots = groupedShowtimes[selectedDateId] || [];
+    return rawSlots.map((st) => ({
+      ...st,
+      time: st.GioChieu,
+      showId: st.MaSuatChieu
+    }));
+  }, [groupedShowtimes, selectedDateId]);
+
   const currentSlot = availableSlots[selectedSlotIndex];
 
-  const activeShowData = movie ? dummyDashboardData.activeShows.find(
-    show => show._id === currentSlot?.showId || show.movie._id === movie.MaPhim
+  const activeShowData = movie && currentSlot ? dummyDashboardData.activeShows.find(
+    show => show._id === currentSlot.showId || show.movie._id === movie.MaPhim
   ) : null;
   const occupiedSeats = activeShowData?.occupiedSeats || {};
 
@@ -121,9 +170,10 @@ const MovieDetails = () => {
 
   // --- LOGIC ĐIỀU KIỆN RENDER MÀN HÌNH VÉ ĐÃ ĐẶT ---
   const calculateTotalAmount = (seats) => {
+    const basePrice = Number(currentSlot?.GiaVeGoc) || 90000;
     return seats.reduce((total, seatId) => {
       const rowLetter = seatId.charAt(0);
-      const price = (rowLetter === 'A' || rowLetter === 'B') ? 90000 : 120000;
+      const price = (rowLetter === 'A' || rowLetter === 'B') ? basePrice : basePrice + 30000;
       return total + price;
     }, 0);
   };
@@ -216,7 +266,15 @@ const MovieDetails = () => {
     <div className="min-h-screen pt-28 pb-12 px-6 md:px-20 max-w-7xl mx-auto flex flex-col gap-16 animate-in fade-in duration-500 relative">
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-12 items-start">
         <div className="w-full max-w-90 mx-auto lg:mx-0 aspect-2/3 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.6)] border border-white/10">
-          <img src={movie.poster_path} alt={movie.title} className="w-full h-full object-cover" />
+          <img 
+            src={movie.poster_path} 
+            alt={movie.title} 
+            className="w-full h-full object-cover" 
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = dummyShowsData[0]?.poster_path;
+            }}
+          />
         </div>
 
         <div className="flex flex-col gap-6 text-left">
@@ -269,19 +327,20 @@ const MovieDetails = () => {
         </div>
       </div>
 
-      <div className="w-full bg-[#1b1223]/60 backdrop-blur-md border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-8 shadow-2xl">
-        <div className="flex flex-col gap-4 w-full md:w-auto">
-          <p className="text-gray-400 font-bold text-sm uppercase tracking-wider text-left">Chọn Ngày Chiếu</p>
+      <div className="w-full bg-[#1b1223]/60 backdrop-blur-md border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col gap-8 shadow-2xl text-left">
+        {/* Chọn Ngày Chiếu */}
+        <div className="flex flex-col gap-4 w-full">
+          <p className="text-gray-400 font-bold text-sm uppercase tracking-wider">Chọn Ngày Chiếu</p>
           <div className="flex items-center gap-4">
             <button className="text-gray-500 hover:text-white transition-colors"><ChevronLeft size={24} /></button>
-            <div className="flex gap-3 overflow-x-auto scrollbar-none">
+            <div className="flex gap-3 overflow-x-auto scrollbar-none py-1">
               {realDates.map((d) => {
                 const isSelected = d.id === selectedDateId;
                 return (
                   <button
                     key={d.id}
                     onClick={() => { setSelectedDateId(d.id); setSelectedSlotIndex(0); }}
-                    className={`flex flex-col items-center justify-center w-14 h-16 rounded-xl border transition-all cursor-pointer ${
+                    className={`flex flex-col items-center justify-center w-14 h-16 rounded-xl border transition-all cursor-pointer shrink-0 ${
                       isSelected 
                         ? 'bg-[#ff436e] border-[#ff436e] text-white font-bold shadow-[0_0_15px_rgba(255,67,110,0.4)] scale-105' 
                         : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/30'
@@ -292,17 +351,57 @@ const MovieDetails = () => {
                   </button>
                 );
               })}
+              {realDates.length === 0 && (
+                <p className="text-gray-500 italic text-sm py-2">Hiện tại không có suất chiếu nào khả dụng cho phim này.</p>
+              )}
             </div>
             <button className="text-gray-500 hover:text-white transition-colors"><ChevronRight size={24} /></button>
           </div>
         </div>
 
-        <button 
-          onClick={handleStartBooking}
-          className="w-full md:w-auto bg-[#ff436e] hover:bg-[#e0325a] text-white font-extrabold px-12 py-4 rounded-2xl transition-all shadow-[0_0_30px_rgba(255,67,110,0.4)] text-base tracking-wider active:scale-98 whitespace-nowrap cursor-pointer"
-        >
-          ĐẶT VÉ NGAY
-        </button>
+        {/* Chọn Suất Chiếu & Phòng Chiếu */}
+        {realDates.length > 0 && (
+          <div className="flex flex-col gap-4 w-full border-t border-white/5 pt-6">
+            <p className="text-gray-400 font-bold text-sm uppercase tracking-wider">Chọn Suất Chiếu & Phòng Chiếu</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {availableSlots.map((slot, index) => {
+                const isSelected = index === selectedSlotIndex;
+                return (
+                  <button
+                    key={slot.showId || index}
+                    onClick={() => setSelectedSlotIndex(index)}
+                    className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all cursor-pointer ${
+                      isSelected 
+                        ? 'bg-linear-to-r from-[#ff436e] to-[#e0325a] border-[#ff436e] text-white shadow-[0_0_20px_rgba(255,67,110,0.4)] scale-105' 
+                        : 'border-white/10 bg-white/5 text-gray-300 hover:border-white/30'
+                    }`}
+                  >
+                    <span className="text-lg font-black tracking-wider">{formatTime(slot.time)}</span>
+                    <span className="text-[10px] uppercase opacity-80 mt-1 font-bold">
+                      {slot.PhongChieu?.TenPhong || 'Phòng chiếu'}
+                    </span>
+                    <span className="text-xs font-semibold text-green-400 mt-0.5">
+                      {formatVND(slot.GiaVeGoc)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Nút hành động */}
+        <div className="w-full flex justify-end border-t border-white/5 pt-6">
+          <button 
+            disabled={realDates.length === 0}
+            onClick={handleStartBooking}
+            className={`w-full md:w-auto bg-[#ff436e] hover:bg-[#e0325a] text-white font-extrabold px-12 py-4 rounded-2xl transition-all text-base tracking-wider active:scale-98 whitespace-nowrap cursor-pointer ${
+              realDates.length === 0 ? 'opacity-40 cursor-not-allowed shadow-none' : 'shadow-[0_0_30px_rgba(255,67,110,0.4)]'
+            }`}
+          >
+            ĐẶT VÉ NGAY
+          </button>
+        </div>
       </div>
 
       {/* SECTION ĐÁNH GIÁ (REVIEWS) */}

@@ -6,6 +6,7 @@ import oke from '../../assets/backgroundImage.png';
 import { Link } from 'react-router-dom';
 
 import { getMovies } from '../../api/movieApi';
+import { getMovieVisuals } from '../../utils/visualHelper';
 
 const Home = () => {
   const marvelMovie = {
@@ -81,15 +82,16 @@ const Home = () => {
         // Pick the first now showing movie as the hero, if available
         if (nowMovies.length > 0) {
           const firstMovie = nowMovies[0];
+          const visuals = getMovieVisuals(firstMovie, 0);
           setHeroMovie({
             title: firstMovie.TenPhim,
-            backdrop: firstMovie.HinhAnh || oke,
+            backdrop: visuals.backdrop,
             releaseDate: new Date(firstMovie.NgayKhoiChieu).getFullYear().toString(),
             runtime: formatRuntime(firstMovie.ThoiLuong),
             genres: firstMovie.TheLoai ? firstMovie.TheLoai.split(',').map(g => g.trim()) : [],
             overview: firstMovie.NoiDung || 'Không có mô tả cho bộ phim này.',
             marvelLogo: assets.marvelLogo,
-            videoUrl: firstMovie.Trailer,
+            videoUrl: visuals.trailer,
             MaPhim: firstMovie.MaPhim
           });
         }
@@ -117,8 +119,7 @@ const Home = () => {
 
   // --- RENDER MOVIE CARD ---
   const MovieCard = ({ movie, type, index }) => {
-    const finalPoster = movie.HinhAnh || dummyShowsData[index % dummyShowsData.length]?.poster_path;
-    const finalTrailer = movie.Trailer || dummyTrailers[index % dummyTrailers.length]?.videoUrl;
+    const { poster: finalPoster, trailer: finalTrailer } = getMovieVisuals(movie, index);
 
     return (
       <div className="shrink-0 w-full sm:w-1/2 lg:w-1/4 px-3 group">
@@ -130,6 +131,10 @@ const Home = () => {
               src={finalPoster}
               alt={movie.TenPhim}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = dummyShowsData[index % dummyShowsData.length]?.poster_path;
+              }}
             />
             <div className="absolute top-2 left-2 flex gap-1">
               <span className="bg-orange-500 text-white text-[10px] font-bold px-1 rounded">2D</span>
@@ -194,6 +199,10 @@ const Home = () => {
             src={heroMovie.backdrop}
             alt={heroMovie.title}
             className="w-full h-full object-cover object-top opacity-70"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = oke;
+            }}
           />
           <div className="absolute inset-0 bg-linear-to-r from-[#020617] via-transparent to-transparent"></div>
           <div className="absolute inset-0 bg-linear-to-t from-[#020617] via-transparent to-transparent"></div>
