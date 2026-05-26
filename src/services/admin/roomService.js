@@ -1,116 +1,83 @@
-import { ROOMS, ROOM_TYPES } from '../../constants/adminMockData';
+import axiosClient from '../../api/axiosClient';
 
-const delay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
+const mapRoom = (r) => ({
+  MaPhongChieu: r.MaPhong,
+  TenPhong: r.TenPhong,
+  SoGhe: (r.soHang && r.soCot) ? (r.soHang * r.soCot) : (r.SoGhe || 0),
+  MaLoaiPhong: r.MaLoaiPhong,
+  MaSoDoGhe: r.MaSoDo,
+  KhaDung: r.KhaDung ? 1 : 0,
+  NgayTao: r.NgayTao ? new Date(r.NgayTao).toISOString().replace('T', ' ').substring(0, 19) : null,
+  NgayCapNhat: r.NgayCapNhat ? new Date(r.NgayCapNhat).toISOString().replace('T', ' ').substring(0, 19) : null,
+});
+
+const mapRoomType = (t) => ({
+  MaLoaiPhong: t.MaLoaiPhong,
+  TenLoaiPhong: t.TenLoaiPhong,
+  GiaPhuThu: parseFloat(t.PhuThu),
+  MoTa: t.MoTa || `Loại phòng ${t.TenLoaiPhong}`,
+  KhaDung: t.KhaDung ? 1 : 0,
+  NgayTao: t.NgayTao ? new Date(t.NgayTao).toISOString().replace('T', ' ').substring(0, 19) : null,
+  NgayCapNhat: t.NgayCapNhat ? new Date(t.NgayCapNhat).toISOString().replace('T', ' ').substring(0, 19) : null,
+});
 
 const roomService = {
   getRooms: async () => {
-    await delay();
-    return [...ROOMS];
+    const data = await axiosClient.get('/admin/phong-chieu');
+    return data.map(mapRoom);
   },
   getRoomById: async (id) => {
-    await delay();
-    return ROOMS.find(r => r.MaPhongChieu === id);
+    const data = await axiosClient.get(`/admin/phong-chieu/${id}`);
+    return mapRoom(data);
   },
   addRoom: async (room) => {
-    await delay();
-    if (!room.TenPhong || room.TenPhong.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Tên phòng chiếu không được để trống!');
-    }
-    const exists = ROOMS.some(r => r.TenPhong.toLowerCase() === room.TenPhong.toLowerCase() && r.KhaDung !== 0);
-    if (exists) {
-      throw new Error('Lỗi: Phòng chiếu đã tồn tại trong hệ thống!');
-    }
-    const newRoom = {
-      ...room,
-      NgayTao: new Date().toISOString().replace('T', ' ').substring(0, 19),
-      NgayCapNhat: null
+    const payload = {
+      TenPhong: room.TenPhong,
+      MaLoaiPhong: room.MaLoaiPhong,
+      MaSoDo: room.MaSoDoGhe,
+      KhaDung: room.KhaDung === 1,
     };
-    ROOMS.push(newRoom);
-    return newRoom;
+    const data = await axiosClient.post('/admin/phong-chieu', payload);
+    return mapRoom(data);
   },
   updateRoom: async (maPhong, updates) => {
-    await delay();
-    if (!updates.TenPhong || updates.TenPhong.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Tên phòng chiếu không được để trống!');
-    }
-    const index = ROOMS.findIndex(r => r.MaPhongChieu === maPhong);
-    if (index === -1) {
-      throw new Error('Không tìm thấy phòng chiếu');
-    }
-    const exists = ROOMS.some(r => r.MaPhongChieu !== maPhong && r.TenPhong.toLowerCase() === updates.TenPhong.toLowerCase() && r.KhaDung !== 0);
-    if (exists) {
-      throw new Error('Lỗi: Tên phòng chiếu đã tồn tại!');
-    }
-
-    ROOMS[index] = {
-      ...ROOMS[index],
-      ...updates,
-      NgayCapNhat: new Date().toISOString().replace('T', ' ').substring(0, 19)
+    const payload = {
+      TenPhong: updates.TenPhong,
+      MaLoaiPhong: updates.MaLoaiPhong,
+      MaSoDo: updates.MaSoDoGhe,
+      KhaDung: updates.KhaDung === 1,
     };
-    return ROOMS[index];
+    const data = await axiosClient.put(`/admin/phong-chieu/${maPhong}`, payload);
+    return mapRoom(data);
   },
   deleteRoom: async (maPhong) => {
-    await delay();
-    const index = ROOMS.findIndex(r => r.MaPhongChieu === maPhong);
-    if (index === -1) {
-      throw new Error('Không tìm thấy phòng chiếu');
-    }
-    if (maPhong === 'PC01') {
-      throw new Error('Không thể xóa phòng chiếu vì đã có vé bán ra thuộc các suất chiếu của phòng này (Kiểm tra trong bảng CHITIETDATVE)!');
-    }
-    ROOMS.splice(index, 1);
+    await axiosClient.delete(`/admin/phong-chieu/${maPhong}`);
     return true;
   },
 
   getRoomTypes: async () => {
-    await delay();
-    return [...ROOM_TYPES];
+    const data = await axiosClient.get('/admin/loai-phong');
+    return data.map(mapRoomType);
   },
   addRoomType: async (item) => {
-    await delay();
-    if (!item.TenLoaiPhong || item.TenLoaiPhong.trim() === '') {
-      throw new Error('Thông tin không hợp lệ: Tên loại phòng không được để trống!');
-    }
-    const exists = ROOM_TYPES.some(t => t.TenLoaiPhong.toLowerCase() === item.TenLoaiPhong.toLowerCase() && t.KhaDung !== 0);
-    if (exists) {
-      throw new Error('Lỗi: Tên loại phòng đã tồn tại trong hệ thống!');
-    }
-    ROOM_TYPES.push(item);
-    return item;
+    const payload = {
+      TenLoaiPhong: item.TenLoaiPhong,
+      PhuThu: Number(item.GiaPhuThu),
+    };
+    const data = await axiosClient.post('/admin/loai-phong', payload);
+    return mapRoomType(data);
   },
   updateRoomType: async (id, updates) => {
-    await delay();
-    const index = ROOM_TYPES.findIndex(t => t.MaLoaiPhong === id);
-    if (index === -1) {
-      throw new Error('Không tìm thấy loại phòng');
-    }
-    if (updates.TenLoaiPhong !== undefined && (!updates.TenLoaiPhong || updates.TenLoaiPhong.trim() === '')) {
-      throw new Error('Thông tin không hợp lệ: Tên loại phòng không được để trống!');
-    }
-    if (updates.TenLoaiPhong) {
-      const exists = ROOM_TYPES.some(t => t.MaLoaiPhong !== id && t.TenLoaiPhong.toLowerCase() === updates.TenLoaiPhong.toLowerCase() && t.KhaDung !== 0);
-      if (exists) {
-        throw new Error('Lỗi: Tên loại phòng đã tồn tại trong hệ thống!');
-      }
-    }
-    ROOM_TYPES[index] = {
-      ...ROOM_TYPES[index],
-      ...updates,
-      NgayCapNhat: new Date().toISOString().replace('T', ' ').substring(0, 19)
+    const payload = {
+      ...(updates.TenLoaiPhong !== undefined && { TenLoaiPhong: updates.TenLoaiPhong }),
+      ...(updates.GiaPhuThu !== undefined && { PhuThu: Number(updates.GiaPhuThu) }),
+      ...(updates.KhaDung !== undefined && { KhaDung: updates.KhaDung === 1 }),
     };
-    return ROOM_TYPES[index];
+    const data = await axiosClient.put(`/admin/loai-phong/${id}`, payload);
+    return mapRoomType(data);
   },
   deleteRoomType: async (id) => {
-    await delay();
-    const index = ROOM_TYPES.findIndex(t => t.MaLoaiPhong === id);
-    if (index === -1) {
-      throw new Error('Không tìm thấy loại phòng');
-    }
-    const roomExists = ROOMS.some(r => r.MaLoaiPhong === id);
-    if (roomExists) {
-      throw new Error('Không thể xóa loại phòng này vì đang được sử dụng trong bảng phòng chiếu (Kiểm tra trong bảng PHONGCHIEU)!');
-    }
-    ROOM_TYPES.splice(index, 1);
+    await axiosClient.delete(`/admin/loai-phong/${id}`);
     return true;
   }
 };
