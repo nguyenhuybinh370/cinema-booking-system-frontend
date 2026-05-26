@@ -234,31 +234,19 @@ const Pricing = () => {
       } else {
         // Add Mode
         if (modalCategory === 'room') {
-          const newId = getNextId(roomTypes, 'LP');
           await adminService.addRoomType({
-            MaLoaiPhong: newId,
             TenLoaiPhong: formData.name,
-            ...processedData,
-            NgayTao: new Date().toISOString().replace('T', ' ').substring(0, 19),
-            NgayCapNhat: null
+            ...processedData
           });
         } else if (modalCategory === 'seat') {
-          const newId = getNextId(seatTypes, 'LG');
           await adminService.addSeatType({
-            MaLoaiGhe: newId,
             TenLoaiGhe: formData.name,
-            ...processedData,
-            NgayTao: new Date().toISOString().replace('T', ' ').substring(0, 19),
-            NgayCapNhat: null
+            ...processedData
           });
         } else {
-          const newId = getNextId(dayTypes, 'LN');
           await adminService.addDayType({
-            MaLoaiNgay: newId,
             TenLoaiNgay: formData.name,
-            ...processedData,
-            NgayTao: new Date().toISOString().replace('T', ' ').substring(0, 19),
-            NgayCapNhat: null
+            ...processedData
           });
         }
         alert("Thêm cấu hình mới thành công!");
