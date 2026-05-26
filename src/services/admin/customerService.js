@@ -1,85 +1,89 @@
-import { CUSTOMERS, ACCOUNTS, TICKET_RECEIPTS, TICKET_DETAILS, SHOWTIME_SEATS, SHOWTIMES, ADMIN_MOVIES } from '../../constants/adminMockData';
+import axiosClient from '../../api/axiosClient';
 
-const delay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
+const mapCustomer = (u) => ({
+  MaKhachHang: u.KhachHang?.MaKhachHang || u.MaTaiKhoan,
+  MaTaiKhoan: u.MaTaiKhoan,
+  HoTen: u.HoTen,
+  Email: u.Email,
+  SoDienThoai: u.SoDienThoai,
+  DiemTichLuy: 0, // Customer loyalty points default placeholder
+  KhaDung: u.KhaDung ? 1 : 0,
+  LyDoKhoa: u.KhaDung ? null : 'Bị khóa bởi Admin',
+  TrangThai: u.KhaDung ? 'Active' : 'Banned',
+  NgayTao: u.NgayTao ? new Date(u.NgayTao).toISOString().replace('T', ' ').substring(0, 19) : null,
+  NgayCapNhat: u.NgayCapNhat ? new Date(u.NgayCapNhat).toISOString().replace('T', ' ').substring(0, 19) : null,
+});
 
 const customerService = {
   getCustomers: async () => {
-    await delay();
-    return CUSTOMERS.map(c => {
-      const account = ACCOUNTS.find(acc => acc.MaTaiKhoan === c.MaTaiKhoan);
-      return {
-        ...c,
-        HoTen: account ? account.HoTen : 'N/A',
-        Email: account ? account.Email : 'N/A',
-        SoDienThoai: account ? account.SoDienThoai : 'N/A',
-        TrangThai: c.KhaDung === 1 ? 'Active' : 'Banned'
-      };
-    });
+    const res = await axiosClient.get('/admin/nguoi-dung?vaiTro=CUSTOMER&limit=200');
+    const items = Array.isArray(res) ? res : (res && Array.isArray(res.data) ? res.data : []);
+    return items.map(mapCustomer);
   },
+
   lockCustomerAccount: async (maKhachHang, reason) => {
-    await delay();
-    const customer = CUSTOMERS.find(c => c.MaKhachHang === maKhachHang);
-    if (!customer) throw new Error('Không tìm thấy khách hàng!');
+    // 1. Resolve maKhachHang to maTaiKhoan
+    const resList = await axiosClient.get('/admin/nguoi-dung?vaiTro=CUSTOMER&limit=200');
+    const users = Array.isArray(resList) ? resList : (resList && Array.isArray(resList.data) ? resList.data : []);
+    const user = users.find(u => u.KhachHang?.MaKhachHang === maKhachHang || u.MaTaiKhoan === maKhachHang);
+    if (!user) {
+      throw new Error(`Không tìm thấy tài khoản khách hàng với mã: ${maKhachHang}`);
+    }
 
-    customer.KhaDung = 0;
-    customer.LyDoKhoa = reason;
-    customer.NgayCapNhat = new Date().toISOString().replace('T', ' ').substring(0, 19);
-
-    const account = ACCOUNTS.find(acc => acc.MaTaiKhoan === customer.MaTaiKhoan);
+    const maTaiKhoan = user.MaTaiKhoan;
+    await axiosClient.put(`/admin/nguoi-dung/${maTaiKhoan}`, { KhaDung: false });
     return {
       success: true,
-      email: account ? account.Email : 'N/A',
+      email: user.Email,
       reason: reason
     };
   },
-  unlockCustomerAccount: async (maKhachHang) => {
-    await delay();
-    const customer = CUSTOMERS.find(c => c.MaKhachHang === maKhachHang);
-    if (!customer) throw new Error('Không tìm thấy khách hàng!');
 
-    customer.KhaDung = 1;
-    customer.LyDoKhoa = null;
-    customer.NgayCapNhat = new Date().toISOString().replace('T', ' ').substring(0, 19);
+  unlockCustomerAccount: async (maKhachHang) => {
+    // 1. Resolve maKhachHang to maTaiKhoan
+    const resList = await axiosClient.get('/admin/nguoi-dung?vaiTro=CUSTOMER&limit=200');
+    const users = Array.isArray(resList) ? resList : (resList && Array.isArray(resList.data) ? resList.data : []);
+    const user = users.find(u => u.KhachHang?.MaKhachHang === maKhachHang || u.MaTaiKhoan === maKhachHang);
+    if (!user) {
+      throw new Error(`Không tìm thấy tài khoản khách hàng với mã: ${maKhachHang}`);
+    }
+
+    const maTaiKhoan = user.MaTaiKhoan;
+    await axiosClient.put(`/admin/nguoi-dung/${maTaiKhoan}`, { KhaDung: true });
     return true;
   },
+
   getCustomerTransactions: async (maKhachHang) => {
-    await delay();
-    const receipts = TICKET_RECEIPTS.filter(r => r.MaKhachHang === maKhachHang);
-    return receipts.map(r => {
-      const details = TICKET_DETAILS.filter(d => d.MaPhieuDatVe === r.MaPhieuDatVe);
-      let seatsList = [];
-      let movieName = 'N/A';
+    const res = await axiosClient.get('/admin/giao-dich/phieu-dat?limit=1000');
+    const items = Array.isArray(res) ? res : (res && Array.isArray(res.data) ? res.data : []);
+    
+    // Filter tickets belonging to this customer
+    return items
+      .filter(p => p.MaKhachHang === maKhachHang || p.KhachHang?.MaKhachHang === maKhachHang)
+      .map(p => {
+        const firstDetail = p.ChiTietDatVes?.[0];
+        const movieName = firstDetail?.GheSuatChieu?.SuatChieu?.Phim?.TenPhim || 'N/A';
+        const seatsList = p.ChiTietDatVes?.map(ct => {
+          const ghe = ct.GheSuatChieu?.Ghe;
+          return ghe ? `${ghe.ViTriDay}${ghe.ViTriCot}` : '';
+        }).filter(Boolean).join(', ') || 'Chưa chọn';
 
-      if (details.length > 0) {
-        details.forEach(det => {
-          const showtimeSeat = SHOWTIME_SEATS.find(s => s.MaGheSuatChieu === det.MaGheSuatChieu);
-          if (showtimeSeat) {
-            const label = showtimeSeat.MaGhe.split('-')[1] || showtimeSeat.MaGhe;
-            seatsList.push(label);
+        const paymentMethod = p.GiaoDichs?.[0]?.PhuongThuc || 'TIEN_MAT';
+        
+        let displayStatus = 'Chờ thanh toán';
+        if (p.TrangThai === 'DA_THANH_TOAN') displayStatus = 'Thành công';
+        if (p.TrangThai === 'DA_HUY') displayStatus = 'Đã hủy';
 
-            if (movieName === 'N/A') {
-              const showtime = SHOWTIMES.find(st => st.MaSuatChieu === showtimeSeat.MaSuatChieu);
-              if (showtime) {
-                const movie = ADMIN_MOVIES.find(m => m.MaPhim === showtime.MaPhim);
-                if (movie) {
-                  movieName = movie.TenPhim;
-                }
-              }
-            }
-          }
-        });
-      }
-
-      return {
-        MaDatVe: r.MaPhieuDatVe,
-        NgayDat: r.NgayDat.substring(0, 16),
-        Phim: movieName,
-        Ghe: seatsList.join(', ') || 'Chưa chọn',
-        TongTien: parseFloat(r.TongTien),
-        PTThanhToan: 'VNPay',
-        TrangThai: r.TrangThai === 'Đã TT' ? 'Thành công' : r.TrangThai === 'Đã hủy' ? 'Đã hủy' : r.TrangThai
-      };
-    });
+        return {
+          MaDatVe: p.MaPhieuDat,
+          NgayDat: p.NgayTao ? new Date(p.NgayTao).toISOString().replace('T', ' ').substring(0, 16) : '',
+          Phim: movieName,
+          Ghe: seatsList,
+          TongTien: parseFloat(p.TongTien),
+          PTThanhToan: paymentMethod,
+          TrangThai: displayStatus
+        };
+      });
   }
 };
 
