@@ -1,104 +1,91 @@
-import { 
-  TRANSACTIONS, 
-  TICKET_RECEIPTS, 
-  CUSTOMERS, 
-  ACCOUNTS, 
-  TICKET_DETAILS, 
-  SHOWTIME_SEATS, 
-  SHOWTIMES, 
-  ADMIN_MOVIES,
-  LICHSUHOANTIEN
-} from '../../constants/adminMockData';
-
-const delay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
+import axiosClient from '../../api/axiosClient';
 
 const transactionService = {
   getTransactions: async () => {
-    await delay();
-    return TRANSACTIONS.map(tx => {
-      const receipt = TICKET_RECEIPTS.find(r => r.MaPhieuDatVe === tx.MaPhieuDatVe);
-      let customerName = 'N/A';
-      let movieName = 'N/A';
-      let seatsList = [];
+    const res = await axiosClient.get('/admin/giao-dich/phieu-dat?limit=1000');
+    const items = Array.isArray(res) ? res : (res && Array.isArray(res.data) ? res.data : []);
 
-      if (receipt) {
-        const customer = CUSTOMERS.find(c => c.MaKhachHang === receipt.MaKhachHang);
-        if (customer) {
-          const account = ACCOUNTS.find(acc => acc.MaTaiKhoan === customer.MaTaiKhoan);
-          if (account) {
-            customerName = account.HoTen;
-          }
-        }
+    const txList = [];
+    items.forEach(p => {
+      const customerName = p.KhachHang?.TaiKhoan?.HoTen || 'Khách vãng lai';
+      const firstDetail = p.ChiTietDatVes?.[0];
+      const movieName = firstDetail?.GheSuatChieu?.SuatChieu?.Phim?.TenPhim || 'N/A';
+      const seatsList = p.ChiTietDatVes?.map(ct => {
+        const ghe = ct.GheSuatChieu?.Ghe;
+        return ghe ? `${ghe.ViTriDay}${ghe.ViTriCot}` : '';
+      }).filter(Boolean).join(', ') || 'N/A';
 
-        const details = TICKET_DETAILS.filter(d => d.MaPhieuDatVe === receipt.MaPhieuDatVe);
-        details.forEach(det => {
-          const showtimeSeat = SHOWTIME_SEATS.find(s => s.MaGheSuatChieu === det.MaGheSuatChieu);
-          if (showtimeSeat) {
-            const label = showtimeSeat.MaGhe.split('-')[1] || showtimeSeat.MaGhe;
-            seatsList.push(label);
+      if (p.GiaoDichs && p.GiaoDichs.length > 0) {
+        p.GiaoDichs.forEach(gd => {
+          let displayStatus = 'Success';
+          if (gd.TrangThai === 'CHO_XU_LY') displayStatus = 'Pending';
+          if (gd.TrangThai === 'THAT_BAI') displayStatus = 'Failed';
+          if (gd.TrangThai === 'DA_HOAN_TIEN') displayStatus = 'Refunded';
 
-            if (movieName === 'N/A') {
-              const showtime = SHOWTIMES.find(st => st.MaSuatChieu === showtimeSeat.MaSuatChieu);
-              if (showtime) {
-                const movie = ADMIN_MOVIES.find(m => m.MaPhim === showtime.MaPhim);
-                if (movie) {
-                  movieName = movie.TenPhim;
-                }
-              }
-            }
-          }
+          txList.push({
+            MaGiaoDich: gd.MaGiaoDich,
+            MaPhieuDatVe: p.MaPhieuDat,
+            PhuongThuc: gd.PhuongThuc,
+            SoTien: parseFloat(gd.SoTien),
+            TrangThai: displayStatus,
+            NgayGiaoDich: gd.NgayGiaoDich ? new Date(gd.NgayGiaoDich).toISOString().replace('T', ' ').substring(0, 19) : '',
+            KhachHang: customerName,
+            Phim: movieName,
+            Ghe: seatsList,
+            GhiChu: gd.MaGiaoDichNgoai || ''
+          });
+        });
+      } else {
+        // Fallback for bookings without transaction records (e.g. cash bookings)
+        let displayStatus = 'Success';
+        if (p.TrangThai === 'DA_HUY') displayStatus = 'Refunded';
+        if (p.TrangThai === 'CHO_THANH_TOAN') displayStatus = 'Pending';
+
+        txList.push({
+          MaGiaoDich: `CASH_${p.MaPhieuDat}`,
+          MaPhieuDatVe: p.MaPhieuDat,
+          PhuongThuc: 'TIEN_MAT',
+          SoTien: parseFloat(p.TongTien),
+          TrangThai: displayStatus,
+          NgayGiaoDich: p.NgayTao ? new Date(p.NgayTao).toISOString().replace('T', ' ').substring(0, 19) : '',
+          KhachHang: customerName,
+          Phim: movieName,
+          Ghe: seatsList,
+          GhiChu: 'Thanh toán trực tiếp'
         });
       }
-
-      return {
-        ...tx,
-        KhachHang: customerName,
-        Phim: movieName,
-        Ghe: seatsList.join(', ') || 'N/A',
-        SoTien: parseFloat(tx.SoTien)
-      };
     });
+
+    return txList;
   },
 
   refundTransaction: async (maGiaoDich, reason) => {
-    await delay();
-    const tx = TRANSACTIONS.find(t => t.MaGiaoDich === maGiaoDich);
-    if (!tx) throw new Error('Không tìm thấy giao dịch!');
-
-    tx.TrangThai = 'Refunded';
-    tx.GhiChu = reason;
-    tx.NgayCapNhat = new Date().toISOString().replace('T', ' ').substring(0, 19);
-
-    const receipt = TICKET_RECEIPTS.find(r => r.MaPhieuDatVe === tx.MaPhieuDatVe);
-    if (receipt) {
-      receipt.TrangThai = 'Đã hủy';
-      receipt.NgayCapNhat = new Date().toISOString().replace('T', ' ').substring(0, 19);
-
-      const details = TICKET_DETAILS.filter(d => d.MaPhieuDatVe === receipt.MaPhieuDatVe);
-      details.forEach(det => {
-        const showtimeSeat = SHOWTIME_SEATS.find(s => s.MaGheSuatChieu === det.MaGheSuatChieu);
-        if (showtimeSeat) {
-          showtimeSeat.TrangThai = 0;
-          showtimeSeat.NgayCapNhat = new Date().toISOString().replace('T', ' ').substring(0, 19);
-        }
-      });
+    if (maGiaoDich.startsWith('CASH_')) {
+      const maPhieuDat = maGiaoDich.replace('CASH_', '');
+      await axiosClient.patch(`/admin/giao-dich/phieu-dat/${maPhieuDat}/huy`);
+      return { success: true };
     }
 
-    const refundRecord = {
-      MaLichSuHoanTien: `HT_${Math.floor(100000 + Math.random() * 900000)}`,
-      MaGiaoDich: tx.MaGiaoDich,
-      MaPhieuDatVe: tx.MaPhieuDatVe,
-      SoTienHoan: tx.SoTien,
-      LyDoHoan: reason,
-      TrangThai: 'Success',
-      NgayYeuCau: new Date().toISOString().replace('T', ' ').substring(0, 19),
-      NgayHoan: new Date().toISOString().replace('T', ' ').substring(0, 19),
-      NgayTao: new Date().toISOString().replace('T', ' ').substring(0, 19),
-      NgayCapNhat: null
-    };
-    LICHSUHOANTIEN.push(refundRecord);
+    // Resolve transaction amount by retrieving all receipts
+    const res = await axiosClient.get('/admin/giao-dich/phieu-dat?limit=1000');
+    const items = Array.isArray(res) ? res : (res && Array.isArray(res.data) ? res.data : []);
+    
+    let targetGd = null;
+    for (const p of items) {
+      if (p.GiaoDichs) {
+        targetGd = p.GiaoDichs.find(g => g.MaGiaoDich === maGiaoDich);
+        if (targetGd) break;
+      }
+    }
 
-    return { tx, refundRecord };
+    const amount = targetGd ? parseFloat(targetGd.SoTien) : 0;
+
+    await axiosClient.post(`/admin/giao-dich/${maGiaoDich}/hoan-tien`, {
+      SoTienHoan: amount,
+      LyDo: reason
+    });
+
+    return { success: true };
   }
 };
 
