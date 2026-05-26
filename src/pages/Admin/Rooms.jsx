@@ -18,8 +18,8 @@ const Rooms = () => {
 
   const initialFormState = {
     TenPhong: '',
-    MaLoaiPhong: 'LP01',
-    MaSoDoGhe: 'SM01',
+    MaLoaiPhong: '',
+    MaSoDoGhe: '',
     KhaDung: 1
   };
 
@@ -67,7 +67,6 @@ const Rooms = () => {
     handleSubmit,
     resetForm
   } = useAdminForm(initialFormState, async (data, { resetForm }) => {
-    // Convert KhaDung form value to integer 0/1
     const processedData = {
       ...data,
       KhaDung: parseInt(data.KhaDung, 10),
@@ -78,11 +77,7 @@ const Rooms = () => {
       await adminService.updateRoom(editingRoom.MaPhongChieu, processedData);
       alert("Cập nhật phòng chiếu thành công!");
     } else {
-      const newRoom = {
-        MaPhongChieu: `PC${String(rooms.length + 1).padStart(2, '0')}`,
-        ...processedData
-      };
-      await adminService.addRoom(newRoom);
+      await adminService.addRoom(processedData);
       alert("Thêm phòng chiếu mới thành công!");
     }
     
@@ -91,6 +86,17 @@ const Rooms = () => {
     setEditingRoom(null);
     resetForm();
   });
+
+  const handleOpenAddModal = () => {
+    setEditingRoom(null);
+    setFormData({
+      TenPhong: '',
+      MaLoaiPhong: roomTypes[0]?.MaLoaiPhong || '',
+      MaSoDoGhe: seatMaps[0]?.MaSoDoGhe || '',
+      KhaDung: 1
+    });
+    setIsModalOpen(true);
+  };
 
   const handleEdit = (room) => {
     setEditingRoom(room);
@@ -208,11 +214,7 @@ const Rooms = () => {
           <p className="text-slate-500 font-medium">Định nghĩa và kiểm soát cơ sở hạ tầng phòng chiếu vật lý.</p>
         </div>
         <button 
-          onClick={() => {
-            setEditingRoom(null);
-            resetForm();
-            setIsModalOpen(true);
-          }}
+          onClick={handleOpenAddModal}
           className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 flex items-center gap-2 cursor-pointer"
         >
           <Plus size={20} />
