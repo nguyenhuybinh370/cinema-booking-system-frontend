@@ -1,58 +1,87 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Play, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { dummyShowsData, dummyTrailers } from '../../assets/assets';
+import { getMovies } from '../../api/movieApi';
 
 const MoviesPage = ({ initialType }) => {
   const [movieType, setMovieType] = useState(initialType); // 'now' hoặc 'soon'
   const [trailerUrl, setTrailerUrl] = useState(null); // Quản lý đóng mở trailer video
 
+  // --- LOGIC TÌM KIẾM & LỌC CHỦ ĐỘNG ---
+  const [keyword, setKeyword] = useState('');
+  const [theLoai, setTheLoai] = useState('');
+  const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   // --- LOGIC PHÂN TRANG (PAGINATION) ---
   const [currentPage, setCurrentPage] = useState(1);
-  const moviesPerPage = 4; // Số lượng phim hiển thị trên một trang (2 hàng x 4 cột)
+  const [totalPages, setTotalPages] = useState(1);
+  const moviesPerPage = 8; // Số lượng phim hiển thị trên một trang (2 hàng x 4 cột)
 
-  // Reset lại trang về trang 1 khi người dùng bấm chuyển đổi Tab
-  // useEffect(() => {
-  //   setMovieType(initialType);
-  //   setCurrentPage(1);
-  // }, [initialType]);
+  const genresList = [
+    { value: '', label: 'Tất cả thể loại' },
+    { value: 'Hành động', label: 'Hành động' },
+    { value: 'Phiêu lưu', label: 'Phiêu lưu' },
+    { value: 'Kinh dị', label: 'Kinh dị' },
+    { value: 'Bí ẩn', label: 'Bí ẩn' },
+    { value: 'Gia đình', label: 'Gia đình' },
+    { value: 'Hài', label: 'Hài hước' },
+    { value: 'Viễn tưởng', label: 'Viễn tưởng' },
+    { value: 'Hoạt hình', label: 'Hoạt hình' }
+  ];
 
-  // --- LỌC DỮ LIỆU PHIM THẬT ---
-  // Lọc dữ liệu chính xác dựa trên thuộc tính phim từ dữ liệu thật của bạn
-  const filteredMovies = dummyShowsData.filter(movie => {
-    if (movieType === 'soon') {
-      // Nếu phim có thuộc tính isComingSoon hoặc trạng thái sắp chiếu
-      return movie.isComingSoon === true || movie.status?.toLowerCase() === 'coming soon';
-    } else {
-      // Ngược lại mặc định là phim đang chiếu
-      return !movie.isComingSoon && movie.status?.toLowerCase() !== 'coming soon';
-    }
-  });
+  // Đồng bộ hóa khi initialType thay đổi từ Router
+  useEffect(() => {
+    setMovieType(initialType);
+    setCurrentPage(1);
+    setKeyword('');
+    setTheLoai('');
+  }, [initialType]);
 
-  // Khôi phục dự phòng: Nếu dữ liệu mẫu của bạn chưa phân loại cờ này, 
-  // hệ thống tự động bóc tách mảng (phân nửa đầu và nửa sau) để giao diện không bị trống.
-  const displayMovies = filteredMovies.length > 0
-    ? filteredMovies
-    : (movieType === 'now' ? dummyShowsData.slice(0, 6) : [...dummyShowsData].reverse().slice(0, 6));
+  // --- FETCH PHIM TỪ BACKEND ---
+  useEffect(() => {
+    const fetchMovies = async () => {
+      setLoading(true);
+      try {
+        const now = new Date().toISOString();
+        const params = {
+          keyword: keyword || undefined,
+          theLoai: theLoai || undefined,
+          page: currentPage.toString(),
+          limit: moviesPerPage.toString(),
+        };
 
-  // --- TÍNH TOÁN CHỈ SỐ PHÂN TRANG ---
-  const indexOfLastMovie = currentPage * moviesPerPage;
-  const indexOfFirstMovie = indexOfLastMovie - moviesPerPage;
-  const currentMovies = displayMovies.slice(indexOfFirstMovie, indexOfLastMovie);
-  const totalPages = Math.ceil(displayMovies.length / moviesPerPage);
+        if (movieType === 'now') {
+          params.denNgayKhoiChieu = now;
+        } else {
+          params.tuNgayKhoiChieu = now;
+        }
+
+        const res = await getMovies(params);
+        setMovies(res?.data || []);
+        setTotalPages(res?.pagination?.totalPages || 1);
+      } catch (err) {
+        console.error('Lỗi khi tải danh sách phim:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMovies();
+  }, [movieType, keyword, theLoai, currentPage]);
 
   // Hàm chuyển đổi trang tự động bảo vệ chỉ số biên
   const paginate = (pageNumber) => {
     if (pageNumber >= 1 && pageNumber <= totalPages) {
       setCurrentPage(pageNumber);
-      window.scrollTo({ top: 0, behavior: 'smooth' }); // Cuộn mượt lên đầu trang khi qua trang mới
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  // Hàm đổi link Youtube sang link nhúng iFrame dựa trên index gốc cố định
-  const getEmbedUrl = (videoUrl, movie) => {
-    const originalIndex = dummyShowsData.findIndex(m => m._id === movie._id);
-    const finalUrl = videoUrl || dummyTrailers[originalIndex % dummyTrailers.length]?.videoUrl;
+  // Hàm đổi link Youtube sang link nhúng iFrame
+  const getEmbedUrl = (videoUrl, index) => {
+    const finalUrl = videoUrl || dummyTrailers[index % dummyTrailers.length]?.videoUrl;
     if (!finalUrl) return '';
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = finalUrl.match(regExp);
@@ -67,7 +96,9 @@ const MoviesPage = ({ initialType }) => {
         <button
           onClick={() => {
             setMovieType('now');
-            setCurrentPage(1); // Reset về trang 1 một cách chủ động
+            setCurrentPage(1);
+            setKeyword('');
+            setTheLoai('');
           }}
           className={`text-xl font-bold uppercase tracking-widest italic transition-all cursor-pointer ${movieType === 'now' ? 'text-(--btn-neon) border-b-2 border-(--btn-neon) pb-2 scale-105' : 'text-gray-500 hover:text-white'
             }`}
@@ -78,7 +109,9 @@ const MoviesPage = ({ initialType }) => {
         <button
           onClick={() => {
             setMovieType('soon');
-            setCurrentPage(1); // Reset về trang 1 một cách chủ động
+            setCurrentPage(1);
+            setKeyword('');
+            setTheLoai('');
           }}
           className={`text-xl font-bold uppercase tracking-widest italic transition-all cursor-pointer ${movieType === 'soon' ? 'text-blue-400 border-b-2 border-blue-400 pb-2 scale-105' : 'text-gray-500 hover:text-white'
             }`}
@@ -87,56 +120,106 @@ const MoviesPage = ({ initialType }) => {
         </button>
       </div>
 
-      {/* LƯỚI DANH SÁCH PHIM PHÂN TRANG */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10 min-h-[60vh]">
-        {currentMovies.map((movie) => (
-          <div key={movie._id} className="movie-card bg-transparent rounded-lg overflow-hidden border border-white/5 shadow-none transition-all duration-300 hover:-translate-y-2 flex flex-col">
-
-            {/* Poster */}
-            <Link to={`/movie/${movie._id}`} className="block relative aspect-2/3 overflow-hidden rounded-lg cursor-pointer">
-              <img
-                src={movie.poster_path}
-                alt={movie.title}
-                className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-              />
-              <div className="absolute top-2 left-2 flex gap-1">
-                <span className="bg-orange-500 text-white text-[10px] font-bold px-1 rounded">2D</span>
-                <span className="bg-red-600 text-white text-[10px] font-bold px-1 rounded">T18</span>
-              </div>
-            </Link>
-
-            {/* Thông tin phim */}
-            <div className="p-4 bg-transparent min-h-35 flex flex-col justify-between flex-1 text-left">
-              <Link to={`/movie/${movie._id}`}>
-                <h3 className="text-white font-bold text-base leading-tight uppercase line-clamp-2 mb-4 hover:text-(--btn-neon) transition-colors text-glow cursor-pointer">
-                  {movie.title}
-                </h3>
-              </Link>
-
-              <div className="flex items-center justify-between gap-2 mt-auto">
-                <button
-                  onClick={() => setTrailerUrl(getEmbedUrl(movie.videoUrl, movie))}
-                  className="flex items-center gap-1.5 group/btn cursor-pointer"
-                >
-                  <div className="w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-lg transition-transform group-hover/btn:scale-110">
-                    <Play size={12} fill="#ef4444" className="text-red-500 ml-0.5" />
-                  </div>
-                  <span className="text-white text-xs font-semibold underline decoration-1 underline-offset-4 hover:text-(--btn-neon) transition-colors">
-                    Xem Trailer
-                  </span>
-                </button>
-
-                <Link to={`/movie/${movie._id}`}>
-                  <button className="bg-[#fde047] hover:bg-[#facc15] text-slate-900 font-extrabold px-5 py-2.5 rounded-md transition-all active:scale-95 text-xs tracking-wider shadow-[0_0_15px_rgba(253,224,71,0.3)] cursor-pointer">
-                    {movieType === 'now' ? 'ĐẶT VÉ' : 'CHI TIẾT'}
-                  </button>
-                </Link>
-              </div>
-            </div>
-
-          </div>
-        ))}
+      {/* THANH TÌM KIẾM & BỘ LỌC THỂ LOẠI */}
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/10 max-w-4xl mx-auto w-full">
+        <div className="relative w-full md:max-w-md">
+          <input
+            type="text"
+            placeholder="Tìm kiếm theo tên phim, đạo diễn, diễn viên..."
+            value={keyword}
+            onChange={(e) => {
+              setKeyword(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors text-sm"
+          />
+        </div>
+        <div className="w-full md:w-48">
+          <select
+            value={theLoai}
+            onChange={(e) => {
+              setTheLoai(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-yellow-400 transition-colors text-sm cursor-pointer"
+          >
+            {genresList.map((g) => (
+              <option key={g.value} value={g.value} className="bg-slate-950">
+                {g.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
+
+      {/* LƯỚI DANH SÁCH PHIM */}
+      {loading ? (
+        <div className="min-h-[40vh] flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-yellow-400 mx-auto mb-4"></div>
+            <p className="text-gray-400">Đang tải phim...</p>
+          </div>
+        </div>
+      ) : movies.length === 0 ? (
+        <div className="min-h-[40vh] flex items-center justify-center">
+          <p className="text-gray-400">Không tìm thấy phim phù hợp với bộ lọc.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10 min-h-[40vh]">
+          {movies.map((movie, idx) => {
+            const finalPoster = movie.HinhAnh || dummyShowsData[idx % dummyShowsData.length]?.poster_path;
+            const finalTrailer = movie.Trailer || dummyTrailers[idx % dummyTrailers.length]?.videoUrl;
+
+            return (
+              <div key={movie.MaPhim} className="movie-card bg-transparent rounded-lg overflow-hidden border border-white/5 shadow-none transition-all duration-300 hover:-translate-y-2 flex flex-col">
+
+                {/* Poster */}
+                <Link to={`/movie/${movie.MaPhim}`} className="block relative aspect-2/3 overflow-hidden rounded-lg cursor-pointer">
+                  <img
+                    src={finalPoster}
+                    alt={movie.TenPhim}
+                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                  />
+                  <div className="absolute top-2 left-2 flex gap-1">
+                    <span className="bg-orange-500 text-white text-[10px] font-bold px-1 rounded">2D</span>
+                    <span className="bg-red-600 text-white text-[10px] font-bold px-1 rounded">{movie.GioiHanTuoi || 'P'}</span>
+                  </div>
+                </Link>
+
+                {/* Thông tin phim */}
+                <div className="p-4 bg-transparent min-h-35 flex flex-col justify-between flex-1 text-left">
+                  <Link to={`/movie/${movie.MaPhim}`}>
+                    <h3 className="text-white font-bold text-base leading-tight uppercase line-clamp-2 mb-4 hover:text-(--btn-neon) transition-colors text-glow cursor-pointer">
+                      {movie.TenPhim}
+                    </h3>
+                  </Link>
+
+                  <div className="flex items-center justify-between gap-2 mt-auto">
+                    <button
+                      onClick={() => setTrailerUrl(getEmbedUrl(finalTrailer, idx))}
+                      className="flex items-center gap-1.5 group/btn cursor-pointer"
+                    >
+                      <div className="w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-lg transition-transform group-hover/btn:scale-110">
+                        <Play size={12} fill="#ef4444" className="text-red-500 ml-0.5" />
+                      </div>
+                      <span className="text-white text-xs font-semibold underline decoration-1 underline-offset-4 hover:text-(--btn-neon) transition-colors">
+                        Xem Trailer
+                      </span>
+                    </button>
+
+                    <Link to={`/movie/${movie.MaPhim}`}>
+                      <button className="bg-[#fde047] hover:bg-[#facc15] text-slate-900 font-extrabold px-5 py-2.5 rounded-md transition-all active:scale-95 text-xs tracking-wider shadow-[0_0_15px_rgba(253,224,71,0.3)] cursor-pointer">
+                        {movieType === 'now' ? 'ĐẶT VÉ' : 'CHI TIẾT'}
+                      </button>
+                    </Link>
+                  </div>
+                </div>
+
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* --- THANH ĐIỀU HƯỚNG PHÂN TRANG (PAGINATION BAR UI) --- */}
       {totalPages > 1 && (

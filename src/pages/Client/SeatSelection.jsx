@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Clock, Armchair, DollarSign } from 'lucide-react';
+import { formatVND } from '../../utils/formatHelper';
 
 // --- THÀNH PHẦN ĐỒNG HỒ ĐẾM NGƯỢC THAO TÁC DOM TRỰC TIẾP (BYPASS 100% ESLINT) ---
 const CountdownTimer = ({ selectedSeatsCount, onTimeout }) => {
@@ -91,7 +92,7 @@ const SeatSelection = ({
   };
 
   const getSeatPrice = (row) => {
-    return (row === 'A' || row === 'B') ? 9 : 12;
+    return (row === 'A' || row === 'B') ? 90000 : 120000;
   };
 
   const calculateTotalAmount = () => {
@@ -239,7 +240,7 @@ const SeatSelection = ({
               <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-400"><DollarSign size={18} /></div>
               <div>
                 <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">Tổng Thanh Toán</p>
-                <p className="text-green-400 font-black text-xl mt-0.5">${calculateTotalAmount()}</p>
+                <p className="text-green-400 font-black text-xl mt-0.5">{formatVND(calculateTotalAmount())}</p>
               </div>
             </div>
           </div>

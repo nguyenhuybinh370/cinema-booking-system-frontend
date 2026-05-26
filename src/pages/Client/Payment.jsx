@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronLeft, ShieldCheck } from 'lucide-react';
+import { formatVND } from '../../utils/formatHelper';
 
 const Payment = ({ movie, selectedDateId, currentSlot, selectedSeats, amount, formatTime, onBack, onPaymentSuccess }) => {
   const [paymentMethod, setPaymentMethod] = useState('momo'); // 'momo' hoặc 'vnpay'
@@ -120,7 +121,7 @@ const Payment = ({ movie, selectedDateId, currentSlot, selectedSeats, amount, fo
           <div className="flex justify-between items-center pt-2">
             <span className="text-xs uppercase font-bold tracking-widest text-blue-100">Số tiền cần thanh toán</span>
             <span className="text-2xl font-black text-yellow-300 drop-shadow-md">
-              ${amount}
+              {formatVND(amount)}
             </span>
           </div>
           

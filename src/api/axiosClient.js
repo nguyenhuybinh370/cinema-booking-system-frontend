@@ -39,7 +39,8 @@ axiosClient.interceptors.response.use(
     const { success, data, message, pagination } = response.data;
     if (success) {
       if (pagination) {
-        return { data, pagination };
+        const { success: s, message: m, ...rest } = response.data;
+        return rest;
       }
       return data;
     }

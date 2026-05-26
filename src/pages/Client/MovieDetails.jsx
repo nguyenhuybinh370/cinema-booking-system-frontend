@@ -3,15 +3,55 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Play, Heart, ChevronLeft, ChevronRight, Star, X } from 'lucide-react';
 import { dummyShowsData, dummyDateTimeData, dummyDashboardData, dummyTrailers } from '../../assets/assets'; 
 import SeatSelection from './SeatSelection';
-import TicketConfirmation from './TicketConfirmation'; // Import component vé mới tạo
+import TicketConfirmation from './TicketConfirmation'; 
 import Payment from './Payment';
 import toast from 'react-hot-toast';
+import { getMovieDetail, getMovieReviews } from '../../api/movieApi';
 
 const MovieDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  
-  const movie = dummyShowsData.find(m => m._id === id || m.id?.toString() === id) || dummyShowsData[0];
+
+  // --- STATE FOR BACKEND INTEGRATION ---
+  const [rawMovie, setRawMovie] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [ratingSummary, setRatingSummary] = useState({ DiemTrungBinh: 0, SoLuongDanhGia: 0 });
+  const [loading, setLoading] = useState(true);
+
+  // --- FETCH MOVIE AND REVIEWS CONCURRENTLY ---
+  useEffect(() => {
+    const fetchMovieData = async () => {
+      setLoading(true);
+      try {
+        const [movieRes, reviewsRes] = await Promise.all([
+          getMovieDetail(id),
+          getMovieReviews(id)
+        ]);
+        setRawMovie(movieRes);
+        setReviews(reviewsRes?.data || []);
+        setRatingSummary(reviewsRes?.ratingSummary || { DiemTrungBinh: 0, SoLuongDanhGia: 0 });
+      } catch (err) {
+        console.error('Lỗi khi tải chi tiết phim:', err);
+        toast.error('Không thể tải thông tin bộ phim!');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMovieData();
+  }, [id]);
+
+  // Construct backward-compatible merged movie object
+  const movie = rawMovie ? {
+    ...rawMovie,
+    _id: rawMovie.MaPhim,
+    id: rawMovie.MaPhim,
+    title: rawMovie.TenPhim,
+    poster_path: rawMovie.HinhAnh || dummyShowsData[0].poster_path,
+    backdrop_path: rawMovie.HinhAnh || dummyShowsData[0].backdrop_path,
+    release_date: rawMovie.NgayKhoiChieu ? new Date(rawMovie.NgayKhoiChieu).toLocaleDateString('vi-VN') : '',
+    runtime: rawMovie.ThoiLuong,
+    genres: rawMovie.TheLoai ? rawMovie.TheLoai.split(',').map(g => ({ name: g.trim() })) : []
+  } : null;
 
   const daysOfWeek = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
   const realDates = Object.keys(dummyDateTimeData).map((dateStr) => {
@@ -28,7 +68,6 @@ const MovieDetails = () => {
   const [selectedSlotIndex, setSelectedSlotIndex] = useState(0);
   const [trailerUrl, setTrailerUrl] = useState(null); 
 
-  // --- THÊM STATE QUẢN LÝ MÀN HÌNH VÉ VÀ LƯU GHẾ ĐÃ ĐẶT THÀNH CÔNG ---
   const [isTicketStage, setIsTicketStage] = useState(false);
   const [confirmedSeats, setConfirmedSeats] = useState([]);
 
@@ -49,9 +88,9 @@ const MovieDetails = () => {
   const availableSlots = dummyDateTimeData[selectedDateId] || [];
   const currentSlot = availableSlots[selectedSlotIndex];
 
-  const activeShowData = dummyDashboardData.activeShows.find(
-    show => show._id === currentSlot?.showId || show.movie._id === movie._id
-  );
+  const activeShowData = movie ? dummyDashboardData.activeShows.find(
+    show => show._id === currentSlot?.showId || show.movie._id === movie.MaPhim
+  ) : null;
   const occupiedSeats = activeShowData?.occupiedSeats || {};
 
   const formatTime = (isoString) => {
@@ -61,8 +100,9 @@ const MovieDetails = () => {
   };
 
   const getEmbedUrl = (videoUrl) => {
-    const originalIndex = dummyShowsData.findIndex(m => m._id === movie._id);
-    const finalUrl = videoUrl || dummyTrailers[originalIndex % dummyTrailers.length]?.videoUrl;
+    if (!movie) return '';
+    const originalIndex = dummyShowsData.findIndex(m => m._id === movie.MaPhim);
+    const finalUrl = videoUrl || dummyTrailers[Math.max(0, originalIndex) % dummyTrailers.length]?.videoUrl;
     
     if (!finalUrl) return '';
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -83,7 +123,7 @@ const MovieDetails = () => {
   const calculateTotalAmount = (seats) => {
     return seats.reduce((total, seatId) => {
       const rowLetter = seatId.charAt(0);
-      const price = (rowLetter === 'A' || rowLetter === 'B') ? 9 : 12;
+      const price = (rowLetter === 'A' || rowLetter === 'B') ? 90000 : 120000;
       return total + price;
     }, 0);
   };
@@ -151,6 +191,26 @@ const MovieDetails = () => {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen text-white bg-[#020617] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#ff436e] mx-auto mb-4"></div>
+          <p className="text-gray-400">Đang tải thông tin chi tiết phim...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!movie) {
+    return (
+      <div className="min-h-screen text-white bg-[#020617] flex flex-col items-center justify-center gap-4">
+        <p className="text-gray-400 text-lg">Không tìm thấy thông tin bộ phim này.</p>
+        <button onClick={() => navigate('/')} className="px-6 py-2 bg-[#ff436e] hover:bg-[#e0325a] font-bold rounded-xl text-white">Quay lại Trang Chủ</button>
+      </div>
+    );
+  }
+
   // TRANG CHI TIẾT PHIM MẶC ĐỊNH
   return (
     <div className="min-h-screen pt-28 pb-12 px-6 md:px-20 max-w-7xl mx-auto flex flex-col gap-16 animate-in fade-in duration-500 relative">
@@ -161,40 +221,35 @@ const MovieDetails = () => {
 
         <div className="flex flex-col gap-6 text-left">
           <span className="text-rose-500 font-bold tracking-widest uppercase text-sm">
-            {movie.original_language === 'en' ? 'TIẾNG ANH' : movie.original_language}
+            BẢN ĐẸP 2D
           </span>
           <h1 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-none uppercase">{movie.title}</h1>
           <div className="flex items-center gap-2 text-[#ff436e] font-semibold text-base">
             <Star size={18} fill="#ff436e" />
-            <span>{movie.vote_average ? movie.vote_average.toFixed(1) : '6.4'} Điểm IMDb</span>
+            <span>{ratingSummary.DiemTrungBinh > 0 ? `${ratingSummary.DiemTrungBinh} / 5 điểm` : 'Chưa có đánh giá'} ({ratingSummary.SoLuongDanhGia} đánh giá)</span>
           </div>
-          <p className="text-gray-400 text-base md:text-lg leading-relaxed max-w-3xl">{movie.overview}</p>
+          <p className="text-gray-400 text-base md:text-lg leading-relaxed max-w-3xl">{movie.overview || 'Chưa có mô tả nội dung cho phim này.'}</p>
 
           {/* phần tên diễn viên và đạo diễn */}
           <div className="text-gray-400 font-medium text-sm flex flex-col gap-1.5 border-t border-white/5 pt-4 mt-2">
             <p>
               <span className="text-gray-500 font-bold uppercase tracking-wider text-xs mr-2">Đạo diễn:</span>
-              {/* Giả định tên đạo diễn mặc định cho data tĩnh, sau này gắn backend sẽ thay thế */}
-              <span className="text-white hover:text-(--btn-neon) transition-colors cursor-pointer">Trấn Thành</span>
+              <span className="text-white hover:text-(--btn-neon) transition-colors cursor-pointer">{movie.DaoDien || 'Chưa cập nhật'}</span>
             </p>
             
-            {movie.casts && movie.casts.length > 0 && (
-              <p className="line-clamp-1">
-                <span className="text-gray-500 font-bold uppercase tracking-wider text-xs mr-2">Diễn viên:</span>
-                <span className="text-white">
-                  {/* Lấy ra 3 diễn viên đầu tiên từ mảng casts thật để text không bị tràn hàng */}
-                  {movie.casts.slice(0, 3).map(c => c.name).join(', ')}
-                  {movie.casts.length > 3 && '...'}
-                </span>
-              </p>
-            )}
+            <p className="line-clamp-2">
+              <span className="text-gray-500 font-bold uppercase tracking-wider text-xs mr-2">Diễn viên:</span>
+              <span className="text-white">
+                {movie.DienVien || 'Chưa cập nhật'}
+              </span>
+            </p>
           </div>
-             {/*  kết thúc phần tên diễn viên và đạo diễn */}
+          {/*  kết thúc phần tên diễn viên và đạo diễn */}
 
           <div className="text-gray-300 font-medium text-sm md:text-base flex flex-wrap items-center gap-2">
             <span>{movie.runtime} phút</span><span>•</span>
-            <span>{movie.genres?.map(g => g.name).join(' | ')}</span><span>•</span>
-            <span>{movie.release_date}</span>
+            <span>{movie.TheLoai}</span><span>•</span>
+            <span>Khởi chiếu: {movie.release_date}</span>
           </div>
           
           <div className="flex items-center gap-4 mt-4">
@@ -248,6 +303,54 @@ const MovieDetails = () => {
         >
           ĐẶT VÉ NGAY
         </button>
+      </div>
+
+      {/* SECTION ĐÁNH GIÁ (REVIEWS) */}
+      <div className="w-full bg-[#1b1223]/60 backdrop-blur-md border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col gap-6 shadow-2xl text-left">
+        <h2 className="text-2xl font-bold uppercase italic tracking-wider text-white">Đánh Giá Từ Khách Hàng</h2>
+        
+        {/* Rating Stats Summary */}
+        <div className="flex items-center gap-6 border-b border-white/5 pb-6">
+          <div className="text-center bg-white/5 px-6 py-4 rounded-2xl border border-white/10">
+            <p className="text-4xl font-extrabold text-yellow-400">{ratingSummary.DiemTrungBinh || '0.0'}</p>
+            <div className="flex items-center justify-center gap-1 my-1 text-yellow-400">
+              <Star size={16} fill="currentColor" className="text-yellow-400" />
+            </div>
+            <p className="text-xs text-gray-400 font-medium">{ratingSummary.SoLuongDanhGia || 0} đánh giá</p>
+          </div>
+          <div>
+            <p className="text-lg font-bold text-white">Điểm đánh giá trung bình</p>
+            <p className="text-sm text-gray-400">Đánh giá thực tế từ các khán giả đã xem bộ phim này tại cụm rạp.</p>
+          </div>
+        </div>
+
+        {/* Reviews List */}
+        {reviews.length === 0 ? (
+          <p className="text-gray-400 italic">Chưa có đánh giá nào cho phim này.</p>
+        ) : (
+          <div className="flex flex-col gap-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10">
+            {reviews.map((rev) => (
+              <div key={rev.MaDanhGia} className="bg-white/2 border border-white/5 rounded-2xl p-4 flex flex-col gap-2 hover:border-white/10 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-yellow-400/20 text-yellow-400 flex items-center justify-center font-bold text-sm uppercase">
+                      {rev.KhachHang?.HoTen?.charAt(0) || 'U'}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-white">{rev.KhachHang?.HoTen || 'Ẩn danh'}</p>
+                      <p className="text-[10px] text-gray-500">{new Date(rev.NgayTao).toLocaleDateString('vi-VN')}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 text-yellow-400 bg-yellow-400/5 px-2.5 py-1 rounded-full text-xs font-bold border border-yellow-400/10">
+                    <span>{rev.SoSao}</span>
+                    <Star size={12} fill="currentColor" />
+                  </div>
+                </div>
+                <p className="text-sm text-gray-300 leading-relaxed pl-10">{rev.BinhLuan}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {trailerUrl && (
