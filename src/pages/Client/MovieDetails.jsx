@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Play, Heart, ChevronLeft, ChevronRight, Star, X } from 'lucide-react';
 import { dummyShowsData, dummyDateTimeData, dummyDashboardData, dummyTrailers } from '../../assets/assets'; 
@@ -7,6 +7,7 @@ import TicketConfirmation from './TicketConfirmation';
 import Payment from './Payment';
 import toast from 'react-hot-toast';
 import { getMovieDetail, getMovieReviews, getMovieShowtimes } from '../../api/movieApi';
+import { holdSeats, cancelHeldSeats } from '../../api/bookingApi';
 import { formatVND } from '../../utils/formatHelper';
 import { getMovieVisuals } from '../../utils/visualHelper';
 
@@ -114,17 +115,9 @@ const MovieDetails = () => {
 
   const [isPaymentStage, setIsPaymentStage] = useState(false);
 
-  const handleStartBooking = () => {
-    const token = localStorage.getItem("accessToken");
-    const role = localStorage.getItem("userRole");
-    
-    if (!token || role !== "CUSTOMER") {
-      toast.error("Vui lòng đăng nhập tài khoản khách hàng để đặt vé!");
-      navigate("/login", { state: { from: `/movie/${id}` } });
-      return;
-    }
-    setIsBookingStage(true);
-  };
+  // --- SEAT HOLD LIFE CYCLE AND TIMER STATES ---
+  const [heldSeats, setHeldSeats] = useState([]);
+  const [timeLeft, setTimeLeft] = useState(null);
 
   const availableSlots = useMemo(() => {
     const rawSlots = groupedShowtimes[selectedDateId] || [];
@@ -136,6 +129,147 @@ const MovieDetails = () => {
   }, [groupedShowtimes, selectedDateId]);
 
   const currentSlot = availableSlots[selectedSlotIndex];
+
+  const heldSeatsRef = useRef([]);
+  const showIdRef = useRef(null);
+
+  useEffect(() => {
+    heldSeatsRef.current = heldSeats;
+  }, [heldSeats]);
+
+  useEffect(() => {
+    showIdRef.current = currentSlot?.showId;
+  }, [currentSlot]);
+
+  // Hold Timer Effect
+  useEffect(() => {
+    if (heldSeats.length === 0) {
+      setTimeLeft(null);
+      return;
+    }
+
+    setTimeLeft(600); // 10 minutes in seconds
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev === null) return null;
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleHoldTimeout();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [heldSeats]);
+
+  const handleHoldTimeout = async () => {
+    alert("Thời gian giữ ghế đã hết! Vui lòng thao tác chọn lại.");
+    const latestHeldSeats = heldSeatsRef.current;
+    const latestShowId = showIdRef.current;
+    if (latestHeldSeats && latestHeldSeats.length > 0 && latestShowId) {
+      try {
+        await cancelHeldSeats(latestShowId, latestHeldSeats);
+      } catch (err) {
+        console.error("Hủy giữ ghế khi hết hạn thất bại:", err);
+      }
+    }
+    setHeldSeats([]);
+    setConfirmedSeats([]);
+    setTimeLeft(null);
+    setIsPaymentStage(false);
+    setIsBookingStage(true); // Return to seat selection
+  };
+
+  // Cleanup holds on unmount
+  useEffect(() => {
+    return () => {
+      const latestHeldSeats = heldSeatsRef.current;
+      const latestShowId = showIdRef.current;
+      if (latestHeldSeats && latestHeldSeats.length > 0 && latestShowId) {
+        cancelHeldSeats(latestShowId, latestHeldSeats).catch(err => {
+          console.error("Cleanup cancel held seats failed:", err);
+        });
+      }
+    };
+  }, []);
+
+  const handleCancelHold = async () => {
+    const latestHeldSeats = heldSeatsRef.current;
+    const latestShowId = showIdRef.current;
+    if (latestHeldSeats && latestHeldSeats.length > 0 && latestShowId) {
+      try {
+        await cancelHeldSeats(latestShowId, latestHeldSeats);
+      } catch (err) {
+        console.error("Hủy giữ ghế thất bại:", err);
+      }
+    }
+    setHeldSeats([]);
+    setConfirmedSeats([]);
+    setTimeLeft(null);
+  };
+
+  const handleConfirmBooking = async (selectedSeats) => {
+    const token = localStorage.getItem("accessToken");
+    const role = localStorage.getItem("userRole");
+    if (!token || role !== "CUSTOMER") {
+      toast.error("Vui lòng đăng nhập tài khoản khách hàng để thực hiện!");
+      navigate("/login", { state: { from: `/movie/${id}` } });
+      throw new Error("Unauthorized");
+    }
+
+    const showId = currentSlot?.showId;
+    if (!showId) {
+      toast.error("Không tìm thấy thông tin suất chiếu!");
+      throw new Error("Missing showId");
+    }
+
+    try {
+      await holdSeats(showId, selectedSeats);
+      setHeldSeats(selectedSeats);
+      setConfirmedSeats(selectedSeats);
+      setIsBookingStage(false);
+      setIsPaymentStage(true);
+    } catch (err) {
+      if (err?.status === 401) {
+        toast.error("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!");
+        navigate("/login", { state: { from: `/movie/${id}` } });
+      }
+      throw err;
+    }
+  };
+
+  const formatTimeLeft = (seconds) => {
+    if (seconds === null) return "00:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleStartBooking = () => {
+    const token = localStorage.getItem("accessToken");
+    const role = localStorage.getItem("userRole");
+    
+    if (!token || role !== "CUSTOMER") {
+      toast.error("Vui lòng đăng nhập tài khoản khách hàng để đặt vé!");
+      navigate("/login", { state: { from: `/movie/${id}` } });
+      return;
+    }
+
+    if (showtimes.length === 0) {
+      toast.error("Hiện chưa có suất chiếu cho phim này.");
+      return;
+    }
+
+    if (!currentSlot || !currentSlot.showId) {
+      toast.error("Vui lòng chọn suất chiếu trước.");
+      return;
+    }
+
+    setIsBookingStage(true);
+  };
 
   const activeShowData = movie && currentSlot ? dummyDashboardData.activeShows.find(
     show => show._id === currentSlot.showId || show.movie._id === movie.MaPhim
@@ -207,11 +341,15 @@ const MovieDetails = () => {
         selectedSeats={confirmedSeats}
         amount={calculateTotalAmount(confirmedSeats)} // Truyền số tiền đã tính toán sang bên trang thanh toán
         formatTime={formatTime}
-        onBack={() => {
+        timeLeft={timeLeft}
+        formatTimeLeft={formatTimeLeft}
+        onBack={async () => {
+          await handleCancelHold();
           setIsPaymentStage(false); // Bấm quay lại thì ẩn trang thanh toán, đưa về giao diện chọn ghế
           setIsBookingStage(true);
         }}
         onPaymentSuccess={() => {
+          setHeldSeats([]); // Thanh toán thành công, không giải phóng ghế
           setIsPaymentStage(false);
           setIsTicketStage(true);   // Bấm thanh toán thành công thì nhảy ra trang hóa đơn vé điện tử QR Code
         }}
@@ -224,18 +362,17 @@ const MovieDetails = () => {
     return (
       <div className="max-w-7xl mx-auto px-6 md:px-20">
         <SeatSelection 
+          maSuatChieu={currentSlot?.showId}
           availableSlots={availableSlots}
           selectedSlotIndex={selectedSlotIndex}
           setSelectedSlotIndex={setSelectedSlotIndex}
           occupiedSeats={occupiedSeats}
           formatTime={formatTime}
-          onBack={() => setIsBookingStage(false)}
-          // ĐÃ SỬA: Khi bấm chọn ghế xong, lưu danh sách ghế và kích hoạt màn hình PAYMENT trước thay vì ra thẳng hóa đơn
-          onConfirmBooking={(seats) => {
-            setConfirmedSeats(seats);
+          onBack={async () => {
+            await handleCancelHold();
             setIsBookingStage(false);
-            setIsPaymentStage(true); // Kích hoạt nhảy sang bước chọn MoMo / VNPAY
           }}
+          onConfirmBooking={handleConfirmBooking}
         />
       </div>
     );
@@ -317,7 +454,13 @@ const MovieDetails = () => {
             >
               <Play size={16} fill="white"/> Xem Trailer
             </button>
-            <button onClick={handleStartBooking} className="bg-[#ff436e] hover:bg-[#e0325a] text-white font-bold px-8 py-3 rounded-xl transition-all shadow-[0_0_25px_rgba(255,67,110,0.4)] text-sm uppercase cursor-pointer">
+            <button 
+              disabled={showtimes.length === 0}
+              onClick={handleStartBooking} 
+              className={`bg-[#ff436e] hover:bg-[#e0325a] text-white font-bold px-8 py-3 rounded-xl transition-all text-sm uppercase cursor-pointer ${
+                showtimes.length === 0 ? 'opacity-40 cursor-not-allowed shadow-none' : 'shadow-[0_0_25px_rgba(255,67,110,0.4)]'
+              }`}
+            >
               Mua Vé Ngay
             </button>
             <button className="p-3 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-rose-500 hover:bg-white/10 transition-colors">
@@ -352,7 +495,7 @@ const MovieDetails = () => {
                 );
               })}
               {realDates.length === 0 && (
-                <p className="text-gray-500 italic text-sm py-2">Hiện tại không có suất chiếu nào khả dụng cho phim này.</p>
+                <p className="text-gray-500 italic text-sm py-2">Hiện chưa có suất chiếu cho phim này.</p>
               )}
             </div>
             <button className="text-gray-500 hover:text-white transition-colors"><ChevronRight size={24} /></button>
@@ -393,10 +536,10 @@ const MovieDetails = () => {
         {/* Nút hành động */}
         <div className="w-full flex justify-end border-t border-white/5 pt-6">
           <button 
-            disabled={realDates.length === 0}
+            disabled={realDates.length === 0 || !currentSlot || !currentSlot.showId}
             onClick={handleStartBooking}
             className={`w-full md:w-auto bg-[#ff436e] hover:bg-[#e0325a] text-white font-extrabold px-12 py-4 rounded-2xl transition-all text-base tracking-wider active:scale-98 whitespace-nowrap cursor-pointer ${
-              realDates.length === 0 ? 'opacity-40 cursor-not-allowed shadow-none' : 'shadow-[0_0_30px_rgba(255,67,110,0.4)]'
+              (realDates.length === 0 || !currentSlot || !currentSlot.showId) ? 'opacity-40 cursor-not-allowed shadow-none' : 'shadow-[0_0_30px_rgba(255,67,110,0.4)]'
             }`}
           >
             ĐẶT VÉ NGAY

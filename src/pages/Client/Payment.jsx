@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { ChevronLeft, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, ShieldCheck, Clock } from 'lucide-react';
 import { formatVND } from '../../utils/formatHelper';
 
-const Payment = ({ movie, selectedDateId, currentSlot, selectedSeats, amount, formatTime, onBack, onPaymentSuccess }) => {
+const Payment = ({ movie, selectedDateId, currentSlot, selectedSeats, amount, formatTime, timeLeft, formatTimeLeft, onBack, onPaymentSuccess }) => {
   const [paymentMethod, setPaymentMethod] = useState('momo'); // 'momo' hoặc 'vnpay'
 
   return (
@@ -18,6 +18,14 @@ const Payment = ({ movie, selectedDateId, currentSlot, selectedSeats, amount, fo
         </button>
         <h1 className="text-3xl font-black uppercase tracking-wider italic text-white mt-2">Trang Thanh Toán</h1>
       </div>
+
+      {timeLeft !== undefined && timeLeft !== null && (
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-yellow-500/20 bg-yellow-500/5 text-yellow-400 font-bold max-w-md animate-pulse">
+          <Clock size={16} />
+          <span className="text-xs uppercase tracking-wider flex-1">Thời gian thanh toán còn lại:</span>
+          <span className="text-base font-mono font-black tracking-widest">{formatTimeLeft(timeLeft)}</span>
+        </div>
+      )}
 
       {/* Bố cục Grid 2 cột */}
       <div className="grid grid-cols-1 lg:grid-cols-[5fr_4fr] gap-8 items-start">
