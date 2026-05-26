@@ -1,86 +1,10 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
-import Modal from '../../components/Admin/Common/Modal';
 import adminService from '../../services/adminService';
-import { Edit2, Plus, Trash2 } from 'lucide-react';
+import PriceTable from '../../components/Admin/Pricing/PriceTable';
+import PricingModal from '../../components/Admin/Pricing/PricingModal';
 
-const formatPrice = (price) => {
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
-};
-
-
-const PriceTable = ({ title, data, typeKey, nameKey, onAdd, onEdit, onDelete }) => (
-  <div className="bg-[#0f1117] border border-white/5 rounded-3xl overflow-hidden shadow-xl flex flex-col w-full">
-    <div className="px-6 py-4 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
-      <h3 className="font-bold text-white uppercase tracking-widest text-xs">{title}</h3>
-      <button 
-        onClick={onAdd}
-        className="bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-all cursor-pointer px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 text-[10px] uppercase tracking-widest border border-white/5"
-      >
-        <Plus size={12} /> Thêm mới
-      </button>
-    </div>
-    <div className="overflow-x-auto no-scrollbar">
-      <table className="w-full text-left border-collapse">
-        <thead>
-          <tr className="text-[10px] font-black uppercase tracking-widest text-slate-500 border-b border-white/5 bg-white/[0.01]">
-            <th className="px-6 py-4 w-[12%]">Mã cấu hình</th>
-            <th className="px-6 py-4 w-[18%]">Tên hiển thị</th>
-            <th className="px-6 py-4 w-[15%]">Giá phụ thu</th>
-            <th className="px-6 py-4 w-[20%]">Mô tả</th>
-            <th className="px-6 py-4 w-[15%]">Trạng thái</th>
-            <th className="px-6 py-4 w-[10%]">Ngày tạo</th>
-            <th className="px-6 py-4 w-[10%]">Cập nhật</th>
-            <th className="px-6 py-4 w-[5%] text-right"></th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-white/5">
-          {data.map((item) => (
-            <tr key={item[typeKey]} className="hover:bg-white/[0.01] transition-colors group">
-              <td className="px-6 py-4 text-xs font-mono font-bold text-slate-500">{item[typeKey]}</td>
-              <td className="px-6 py-4 text-sm font-bold text-white">{item[nameKey]}</td>
-              <td className="px-6 py-4 text-sm font-mono text-emerald-500 font-bold">
-                {item.GiaPhuThu > 0 ? `+${formatPrice(item.GiaPhuThu)}` : formatPrice(item.GiaPhuThu)}
-              </td>
-              <td className="px-6 py-4 text-xs text-slate-400 max-w-[200px] truncate" title={item.MoTa || 'Không có mô tả'}>
-                {item.MoTa || <span className="text-slate-600 italic">Không có mô tả</span>}
-              </td>
-              <td className="px-6 py-4">
-                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black border ${
-                  item.KhaDung === 0 
-                    ? 'bg-red-500/10 text-red-400 border-red-500/20' 
-                    : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                }`}>
-                  {item.KhaDung === 0 ? '0 (Chưa khả dụng)' : '1 (Khả dụng)'}
-                </span>
-              </td>
-              <td className="px-6 py-4 text-xs font-mono text-slate-500">{item.NgayTao || '--:--'}</td>
-              <td className="px-6 py-4 text-xs font-mono text-slate-500">{item.NgayCapNhat || <span className="text-slate-700 italic">Chưa có</span>}</td>
-              <td className="px-6 py-4 text-right">
-                <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button 
-                    onClick={() => onEdit(item)}
-                    className="p-2 hover:bg-white/5 rounded-xl text-slate-400 hover:text-white transition-all cursor-pointer"
-                    title="Sửa"
-                  >
-                    <Edit2 size={14} />
-                  </button>
-                  <button 
-                    onClick={() => onDelete(item[typeKey])}
-                    className="p-2 hover:bg-white/5 rounded-xl text-red-400 hover:text-white transition-all cursor-pointer"
-                    title="Xóa"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </div>
-);
+const formatPrice = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v);
 
 const Pricing = () => {
   const [roomTypes, setRoomTypes] = useState([]);
@@ -88,180 +12,82 @@ const Pricing = () => {
   const [dayTypes, setDayTypes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalCategory, setModalCategory] = useState(''); // 'room', 'seat', 'day'
+  const [modalCategory, setModalCategory] = useState('');
   const [editingItem, setEditingItem] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    surcharge: 0,
-    description: '',
-    KhaDung: 1
-  });
+  const [formData, setFormData] = useState({ name: '', surcharge: 0, description: '', KhaDung: 1 });
 
-  const [calc, setCalc] = useState({
-    basePrice: 85000,
-    roomType: '',
-    seatType: '',
-    dayType: ''
-  });
+  const [calc, setCalc] = useState({ basePrice: 85000, roomType: '', seatType: '', dayType: '' });
 
   const loadData = async () => {
     const [rooms, seats, days] = await Promise.all([
-      adminService.getRoomTypes(),
-      adminService.getSeatTypes(),
-      adminService.getDayTypes()
+      adminService.getRoomTypes(), adminService.getSeatTypes(), adminService.getDayTypes(),
     ]);
-    setRoomTypes(rooms);
-    setSeatTypes(seats);
-    setDayTypes(days);
-    
-    // update calc keys if empty
+    setRoomTypes(rooms); setSeatTypes(seats); setDayTypes(days);
     setCalc(prev => ({
       ...prev,
       roomType: prev.roomType || rooms[0]?.MaLoaiPhong || '',
       seatType: prev.seatType || seats[0]?.MaLoaiGhe || '',
-      dayType: prev.dayType || days[0]?.MaLoaiNgay || ''
+      dayType: prev.dayType || days[0]?.MaLoaiNgay || '',
     }));
   };
 
   useEffect(() => {
     let ignore = false;
-    const fetchData = async () => {
-      await loadData();
-      if (!ignore) {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    loadData().then(() => { if (!ignore) setLoading(false); });
     return () => { ignore = true; };
   }, []);
 
-  const getSurcharge = (list, key, id) => list.find(item => item[key] === id)?.GiaPhuThu || 0;
+  const getSurcharge = (list, key, id) => list.find(x => x[key] === id)?.GiaPhuThu || 0;
+  const total = calc.basePrice + getSurcharge(roomTypes, 'MaLoaiPhong', calc.roomType)
+    + getSurcharge(seatTypes, 'MaLoaiGhe', calc.seatType) + getSurcharge(dayTypes, 'MaLoaiNgay', calc.dayType);
 
-  const total = calc.basePrice + 
-                getSurcharge(roomTypes, 'MaLoaiPhong', calc.roomType) + 
-                getSurcharge(seatTypes, 'MaLoaiGhe', calc.seatType) + 
-                getSurcharge(dayTypes, 'MaLoaiNgay', calc.dayType);
-
-  // Handlers for CRUD
-  const handleOpenAdd = (category) => {
-    setModalCategory(category);
-    setEditingItem(null);
-    setFormData({
-      name: '',
-      surcharge: 0,
-      description: '',
-      KhaDung: 1
-    });
+  const openAdd = (cat) => {
+    setModalCategory(cat); setEditingItem(null);
+    setFormData({ name: '', surcharge: 0, description: '', KhaDung: 1 });
     setIsModalOpen(true);
   };
-
-  const handleOpenEdit = (category, item) => {
-    setModalCategory(category);
-    setEditingItem(item);
-    setFormData({
-      name: item.TenLoaiPhong || item.TenLoaiGhe || item.TenLoaiNgay || '',
-      surcharge: item.GiaPhuThu || 0,
-      description: item.MoTa || '',
-      KhaDung: item.KhaDung !== undefined ? item.KhaDung : 1
-    });
+  const openEdit = (cat, item) => {
+    setModalCategory(cat); setEditingItem(item);
+    setFormData({ name: item.TenLoaiPhong || item.TenLoaiGhe || item.TenLoaiNgay || '', surcharge: item.GiaPhuThu || 0, description: item.MoTa || '', KhaDung: item.KhaDung ?? 1 });
     setIsModalOpen(true);
   };
-
-  const handleDelete = async (category, id) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa mục này khỏi cơ sở dữ liệu?")) return;
+  const handleDelete = async (cat, id) => {
+    if (!window.confirm('Xóa mục này khỏi cơ sở dữ liệu?')) return;
     setLoading(true);
     try {
-      if (category === 'room') {
-        await adminService.deleteRoomType(id);
-      } else if (category === 'seat') {
-        await adminService.deleteSeatType(id);
-      } else {
-        await adminService.deleteDayType(id);
-      }
-      alert("Xóa cấu hình khỏi cơ sở dữ liệu thành công!");
-      await loadData();
-    } catch (e) {
-      alert("Lỗi khi xóa: " + e.message);
-    } finally {
-      setLoading(false);
-    }
+      if (cat === 'room') await adminService.deleteRoomType(id);
+      else if (cat === 'seat') await adminService.deleteSeatType(id);
+      else await adminService.deleteDayType(id);
+      alert('Xóa thành công!'); await loadData();
+    } catch (e) { alert('Lỗi khi xóa: ' + e.message); }
+    finally { setLoading(false); }
   };
-
   const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault(); setLoading(true);
     try {
-      const processedData = {
-        GiaPhuThu: parseFloat(formData.surcharge) || 0,
-        MoTa: formData.description && formData.description.trim() !== '' ? formData.description : null,
-        KhaDung: parseInt(formData.KhaDung, 10),
-      };
-
+      const base = { GiaPhuThu: parseFloat(formData.surcharge) || 0, MoTa: formData.description?.trim() || null, KhaDung: parseInt(formData.KhaDung, 10) };
+      const namePatch = modalCategory === 'room' ? { TenLoaiPhong: formData.name } : modalCategory === 'seat' ? { TenLoaiGhe: formData.name } : { TenLoaiNgay: formData.name };
       if (editingItem) {
-        // Edit Mode
-        if (modalCategory === 'room') {
-          await adminService.updateRoomType(editingItem.MaLoaiPhong, {
-            TenLoaiPhong: formData.name,
-            ...processedData
-          });
-        } else if (modalCategory === 'seat') {
-          await adminService.updateSeatType(editingItem.MaLoaiGhe, {
-            TenLoaiGhe: formData.name,
-            ...processedData
-          });
-        } else {
-          await adminService.updateDayType(editingItem.MaLoaiNgay, {
-            TenLoaiNgay: formData.name,
-            ...processedData
-          });
-        }
-        alert("Cập nhật cấu hình thành công!");
+        const id = editingItem.MaLoaiPhong || editingItem.MaLoaiGhe || editingItem.MaLoaiNgay;
+        if (modalCategory === 'room') await adminService.updateRoomType(id, { ...namePatch, ...base });
+        else if (modalCategory === 'seat') await adminService.updateSeatType(id, { ...namePatch, ...base });
+        else await adminService.updateDayType(id, { ...namePatch, ...base });
+        alert('Cập nhật cấu hình thành công!');
       } else {
-        // Add Mode
-        if (modalCategory === 'room') {
-          await adminService.addRoomType({
-            TenLoaiPhong: formData.name,
-            ...processedData
-          });
-        } else if (modalCategory === 'seat') {
-          await adminService.addSeatType({
-            TenLoaiGhe: formData.name,
-            ...processedData
-          });
-        } else {
-          await adminService.addDayType({
-            TenLoaiNgay: formData.name,
-            ...processedData
-          });
-        }
-        alert("Thêm cấu hình mới thành công!");
+        if (modalCategory === 'room') await adminService.addRoomType({ ...namePatch, ...base });
+        else if (modalCategory === 'seat') await adminService.addSeatType({ ...namePatch, ...base });
+        else await adminService.addDayType({ ...namePatch, ...base });
+        alert('Thêm cấu hình mới thành công!');
       }
-      await loadData();
-      setIsModalOpen(false);
-    } catch (err) {
-      alert("Lỗi khi lưu thông tin: " + err.message);
-    } finally {
-      setLoading(false);
-    }
+      await loadData(); setIsModalOpen(false);
+    } catch (err) { alert('Lỗi khi lưu: ' + err.message); }
+    finally { setLoading(false); }
   };
 
-  const getCategoryTitle = () => {
-    if (modalCategory === 'room') return 'Loại phòng';
-    if (modalCategory === 'seat') return 'Hạng ghế';
-    return 'Loại ngày';
-  };
-
-  if (loading && roomTypes.length === 0) {
-    return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-64 text-slate-500 animate-pulse font-bold">
-          Đang tải cấu hình bảng giá...
-        </div>
-      </AdminLayout>
-    );
-  }
+  if (loading && roomTypes.length === 0) return (
+    <AdminLayout><div className="flex items-center justify-center h-64 text-slate-500 animate-pulse font-bold">Đang tải cấu hình bảng giá...</div></AdminLayout>
+  );
 
   return (
     <AdminLayout>
@@ -270,109 +96,56 @@ const Pricing = () => {
         <p className="text-slate-500">Định nghĩa chính sách Dynamic Pricing cho hệ thống rạp.</p>
       </div>
 
+      {/* 3 price tables */}
       <div className="space-y-8 mb-12">
-        <PriceTable 
-          title="Phụ thu loại phòng" 
-          data={roomTypes} 
-          typeKey="MaLoaiPhong" 
-          nameKey="TenLoaiPhong" 
-          onAdd={() => handleOpenAdd('room')}
-          onEdit={(item) => handleOpenEdit('room', item)}
-          onDelete={(id) => handleDelete('room', id)}
-        />
-        <PriceTable 
-          title="Phụ thu hạng ghế" 
-          data={seatTypes} 
-          typeKey="MaLoaiGhe" 
-          nameKey="TenLoaiGhe" 
-          onAdd={() => handleOpenAdd('seat')}
-          onEdit={(item) => handleOpenEdit('seat', item)}
-          onDelete={(id) => handleDelete('seat', id)}
-        />
-        <PriceTable 
-          title="Phụ thu loại ngày" 
-          data={dayTypes} 
-          typeKey="MaLoaiNgay" 
-          nameKey="TenLoaiNgay" 
-          onAdd={() => handleOpenAdd('day')}
-          onEdit={(item) => handleOpenEdit('day', item)}
-          onDelete={(id) => handleDelete('day', id)}
-        />
+        {[
+          { title: 'Phụ thu loại phòng', data: roomTypes, typeKey: 'MaLoaiPhong', nameKey: 'TenLoaiPhong', cat: 'room' },
+          { title: 'Phụ thu hạng ghế', data: seatTypes, typeKey: 'MaLoaiGhe', nameKey: 'TenLoaiGhe', cat: 'seat' },
+          { title: 'Phụ thu loại ngày', data: dayTypes, typeKey: 'MaLoaiNgay', nameKey: 'TenLoaiNgay', cat: 'day' },
+        ].map(({ title, data, typeKey, nameKey, cat }) => (
+          <PriceTable key={cat} title={title} data={data} typeKey={typeKey} nameKey={nameKey}
+            onAdd={() => openAdd(cat)} onEdit={(item) => openEdit(cat, item)} onDelete={(id) => handleDelete(cat, id)} />
+        ))}
       </div>
 
-      {/* Price Preview */}
+      {/* Price preview calculator */}
       <div className="bg-red-500/5 border border-red-500/10 rounded-[2.5rem] p-10 relative overflow-hidden group">
-        <div className="absolute -top-24 -right-24 w-64 h-64 bg-red-500 opacity-5 blur-[100px] group-hover:opacity-10 transition-opacity"></div>
-        
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-red-500 opacity-5 blur-[100px] group-hover:opacity-10 transition-opacity" />
         <h3 className="text-xl font-bold text-white mb-8 flex items-center gap-2">
-          <div className="w-2 h-8 bg-red-500 rounded-full"></div>
-          Preview công thức giá
+          <div className="w-2 h-8 bg-red-500 rounded-full" /> Preview công thức giá
         </h3>
-
         <div className="flex flex-col lg:flex-row gap-12">
-          {/* Controls */}
           <div className="lg:w-1/2 grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Loại phòng</label>
-              <select 
-                className="w-full bg-black/20 border border-white/5 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm text-slate-300"
-                value={calc.roomType}
-                onChange={e => setCalc({ ...calc, roomType: e.target.value })}
-              >
-                {roomTypes.map(t => <option key={t.MaLoaiPhong} value={t.MaLoaiPhong} className="bg-[#0f1117]">{t.TenLoaiPhong}</option>)}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Hạng ghế</label>
-              <select 
-                className="w-full bg-black/20 border border-white/5 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm text-slate-300"
-                value={calc.seatType}
-                onChange={e => setCalc({ ...calc, seatType: e.target.value })}
-              >
-                {seatTypes.map(t => <option key={t.MaLoaiGhe} value={t.MaLoaiGhe} className="bg-[#0f1117]">{t.TenLoaiGhe}</option>)}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Loại ngày</label>
-              <select 
-                className="w-full bg-black/20 border border-white/5 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm text-slate-300"
-                value={calc.dayType}
-                onChange={e => setCalc({ ...calc, dayType: e.target.value })}
-              >
-                {dayTypes.map(t => <option key={t.MaLoaiNgay} value={t.MaLoaiNgay} className="bg-[#0f1117]">{t.TenLoaiNgay}</option>)}
-              </select>
-            </div>
+            {[
+              { label: 'Loại phòng', key: 'roomType', list: roomTypes, optKey: 'MaLoaiPhong', optLabel: 'TenLoaiPhong' },
+              { label: 'Hạng ghế', key: 'seatType', list: seatTypes, optKey: 'MaLoaiGhe', optLabel: 'TenLoaiGhe' },
+              { label: 'Loại ngày', key: 'dayType', list: dayTypes, optKey: 'MaLoaiNgay', optLabel: 'TenLoaiNgay' },
+            ].map(({ label, key, list, optKey, optLabel }) => (
+              <div key={key} className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{label}</label>
+                <select value={calc[key]} onChange={e => setCalc(p => ({ ...p, [key]: e.target.value }))}
+                  className="w-full bg-black/20 border border-white/5 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 text-sm text-slate-300">
+                  {list.map(t => <option key={t[optKey]} value={t[optKey]} className="bg-[#0f1117]">{t[optLabel]}</option>)}
+                </select>
+              </div>
+            ))}
             <div className="space-y-2">
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Giá cơ bản (đ)</label>
-              <input 
-                type="number"
-                className="w-full bg-black/20 border border-white/5 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm text-white font-bold"
-                value={calc.basePrice}
-                onChange={e => setCalc({ ...calc, basePrice: parseInt(e.target.value, 10) || 0 })}
-              />
+              <input type="number" value={calc.basePrice} onChange={e => setCalc(p => ({ ...p, basePrice: parseInt(e.target.value, 10) || 0 }))}
+                className="w-full bg-black/20 border border-white/5 rounded-xl py-3 px-4 text-sm text-white font-bold" />
             </div>
           </div>
-
-          {/* Result */}
           <div className="lg:w-1/2 flex flex-col justify-center">
             <div className="space-y-3 font-mono text-sm border-l border-white/5 pl-10">
-              <div className="flex justify-between text-slate-400">
-                <span>Giá vé cơ sở:</span>
-                <span>{formatPrice(calc.basePrice)}</span>
-              </div>
-              <div className="flex justify-between text-slate-400">
-                <span>+ Phụ thu phòng ({roomTypes.find(t => t.MaLoaiPhong === calc.roomType)?.TenLoaiPhong}):</span>
-                <span>{formatPrice(getSurcharge(roomTypes, 'MaLoaiPhong', calc.roomType))}</span>
-              </div>
-              <div className="flex justify-between text-slate-400">
-                <span>+ Phụ thu ghế ({seatTypes.find(t => t.MaLoaiGhe === calc.seatType)?.TenLoaiGhe}):</span>
-                <span>{formatPrice(getSurcharge(seatTypes, 'MaLoaiGhe', calc.seatType))}</span>
-              </div>
-              <div className="flex justify-between text-slate-400">
-                <span>+ Phụ thu ngày ({dayTypes.find(t => t.MaLoaiNgay === calc.dayType)?.TenLoaiNgay}):</span>
-                <span>{formatPrice(getSurcharge(dayTypes, 'MaLoaiNgay', calc.dayType))}</span>
-              </div>
-              <div className="h-[1px] bg-white/10 my-4"></div>
+              {[
+                { label: 'Giá vé cơ sở:', val: formatPrice(calc.basePrice) },
+                { label: `+ Phụ thu phòng (${roomTypes.find(t => t.MaLoaiPhong === calc.roomType)?.TenLoaiPhong}):`, val: formatPrice(getSurcharge(roomTypes, 'MaLoaiPhong', calc.roomType)) },
+                { label: `+ Phụ thu ghế (${seatTypes.find(t => t.MaLoaiGhe === calc.seatType)?.TenLoaiGhe}):`, val: formatPrice(getSurcharge(seatTypes, 'MaLoaiGhe', calc.seatType)) },
+                { label: `+ Phụ thu ngày (${dayTypes.find(t => t.MaLoaiNgay === calc.dayType)?.TenLoaiNgay}):`, val: formatPrice(getSurcharge(dayTypes, 'MaLoaiNgay', calc.dayType)) },
+              ].map(({ label, val }) => (
+                <div key={label} className="flex justify-between text-slate-400"><span>{label}</span><span>{val}</span></div>
+              ))}
+              <div className="h-px bg-white/10 my-4" />
               <div className="flex justify-between text-2xl font-black text-white">
                 <span className="uppercase tracking-tighter italic">Tổng dự kiến:</span>
                 <span className="text-red-500">{formatPrice(total)}</span>
@@ -382,95 +155,12 @@ const Pricing = () => {
         </div>
       </div>
 
-      {/* CRUD Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={editingItem ? `Chỉnh sửa ${getCategoryTitle()}` : `Thêm ${getCategoryTitle()} mới`}
-      >
-        <form onSubmit={handleFormSubmit} className="space-y-6">
-          {editingItem && (
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Mã cấu hình (Không thể sửa)</label>
-              <input 
-                type="text"
-                disabled
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-slate-500 font-bold font-mono text-sm"
-                value={editingItem.MaLoaiPhong || editingItem.MaLoaiGhe || editingItem.MaLoaiNgay}
-              />
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Tên hiển thị</label>
-            <input 
-              type="text"
-              required
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-white font-bold text-sm"
-              value={formData.name}
-              onChange={e => setFormData({ ...formData, name: e.target.value })}
-              placeholder={modalCategory === 'room' ? 'VD: IMAX' : modalCategory === 'seat' ? 'VD: VIP' : 'VD: Ngày cuối tuần'}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Giá phụ thu (đ)</label>
-            <input 
-              type="number"
-              required
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-white font-bold text-sm font-mono"
-              value={formData.surcharge}
-              onChange={e => setFormData({ ...formData, surcharge: e.target.value })}
-              placeholder="Nhập số tiền phụ thu..."
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Mô tả</label>
-            <textarea 
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-slate-300 text-sm min-h-[80px]"
-              value={formData.description}
-              onChange={e => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Nhập mô tả..."
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Trạng thái khả dụng (KhaDung)</label>
-            <select 
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-slate-300 text-sm"
-              value={formData.KhaDung}
-              onChange={e => setFormData({ ...formData, KhaDung: parseInt(e.target.value, 10) })}
-            >
-              <option value={1} className="bg-[#0f1117]">1 (Khả dụng)</option>
-              <option value={0} className="bg-[#0f1117]">0 (Chưa khả dụng)</option>
-            </select>
-          </div>
-
-          {editingItem && (
-            <div className="grid grid-cols-2 gap-6 text-[10px] text-slate-500 font-mono bg-white/[0.01] p-3 rounded-lg border border-white/5">
-              <div>Ngày tạo: {editingItem.NgayTao || '--:--'}</div>
-              <div>Ngày cập nhật: {editingItem.NgayCapNhat || 'Chưa cập nhật'}</div>
-            </div>
-          )}
-
-          <div className="flex gap-4 pt-4 border-t border-white/5">
-            <button 
-              type="button"
-              onClick={() => setIsModalOpen(false)}
-              className="flex-grow py-3 px-6 rounded-xl font-bold text-slate-400 hover:bg-white/5 transition-all uppercase tracking-widest text-xs"
-            >
-              Hủy
-            </button>
-            <button 
-              type="submit"
-              className="flex-grow py-3 px-6 rounded-xl font-bold bg-red-500 hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 uppercase tracking-widest text-xs"
-            >
-              {editingItem ? 'Cập nhật' : 'Thêm mới'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+      <PricingModal
+        isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}
+        modalCategory={modalCategory} editingItem={editingItem} formData={formData}
+        onChange={(k, v) => setFormData(p => ({ ...p, [k]: v }))}
+        onSubmit={handleFormSubmit}
+      />
     </AdminLayout>
   );
 };
