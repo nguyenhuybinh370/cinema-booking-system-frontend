@@ -94,13 +94,15 @@ function App() {
 
         {/* === STAFF ROUTES (Role: STAFF) === */}
         <Route element={<ProtectedRoute allowedRoles={["STAFF"]} />}>
-          <Route path="/staff" element={<StaffLayout />} />
-          <Route path="/staff/dashboard" element={<Dashboard />} />
-          <Route path="/staff/sell-ticket" element={<SellTicketWizard />} />
-          <Route path="/staff/check-in" element={<CheckIn />} />
-          <Route path="/staff/profile" element={<StaffProfile />} />
-          <Route path="/staff/schedule" element={<Schedule />} />
-          <Route path="/staff/transactions" element={<TransactionHistory />} />
+          <Route path="/staff" element={<StaffLayout />}>
+            <Route index element={<Navigate to="/staff/dashboard" replace />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="sell-ticket" element={<SellTicketWizard />} />
+            <Route path="check-in" element={<CheckIn />} />
+            <Route path="profile" element={<StaffProfile />} />
+            <Route path="schedule" element={<Schedule />} />
+            <Route path="transactions" element={<TransactionHistory />} />
+          </Route>
         </Route>
 
         {/* === ADMIN ROUTES (Role: ADMIN) === */}
