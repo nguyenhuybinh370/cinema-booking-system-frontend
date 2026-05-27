@@ -10,7 +10,7 @@ const StatsCharts = ({ stats }) => (
   <>
     {/* Revenue line + Room pie */}
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-      <div className="lg:col-span-2 bg-[#0f1117] border border-white/5 rounded-[2.5rem] p-8">
+      <div className="lg:col-span-2 bg-white/[0.02] border border-white/10 rounded-3xl p-8">
         <h3 className="text-xs font-black uppercase tracking-widest text-white mb-8 border-l-4 border-red-500 pl-4">Biểu đồ doanh thu theo ngày</h3>
         <div className="h-[300px]">
           {stats.dailyRevenueData.length === 0 ? (
@@ -21,7 +21,7 @@ const StatsCharts = ({ stats }) => (
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
                 <XAxis dataKey="day" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} />
                 <YAxis stroke="#475569" fontSize={10} tickLine={false} axisLine={false} tickFormatter={v => `${v / 1000}k`} />
-                <Tooltip contentStyle={{ backgroundColor: '#0f1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                <Tooltip contentStyle={{ backgroundColor: '#0a0d14', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
                   itemStyle={{ color: '#ef4444', fontWeight: 'bold' }} formatter={formatPrice} />
                 <Line type="monotone" dataKey="revenue" stroke="#ef4444" strokeWidth={4} dot={{ r: 4, fill: '#ef4444' }} activeDot={{ r: 8 }} />
               </LineChart>
@@ -30,7 +30,7 @@ const StatsCharts = ({ stats }) => (
         </div>
       </div>
 
-      <div className="bg-[#0f1117] border border-white/5 rounded-[2.5rem] p-8">
+      <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-8">
         <h3 className="text-xs font-black uppercase tracking-widest text-white mb-8 border-l-4 border-blue-500 pl-4">Tỷ lệ lấp đầy theo phòng (%)</h3>
         <div className="h-[300px]">
           {stats.roomOccupancyData.length === 0 ? (
@@ -52,7 +52,7 @@ const StatsCharts = ({ stats }) => (
 
     {/* Movie bar + performance table */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-      <div className="bg-[#0f1117] border border-white/5 rounded-[2.5rem] p-8">
+      <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-8">
         <h3 className="text-xs font-black uppercase tracking-widest text-white mb-8 border-l-4 border-amber-500 pl-4">Top doanh thu theo phim</h3>
         <div className="h-[300px]">
           {stats.movieRevenueData.length === 0 ? (
@@ -70,13 +70,13 @@ const StatsCharts = ({ stats }) => (
         </div>
       </div>
 
-      <div className="bg-[#0f1117] border border-white/5 rounded-[2.5rem] p-8">
+      <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-8">
         <h3 className="text-xs font-black uppercase tracking-widest text-white mb-8 border-l-4 border-emerald-500 pl-4">Chi tiết hiệu suất phim chiếu</h3>
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-white/5">
+            <tr className="border-b border-white/10">
               {['Phim', 'Suất', 'Vé bán', 'Tỉ lệ đầy'].map((h, i) => (
-                <th key={h} className={`pb-4 text-[10px] font-black uppercase text-slate-600 ${i === 3 ? 'text-right' : ''}`}>{h}</th>
+                <th key={h} className={`pb-4 text-[10px] font-black uppercase text-slate-500 tracking-wider ${i === 3 ? 'text-right' : ''}`}>{h}</th>
               ))}
             </tr>
           </thead>

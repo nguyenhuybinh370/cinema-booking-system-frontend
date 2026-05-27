@@ -4,6 +4,7 @@ import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import adminService from '../../services/adminService';
 import { Lock, Unlock, ChevronLeft, Save } from 'lucide-react';
 import { showSuccess, showError } from '../../utils/toastHelper';
+import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
 
 const SeatMaps = () => {
   const { roomId } = useParams();
@@ -152,7 +153,7 @@ const SeatMaps = () => {
   if (loading) return (
     <AdminLayout>
       <div className="flex items-center justify-center h-64">
-        <div className="text-white animate-pulse font-bold tracking-widest">ĐANG TẢI SƠ ĐỒ...</div>
+        <div className="text-white animate-pulse font-bold tracking-widest text-sm">ĐANG TẢI SƠ ĐỒ...</div>
       </div>
     </AdminLayout>
   );
@@ -165,35 +166,27 @@ const SeatMaps = () => {
 
   return (
     <AdminLayout>
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div className="flex items-center gap-4">
+      <AdminPageHeader
+        title={`Cấu hình: ${room.TenPhong}`}
+        subtitle={`Sơ đồ gốc: ${template.MaSoDoGhe} (${template.TongHang}x${template.TongCot})`}
+        backPath="/admin/rooms"
+        action={
           <button 
-            onClick={() => navigate('/admin/rooms')}
-            className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-slate-400 hover:text-white transition-all"
+            onClick={handleSave}
+            className="w-full md:w-auto bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-xs"
           >
-            <ChevronLeft size={24} />
+            <Save size={18} />
+            Lưu cấu hình
           </button>
-          <div>
-            <h1 className="text-3xl font-bold text-white text-glow">Cấu hình: {room.TenPhong}</h1>
-            <p className="text-slate-500 font-medium">Sơ đồ gốc: {template.MaSoDoGhe} ({template.TongHang}x{template.TongCot})</p>
-          </div>
-        </div>
-        <button 
-          onClick={handleSave}
-          className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
-        >
-          <Save size={20} />
-          Lưu cấu hình
-        </button>
-      </div>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Toolbox */}
         <div className="lg:col-span-3 space-y-6">
-          <div className="bg-[#0f1117] border border-white/5 rounded-3xl p-6 shadow-2xl">
-            <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em] mb-6">Chỉnh sửa vùng chọn</h3>
-            <p className="text-[10px] text-slate-600 mb-4 italic leading-relaxed">Giữ Shift để chọn nhiều ghế cùng lúc.</p>
+          <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-6 shadow-2xl">
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Chỉnh sửa vùng chọn</h3>
+            <p className="text-[10px] text-slate-500 mb-4 italic leading-relaxed">Giữ Shift để chọn nhiều ghế cùng lúc.</p>
             
             <div className="space-y-6">
               <div className="space-y-3">
@@ -204,7 +197,7 @@ const SeatMaps = () => {
                       key={type.MaLoaiGhe}
                       onClick={() => updateSelectedSeats({ MaLoaiGhe: type.MaLoaiGhe })}
                       disabled={selectedSeats.length === 0}
-                      className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all group"
+                      className="flex items-center justify-between p-3 rounded-xl bg-white/[0.04] border border-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all group cursor-pointer"
                     >
                       <span className="text-sm font-bold text-slate-300 group-hover:text-white">{type.TenLoaiGhe}</span>
                       <div className={`w-4 h-4 rounded ${getSeatColor(type.MaLoaiGhe, 1)} border border-white/10`}></div>
@@ -219,17 +212,17 @@ const SeatMaps = () => {
                   <button
                     onClick={() => updateSelectedSeats({ KhaDung: 0 })}
                     disabled={selectedSeats.length === 0}
-                    className="flex-grow flex items-center justify-center gap-2 p-4 rounded-xl bg-red-500/10 text-red-500 border border-red-500/10 hover:bg-red-500/20 disabled:opacity-30 transition-all"
+                    className="flex-grow flex items-center justify-center gap-2 p-3.5 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 disabled:opacity-30 transition-all cursor-pointer"
                   >
-                    <Unlock size={16} />
+                    <Lock size={14} />
                     <span className="text-[10px] font-black uppercase">Khóa</span>
                   </button>
                   <button
                     onClick={() => updateSelectedSeats({ KhaDung: 1 })}
                     disabled={selectedSeats.length === 0}
-                    className="flex-grow flex items-center justify-center gap-2 p-4 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/10 hover:bg-emerald-500/20 disabled:opacity-30 transition-all"
+                    className="flex-grow flex items-center justify-center gap-2 p-3.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500/20 disabled:opacity-30 transition-all cursor-pointer"
                   >
-                    <Unlock size={16} />
+                    <Unlock size={14} />
                     <span className="text-[10px] font-black uppercase">Mở</span>
                   </button>
                 </div>
@@ -239,8 +232,8 @@ const SeatMaps = () => {
 
           {/* Selection Stats */}
           {selectedSeats.length > 0 && (
-            <div className="bg-white/5 border border-white/5 rounded-3xl p-6 animate-in fade-in slide-in-from-bottom-4">
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Đang chọn</span>
+            <div className="bg-white/[0.04] border border-red-500/20 rounded-3xl p-6 animate-in fade-in slide-in-from-bottom-4">
+              <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Đang chọn</span>
               <div className="mt-2 text-2xl font-black text-white">{selectedSeats.length} <span className="text-sm font-bold text-slate-500">ghế</span></div>
             </div>
           )}
@@ -248,7 +241,7 @@ const SeatMaps = () => {
 
         {/* Matrix Canvas */}
         <div className="lg:col-span-9">
-          <div className="bg-[#0f1117] border border-white/5 rounded-[3rem] p-16 flex flex-col items-center shadow-2xl relative overflow-hidden">
+          <div className="bg-white/[0.02] border border-white/10 rounded-[2.5rem] p-16 flex flex-col items-center shadow-2xl relative overflow-hidden">
             {/* Ambient background glow */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-40 bg-red-500/5 blur-[100px]"></div>
 
@@ -261,7 +254,7 @@ const SeatMaps = () => {
             </div>
 
             <div 
-              className="inline-grid gap-2 p-8 bg-black/20 rounded-[2rem] border border-white/5" 
+              className="inline-grid gap-2 p-8 bg-black/40 rounded-[2rem] border border-white/5 overflow-auto max-w-full custom-scrollbar" 
               style={{ gridTemplateColumns: `repeat(${template.TongCot}, minmax(0, 1fr))` }}
             >
               {matrix.flat().map((seat) => {
@@ -275,16 +268,16 @@ const SeatMaps = () => {
                     key={seat.MaChiTietSoDo}
                     onClick={(e) => handleSeatClick(seat.MaChiTietSoDo, e)}
                     className={`
-                      w-9 h-9 rounded-md border text-[9px] font-black transition-all
+                      w-9 h-9 rounded-md border text-[9px] font-black transition-all cursor-pointer
                       flex items-center justify-center relative group/seat
                       ${getSeatColor(seat.MaLoaiGhe, seat.KhaDung)}
-                      ${selectedSeats.includes(seat.MaChiTietSoDo) ? 'ring-2 ring-white ring-offset-4 ring-offset-[#0f1117] scale-110 z-10 shadow-2xl' : 'hover:scale-105'}
+                      ${selectedSeats.includes(seat.MaChiTietSoDo) ? 'ring-2 ring-red-500 ring-offset-4 ring-offset-[#0b0f19] scale-110 z-10 shadow-2xl' : 'hover:scale-105'}
                     `}
                   >
                     {seat.KhaDung === 0 ? <Lock size={12} className="opacity-50" /> : `${seat.Hang}${seat.Cot}`}
                     
                     {/* Tooltip on hover */}
-                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-black rounded text-[8px] text-white opacity-0 group-hover/seat:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none border border-white/10">
+                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#0a0d14] rounded text-[8px] text-white opacity-0 group-hover/seat:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none border border-white/10">
                       Hàng {seat.Hang} - Cột {seat.Cot}
                     </div>
                   </button>

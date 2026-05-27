@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import adminService from '../../services/adminService';
+import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
 import PriceTable from '../../components/Admin/Pricing/PriceTable';
 import PricingModal from '../../components/Admin/Pricing/PricingModal';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
@@ -104,10 +105,10 @@ const Pricing = () => {
 
   return (
     <AdminLayout>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white text-glow">Cấu hình bảng giá</h1>
-        <p className="text-slate-500">Định nghĩa chính sách Dynamic Pricing cho hệ thống rạp.</p>
-      </div>
+      <AdminPageHeader
+        title="Cấu hình bảng giá"
+        subtitle="Định nghĩa chính sách Dynamic Pricing cho hệ thống rạp."
+      />
 
       {/* 3 price tables */}
       <div className="space-y-8 mb-12">
@@ -122,10 +123,10 @@ const Pricing = () => {
       </div>
 
       {/* Price preview calculator */}
-      <div className="bg-red-500/5 border border-red-500/10 rounded-[2.5rem] p-10 relative overflow-hidden group">
-        <div className="absolute -top-24 -right-24 w-64 h-64 bg-red-500 opacity-5 blur-[100px] group-hover:opacity-10 transition-opacity" />
-        <h3 className="text-xl font-bold text-white mb-8 flex items-center gap-2">
-          <div className="w-2 h-8 bg-red-500 rounded-full" /> Preview công thức giá
+      <div className="bg-[#131A2A]/40 backdrop-blur-md border border-white/[0.06] rounded-[2.5rem] p-10 relative overflow-hidden group shadow-2xl hover:border-white/10 transition-all duration-300">
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-red-500/10 opacity-5 blur-[100px] group-hover:opacity-10 transition-opacity" />
+        <h3 className="text-xl font-black text-white mb-8 flex items-center gap-2">
+          <div className="w-1.5 h-6 bg-red-500 rounded-full" /> Preview công thức giá
         </h3>
         <div className="flex flex-col lg:flex-row gap-12">
           <div className="lg:w-1/2 grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -137,15 +138,15 @@ const Pricing = () => {
               <div key={key} className="space-y-2">
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{label}</label>
                 <select value={calc[key]} onChange={e => setCalc(p => ({ ...p, [key]: e.target.value }))}
-                  className="w-full bg-black/20 border border-white/5 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 text-sm text-slate-300">
-                  {list.map(t => <option key={t[optKey]} value={t[optKey]} className="bg-[#0f1117]">{t[optLabel]}</option>)}
+                  className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-sm text-slate-200 font-bold [&>option]:bg-[#0a0d14] cursor-pointer">
+                  {list.map(t => <option key={t[optKey]} value={t[optKey]}>{t[optLabel]}</option>)}
                 </select>
               </div>
             ))}
             <div className="space-y-2">
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Giá cơ bản (đ)</label>
               <input type="number" value={calc.basePrice} onChange={e => setCalc(p => ({ ...p, basePrice: parseInt(e.target.value, 10) || 0 }))}
-                className="w-full bg-black/20 border border-white/5 rounded-xl py-3 px-4 text-sm text-white font-bold" />
+                className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-sm text-white font-bold placeholder:text-slate-500" />
             </div>
           </div>
           <div className="lg:w-1/2 flex flex-col justify-center">

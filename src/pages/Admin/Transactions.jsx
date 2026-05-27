@@ -6,6 +6,7 @@ import StatusBadge from '../../components/Admin/Common/StatusBadge';
 import adminService from '../../services/adminService';
 import { Search, Landmark, CreditCard, DollarSign, RotateCcw, AlertTriangle } from 'lucide-react';
 import { showSuccess, showError } from '../../utils/toastHelper';
+import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState([]);
@@ -169,63 +170,56 @@ const Transactions = () => {
     }
   ];
 
-  if (loading) {
-    return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-64 text-slate-500">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500 mr-4"></div>
-          Đang tải danh sách giao dịch...
-        </div>
-      </AdminLayout>
-    );
-  }
-
   return (
     <AdminLayout>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white text-glow">Quản lý giao dịch</h1>
-        <p className="text-slate-500">Giám sát toàn bộ luồng tiền giao dịch vé thực tế (bảng GIAODICH) từ các cổng thanh toán.</p>
-      </div>
+      <AdminPageHeader
+        title="Quản lý giao dịch"
+        subtitle="Giám sát toàn bộ luồng tiền giao dịch vé thực tế (bảng GIAODICH) từ các cổng thanh toán."
+      />
 
       {/* Filter panel */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="md:col-span-2 flex items-center gap-3 bg-white/5 border border-white/5 rounded-2xl px-4 py-3">
-          <Search size={20} className="text-slate-500" />
+        <div className="md:col-span-2 flex items-center gap-3 bg-white/[0.04] border border-white/10 rounded-2xl px-4 py-3.5 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20 transition-all">
+          <Search size={18} className="text-slate-500" />
           <input 
             type="text" 
             placeholder="Tìm theo mã giao dịch, mã vé, khách hàng, tên phim..." 
-            className="bg-transparent border-none focus:outline-none text-sm text-white w-full"
+            className="bg-transparent border-none focus:outline-none text-sm text-white placeholder:text-slate-500 w-full font-bold"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
         </div>
         <select 
-          className="bg-white/5 border border-white/5 rounded-2xl px-6 py-3 text-sm font-bold text-slate-300 focus:outline-none focus:border-red-500 transition-all cursor-pointer"
+          className="bg-white/[0.04] border border-white/10 rounded-2xl px-6 py-3.5 text-sm font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}
         >
-          <option value="All" className="bg-[#0f1117]">Tất cả trạng thái</option>
-          <option value="Success" className="bg-[#0f1117]">Thành công (Success)</option>
-          <option value="Refunded" className="bg-[#0f1117]">Đã hoàn tiền (Refunded)</option>
-          <option value="Failed" className="bg-[#0f1117]">Thất bại (Failed)</option>
+          <option value="All">Tất cả trạng thái</option>
+          <option value="Success">Thành công (Success)</option>
+          <option value="Refunded">Đã hoàn tiền (Refunded)</option>
+          <option value="Failed">Thất bại (Failed)</option>
         </select>
         <select 
-          className="bg-white/5 border border-white/5 rounded-2xl px-6 py-3 text-sm font-bold text-slate-300 focus:outline-none focus:border-red-500 transition-all cursor-pointer"
+          className="bg-white/[0.04] border border-white/10 rounded-2xl px-6 py-3.5 text-sm font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
           value={methodFilter}
           onChange={e => setMethodFilter(e.target.value)}
         >
-          <option value="All" className="bg-[#0f1117]">Phương thức thanh toán</option>
-          <option value="VNPay" className="bg-[#0f1117]">VNPay</option>
-          <option value="MoMo" className="bg-[#0f1117]">MoMo</option>
-          <option value="Card" className="bg-[#0f1117]">Thẻ Quốc tế</option>
-          <option value="Cash" className="bg-[#0f1117]">Tiền mặt</option>
+          <option value="All">Phương thức thanh toán</option>
+          <option value="VNPay">VNPay</option>
+          <option value="MoMo">MoMo</option>
+          <option value="Card">Thẻ Quốc tế</option>
+          <option value="Cash">Tiền mặt</option>
         </select>
       </div>
 
       {/* Table grid with horizontal scroll wrapper */}
-      <div className="overflow-x-auto w-full custom-scrollbar">
-        <AdminTable columns={columns} data={filteredTransactions} rowKey="MaGiaoDich" />
-      </div>
+      {loading ? (
+        <div className="bg-white/5 border border-white/5 rounded-3xl h-64 animate-pulse" />
+      ) : (
+        <div className="overflow-x-auto w-full custom-scrollbar">
+          <AdminTable columns={columns} data={filteredTransactions} rowKey="MaGiaoDich" />
+        </div>
+      )}
 
       {/* Refund Confirmation Modal */}
       <Modal 
@@ -240,7 +234,7 @@ const Transactions = () => {
           </div>
 
           {/* Customer / Ticket context */}
-          <div className="bg-white/5 rounded-2xl p-4 space-y-2 text-xs text-slate-400">
+          <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 space-y-2 text-xs text-slate-400">
             <div className="flex justify-between">
               <span>Khách hàng:</span>
               <span className="text-white font-bold">{selectedTx?.KhachHang}</span>
@@ -256,7 +250,7 @@ const Transactions = () => {
           </div>
 
           {/* LICHSUHOANTIEN Record Preview */}
-          <div className="border border-white/5 rounded-2xl p-5 bg-[#0a0c10] space-y-3 font-mono text-xs text-slate-400">
+          <div className="border border-white/5 rounded-2xl p-5 bg-[#05070a] space-y-3 font-mono text-xs text-slate-400">
             <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-white/5 pb-2 mb-2 flex justify-between">
               <span>Bảng CSDL: LICHSUHOANTIEN</span>
               <span className="text-red-500 font-semibold lowercase">preview</span>
@@ -311,7 +305,7 @@ const Transactions = () => {
             <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Nhập lý do hoàn trả (LyDoHoan)</label>
             <textarea 
               required
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-slate-300 text-sm min-h-[80px]"
+              className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-slate-300 text-sm min-h-[80px]"
               placeholder="Nhập lý do hoàn tiền..."
               value={refundReason}
               onChange={e => setRefundReason(e.target.value)}
@@ -322,7 +316,7 @@ const Transactions = () => {
             <button 
               type="button" 
               onClick={() => setIsRefundModalOpen(false)} 
-              className="flex-grow py-3 rounded-xl font-bold border border-white/10 hover:bg-white/5 transition-all text-xs uppercase tracking-widest cursor-pointer text-slate-400"
+              className="flex-grow py-3 rounded-xl font-bold border border-white/10 hover:bg-white/5 hover:text-white transition-all text-xs uppercase tracking-widest cursor-pointer text-slate-400"
             >
               Đóng
             </button>
@@ -330,7 +324,7 @@ const Transactions = () => {
               type="button"
               disabled={!refundReason.trim()}
               onClick={handleRefundSubmit}
-              className="flex-grow py-3 rounded-xl font-bold bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:hover:bg-red-500 text-white transition-all shadow-lg shadow-red-500/20 text-xs uppercase tracking-widest cursor-pointer"
+              className="flex-grow py-3 rounded-xl font-bold bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-600 disabled:opacity-50 text-white transition-all shadow-lg shadow-red-500/20 text-xs uppercase tracking-widest cursor-pointer"
             >
               Xác nhận Hoàn tiền
             </button>

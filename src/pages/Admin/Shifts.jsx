@@ -5,6 +5,7 @@ import ShiftTable from '../../components/Admin/Shifts/ShiftTable';
 import ShiftDetailTable from '../../components/Admin/Shifts/ShiftDetailTable';
 import ShiftModal from '../../components/Admin/Shifts/ShiftModal';
 import ShiftRegistrationModal from '../../components/Admin/Shifts/ShiftRegistrationModal';
+import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
 import { Plus, Search } from 'lucide-react';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { showSuccess, showError } from '../../utils/toastHelper';
@@ -120,37 +121,38 @@ const Shifts = () => {
 
   return (
     <AdminLayout>
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-white text-glow">Quản lý Ca làm việc</h1>
-          <p className="text-slate-500">Thêm xóa sửa ca làm việc và quản lý danh sách phân ca nhân viên.</p>
-        </div>
-        <button onClick={activeTab === 'shifts' ? openAddShift : openAddReg}
-          className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 flex items-center gap-2 cursor-pointer text-sm">
-          <Plus size={18} /> {activeTab === 'shifts' ? 'Thêm ca làm việc' : 'Phân ca / Đăng ký ca'}
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Quản lý Ca làm việc"
+        subtitle="Quản lý thời gian, số người của các ca và danh sách phân ca của nhân viên."
+        action={
+          <button 
+            onClick={activeTab === 'shifts' ? openAddShift : openAddReg}
+            className="w-full md:w-auto bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2 cursor-pointer text-sm"
+          >
+            <Plus size={18} /> {activeTab === 'shifts' ? 'Thêm ca làm việc' : 'Phân ca / Đăng ký ca'}
+          </button>
+        }
+      />
 
       {/* Tabs */}
-      <div className="flex border-b border-white/5 mb-8">
+      <div className="flex border-b border-white/10 mb-8 gap-2">
         {tabs.map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-            className={`pb-4 px-6 font-bold text-sm transition-all relative cursor-pointer ${activeTab === tab.id ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}
+            className={`pb-4 px-6 font-bold text-sm transition-all relative cursor-pointer ${activeTab === tab.id ? 'text-red-500' : 'text-slate-500 hover:text-slate-300'}`}
           >
             {activeTab === tab.id && <span className="absolute bottom-0 left-0 right-0 h-1 bg-red-500 rounded-full" />}
             {tab.label}
-            {tab.badge && <span className="ml-2 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">{tab.badge}</span>}
+            {tab.badge && <span className="ml-2 bg-red-500/10 text-red-400 border border-red-500/20 text-[10px] px-2 py-0.5 rounded-full font-bold">{tab.badge}</span>}
           </button>
         ))}
       </div>
 
       {/* Search */}
       <div className="flex gap-4 mb-8">
-        <div className="flex-grow flex items-center gap-3 bg-white/5 border border-white/5 rounded-2xl px-4 py-3">
-          <Search size={20} className="text-slate-500" />
+        <div className="flex-grow flex items-center gap-3 bg-white/[0.04] border border-white/10 rounded-2xl px-4 py-3.5 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20 transition-all">
+          <Search size={18} className="text-slate-500" />
           <input type="text" placeholder={activeTab === 'shifts' ? 'Tìm theo tên ca...' : 'Tìm theo tên nhân viên, ca...'}
-            className="bg-transparent border-none focus:outline-none text-sm text-white w-full"
+            className="bg-transparent border-none focus:outline-none text-sm text-white placeholder:text-slate-500 w-full font-bold"
             value={activeTab === 'shifts' ? shiftSearch : regSearch}
             onChange={e => activeTab === 'shifts' ? setShiftSearch(e.target.value) : setRegSearch(e.target.value)}
           />
