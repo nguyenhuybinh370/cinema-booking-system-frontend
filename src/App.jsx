@@ -3,11 +3,11 @@ import { Navigate } from "react-router-dom";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import SellTicketWizard from "./pages/Staff/SellTicket/SellTicketWizard";
 import StaffLayout from "./components/StaffLayout/StaffLayout";
-import CheckIn from "./pages/Staff/CheckIn";
+import CheckIn from "./pages/Staff/CheckInPage/index";
 import Dashboard from "./pages/Staff/Dashboard";
-import StaffProfile from "./pages/Staff/Profile/Profile";
-import Schedule from "./pages/Staff/Schedule/Schedule";
-import TransactionHistory from "./pages/Staff/TransactionHistory";
+import StaffProfile from "./pages/Staff/Profile/index";
+import Schedule from "./pages/Staff/Schedule/index";
+import TransactionHistory from "./pages/Staff/TransactionHistory/index";
 
 import { Route, Routes, useLocation } from 'react-router-dom'
 import Home from './pages/Client/Home'
@@ -27,7 +27,30 @@ function App() {
 
   return (
     <>
-      <Toaster />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#131A2A',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '14px'
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff'
+            }
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff'
+            }
+          }
+        }}
+      />
       {!isAdminRoute && !isStaffRoute && <Navbar />}
       <Routes>
         {/* === PUBLIC ROUTES === */}

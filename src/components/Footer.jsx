@@ -50,8 +50,8 @@ const Footer = () => {
           <div className="flex flex-col gap-6">
             <h3 className="text-white font-bold text-lg uppercase tracking-wider">Liên hệ với chúng tôi</h3>
             <ul className="flex flex-col gap-3 text-gray-400 text-sm">
-              <li className="hover:text-white transition-colors cursor-pointer">+1-212-456-7890</li>
-              <li className="hover:text-white transition-colors cursor-pointer">contact@uitcinema.com</li>
+              <li className="hover:text-white transition-colors cursor-pointer">0907510942</li>
+              <li className="hover:text-white transition-colors cursor-pointer">phangiadat300106@gmail.com</li>
             </ul>
           </div>
 

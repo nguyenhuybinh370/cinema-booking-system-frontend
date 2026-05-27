@@ -1,29 +1,104 @@
 import { useState } from 'react';
 import { ChevronLeft, ShieldCheck, Clock } from 'lucide-react';
 import { formatVND } from '../../utils/formatHelper';
+import toast from 'react-hot-toast';
+import { simulatedCheckout } from '../../api/bookingApi';
+import { getBookingDetail } from '../../api/bookingHistoryApi';
 
-const Payment = ({ movie, selectedDateId, currentSlot, selectedSeats, amount, formatTime, timeLeft, formatTimeLeft, onBack, onPaymentSuccess }) => {
-  const [paymentMethod, setPaymentMethod] = useState('momo'); // 'momo' hoặc 'vnpay'
+const Payment = ({ 
+  movie, 
+  selectedDateId, 
+  currentSlot, 
+  selectedSeats, 
+  amount, 
+  formatTime, 
+  timeLeft = 600, 
+  onBack, 
+  onPaymentSuccess,
+  maSuatChieu,
+  heldSeatIds
+}) => {
+  const [paymentMethod, setPaymentMethod] = useState('vnpay'); // Default to vnpay as Momo is disabled
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const formatTimeSeconds = (seconds) => {
+    const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const remainingSeconds = (seconds % 60).toString().padStart(2, '0');
+    return `${minutes}:${remainingSeconds}`;
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!maSuatChieu) {
+      toast.error("Không tìm thấy thông tin suất chiếu!");
+      return;
+    }
+    if (!heldSeatIds || heldSeatIds.length === 0) {
+      toast.error("Không tìm thấy danh sách ghế đang giữ!");
+      return;
+    }
+
+    setIsSubmitting(true);
+    const toastId = toast.loading("Đang xử lý thanh toán giả lập...");
+    try {
+      // Map to backend allowed enum PhuongThucThanhToan: 'VNPAY' | 'TIEN_MAT'
+      const PhuongThucThanhToan = 'VNPAY';
+
+      const checkoutPayload = {
+        MaSuatChieu: maSuatChieu,
+        DanhSachMaGheSuatChieu: heldSeatIds,
+        PhuongThucThanhToan,
+        KetQuaThanhToan: 'THANH_CONG',
+      };
+
+      const checkoutRes = await simulatedCheckout(checkoutPayload);
+      toast.success("Thanh toán giả lập thành công!");
+
+      // Attempt to load full ticket details with MaChiTietDat
+      try {
+        const detailData = await getBookingDetail(checkoutRes.MaPhieuDat);
+        toast.dismiss(toastId);
+        onPaymentSuccess(detailData, checkoutRes);
+      } catch (detailErr) {
+        console.error("Lỗi khi tải chi tiết vé vừa đặt:", detailErr);
+        toast.error("Không thể tải chi tiết mã vé từ máy chủ. Đang chuyển sang màn hình xác nhận fallback...");
+        toast.dismiss(toastId);
+        onPaymentSuccess(null, checkoutRes);
+      }
+    } catch (err) {
+      console.error("Simulated checkout error:", err);
+      const errMsg = err.response?.data?.message || err.message || "Thanh toán giả lập thất bại. Vui lòng thử lại.";
+      toast.error(errMsg);
+      toast.dismiss(toastId);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 md:px-16 max-w-7xl mx-auto flex flex-col gap-8 animate-in fade-in duration-500 text-left">
       
-      {/* Tiêu đề trang */}
-      <div className="flex flex-col gap-2">
-        <button 
-          onClick={onBack}
-          className="text-sm font-semibold text-gray-400 hover:text-white flex items-center gap-1 transition-colors cursor-pointer w-fit"
-        >
-          <ChevronLeft size={16}/> Quay lại chọn ghế
-        </button>
-        <h1 className="text-3xl font-black uppercase tracking-wider italic text-white mt-2">Trang Thanh Toán</h1>
+      {/* Tiêu đề trang & Thời gian giữ ghế */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <button 
+            onClick={onBack}
+            className="text-sm font-semibold text-gray-400 hover:text-white flex items-center gap-1 transition-colors cursor-pointer w-fit"
+          >
+            <ChevronLeft size={16}/> Quay lại chọn ghế
+          </button>
+          <h1 className="text-3xl font-black uppercase tracking-wider italic text-white mt-2">Trang Thanh Toán</h1>
+        </div>
+
+        <div className="flex items-center gap-2 px-4 py-2 bg-red-950/20 border border-red-500/20 text-red-400 rounded-xl text-sm font-bold font-mono animate-pulse w-fit">
+          ⏱ Thời gian giữ ghế: {formatTimeSeconds(timeLeft)}
+        </div>
       </div>
 
       {timeLeft !== undefined && timeLeft !== null && (
         <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-yellow-500/20 bg-yellow-500/5 text-yellow-400 font-bold max-w-md animate-pulse">
           <Clock size={16} />
           <span className="text-xs uppercase tracking-wider flex-1">Thời gian thanh toán còn lại:</span>
-          <span className="text-base font-mono font-black tracking-widest">{formatTimeLeft(timeLeft)}</span>
+          <span className="text-base font-mono font-black tracking-widest">{formatTimeSeconds(timeLeft)}</span>
         </div>
       )}
 
@@ -33,27 +108,25 @@ const Payment = ({ movie, selectedDateId, currentSlot, selectedSeats, amount, fo
         {/* CỘT TRÁI: PHƯƠNG THỨC THANH TOÁN */}
         <div className="flex flex-col gap-4 w-full">
           
-          {/* Phương thức 1: MoMo */}
-          <label 
-            onClick={() => setPaymentMethod('momo')}
-            className={`flex items-center gap-4 p-5 rounded-xl border transition-all cursor-pointer ${
-              paymentMethod === 'momo' 
-                ? 'bg-white/5 border-pink-500 shadow-[0_0_15px_rgba(239,68,110,0.15)]' 
-                : 'bg-white/5 border-white/10 hover:border-white/20'
-            }`}
+          {/* Phương thức 1: MoMo (Vô hiệu hóa) */}
+          <div 
+            className="flex items-center gap-4 p-5 rounded-xl border bg-white/5 border-white/5 opacity-50 cursor-not-allowed relative overflow-hidden"
+            title="Phương thức Momo chưa hỗ trợ thanh toán giả lập"
           >
             <input 
               type="radio" 
               name="payment" 
-              checked={paymentMethod === 'momo'} 
-              onChange={() => {}} 
-              className="accent-pink-500 w-4 h-4 cursor-pointer"
+              disabled
+              checked={false} 
+              className="w-4 h-4 cursor-not-allowed"
+              onChange={() => {}}
             />
-            <div className="w-8 h-8 bg-[#a50064] rounded-lg flex items-center justify-center text-white text-xs font-black select-none">
+            <div className="w-8 h-8 bg-gray-600 rounded-lg flex items-center justify-center text-white text-xs font-black select-none">
               mo
             </div>
-            <span className="text-white font-bold text-sm md:text-base">Momo</span>
-          </label>
+            <span className="text-gray-400 font-bold text-sm md:text-base flex-1">Momo</span>
+            <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-bold px-2 py-0.5 rounded">Sắp hỗ trợ</span>
+          </div>
 
           {/* Phương thức 2: VNPAY */}
           <label 
@@ -74,15 +147,16 @@ const Payment = ({ movie, selectedDateId, currentSlot, selectedSeats, amount, fo
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-[10px] font-black tracking-tighter select-none">
               VN
             </div>
-            <span className="text-white font-bold text-sm md:text-base">VNPAY</span>
+            <span className="text-white font-bold text-sm md:text-base">VNPAY (Simulated)</span>
           </label>
 
           {/* NÚT THANH TOÁN CHỦ ĐẠO */}
           <button 
-            onClick={onPaymentSuccess}
-            className="w-full bg-linear-to-r from-[#ff436e] to-[#e0325a] hover:from-[#e0325a] hover:to-[#b81d43] text-white font-black py-4 rounded-xl transition-all shadow-[0_0_30px_rgba(255,67,110,0.3)] text-base tracking-widest uppercase mt-4 cursor-pointer text-center active:scale-[0.99]"
+            onClick={handleConfirmPayment}
+            disabled={isSubmitting}
+            className={`w-full bg-linear-to-r from-[#ff436e] to-[#e0325a] hover:from-[#e0325a] hover:to-[#b81d43] text-white font-black py-4 rounded-xl transition-all shadow-[0_0_30px_rgba(255,67,110,0.3)] text-base tracking-widest uppercase mt-4 cursor-pointer text-center active:scale-[0.99] ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            Xác Nhận Thanh Toán
+            {isSubmitting ? 'Đang xử lý...' : 'Xác Nhận Thanh Toán'}
           </button>
         </div>
 
@@ -90,7 +164,6 @@ const Payment = ({ movie, selectedDateId, currentSlot, selectedSeats, amount, fo
         <div className="w-full bg-blue-600/90 backdrop-blur-md rounded-2xl p-6 border border-white/10 flex flex-col gap-4 text-white shadow-2xl">
           <div>
             <h3 className="text-xl font-black uppercase tracking-tight truncate text-glow">{movie.title}</h3>
-            {/* GIỮ NGUYÊN: Dòng chi tiết phim cảnh báo độ tuổi màu vàng chuẩn UI của bạn */}
             <p className="text-xs text-yellow-300 font-semibold mt-1 leading-relaxed">
               Phim dành cho khán giả từ dưới 13 tuổi với điều kiện xem cùng cha, mẹ hoặc người giám hộ
             </p>
@@ -103,11 +176,13 @@ const Payment = ({ movie, selectedDateId, currentSlot, selectedSeats, amount, fo
             <div className="grid grid-cols-2 gap-4">
               <p className="flex flex-col gap-0.5">
                 <span className="text-blue-200/70 font-bold uppercase tracking-wider text-[10px]">Thời Gian Suất Chiếu</span>
-                <span className="text-white font-bold text-sm">{formatTime(currentSlot?.time)} - {selectedDateId}</span>
+                <span className="text-white font-bold text-sm">
+                  {formatTime(currentSlot?.GioChieu || currentSlot?.time)} - {selectedDateId}
+                </span>
               </p>
               <p className="flex flex-col gap-0.5">
                 <span className="text-blue-200/70 font-bold uppercase tracking-wider text-[10px]">Phòng chiếu & Số Vé</span>
-                <span className="text-white font-bold text-sm">Phòng 02 • {selectedSeats.length} Vé</span>
+                <span className="text-white font-bold text-sm">Phòng {currentSlot?.TenPhong || '02'} • {selectedSeats.length} Vé</span>
               </p>
             </div>
 
@@ -118,7 +193,9 @@ const Payment = ({ movie, selectedDateId, currentSlot, selectedSeats, amount, fo
               </p>
               <p className="flex flex-col gap-0.5">
                 <span className="text-blue-200/70 font-bold uppercase tracking-wider text-[10px]">Vị Trí Số Ghế</span>
-                <span className="text-yellow-300 font-black text-base tracking-wide">{selectedSeats.join(', ')}</span>
+                <span className="text-yellow-300 font-black text-base tracking-wide">
+                  {selectedSeats.map(s => typeof s === 'object' ? s.TenGhe : s).join(', ')}
+                </span>
               </p>
             </div>
           </div>

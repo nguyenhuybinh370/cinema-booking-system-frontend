@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import ConfirmDialog from "../common/ConfirmDialog";
 import {
   Ticket,
   Scan,
@@ -46,8 +48,11 @@ const menuItems = [
 
 const StaffSidebar = () => {
   const navigate = useNavigate();
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogout = async () => {
+  const handleLogoutSubmit = async () => {
+    setIsLoggingOut(true);
     try {
       const refreshToken = localStorage.getItem("refreshToken");
       if (refreshToken) {
@@ -56,6 +61,8 @@ const StaffSidebar = () => {
     } catch (err) {
       console.error("Error during backend logout:", err);
     } finally {
+      setIsLoggingOut(false);
+      setIsConfirmOpen(false);
       // Always clear local storage tokens and navigate to login
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
@@ -108,7 +115,7 @@ const StaffSidebar = () => {
       {/* Logout area */}
       <div className="p-3 border-t border-white/[0.06] shrink-0">
         <button
-          onClick={handleLogout}
+          onClick={() => setIsConfirmOpen(true)}
           className="flex items-center gap-3.5 px-4 py-3 w-full rounded-xl font-semibold text-slate-500 hover:bg-red-500/10 hover:text-red-400 border-l-[3px] border-transparent transition-all duration-200 group min-w-0 cursor-pointer"
         >
           <LogOut size={18} className="shrink-0 transition-transform duration-200 group-hover:-translate-x-0.5" />
@@ -118,6 +125,18 @@ const StaffSidebar = () => {
           </span>
         </button>
       </div>
+
+      <ConfirmDialog
+        isOpen={isConfirmOpen}
+        title="Xác nhận đăng xuất"
+        message="Bạn có chắc chắn muốn đăng xuất khỏi ca làm việc hiện tại?"
+        confirmText="Đăng xuất"
+        cancelText="Quay lại"
+        variant="danger"
+        isLoading={isLoggingOut}
+        onConfirm={handleLogoutSubmit}
+        onCancel={() => setIsConfirmOpen(false)}
+      />
     </aside>
   );
 };
