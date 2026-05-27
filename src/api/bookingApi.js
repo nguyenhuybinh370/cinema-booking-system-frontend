@@ -1,9 +1,5 @@
 import axiosClient from './axiosClient';
 
-/**
- * Lấy sơ đồ ghế và trạng thái giữ ghế của suất chiếu
- * @param {string} maSuatChieu 
- */
 export const getSeatMap = (maSuatChieu) => {
   return axiosClient.get(`/suat-chieu/${maSuatChieu}/ghe`);
 };
@@ -43,4 +39,3 @@ export const cancelHeldSeats = (maSuatChieu, seatIds) => {
 export const simulatedCheckout = (payload) => {
   return axiosClient.post('/dat-ve/thanh-toan-gia-lap', payload);
 };
-

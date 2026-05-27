@@ -1,17 +1,20 @@
 import { Route, Routes, Navigate, useLocation } from 'react-router-dom';
+import ProtectedRoute from './components/Auth/ProtectedRoute';
 import { Toaster } from 'react-hot-toast';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
 // Client Pages
 import Home from './pages/Client/Home';
-import MovieDetails from './pages/Client/MovieDetails';
+import MovieDetail from './pages/Client/MovieDetail'; // legacy single detail
+import MovieDetails from './pages/Client/MovieDetails'; // plural (refactored)
+import SeatSelection from './pages/Client/SeatSelection';
+import Checkout from './pages/Client/Checkout';
 import MoviesPage from './pages/Client/MoviesPage';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import ForgotPassword from './pages/Auth/ForgotPassword';
 import ClientProfile from './pages/Client/Profile';
-import ProtectedRoute from './components/Auth/ProtectedRoute';
 
 // Admin Pages
 import Rooms from './pages/Admin/Rooms';
@@ -36,8 +39,8 @@ import Schedule from './pages/Staff/Schedule/index';
 import TransactionHistory from './pages/Staff/TransactionHistory/index';
 
 function App() {
-  const isAdminRoute = useLocation().pathname.startsWith('/admin');
-  const isStaffRoute = useLocation().pathname.startsWith('/staff');
+  const isAdminRoute = useLocation().pathname.startsWith("/admin");
+  const isStaffRoute = useLocation().pathname.startsWith("/staff");
 
   return (
     <>
@@ -46,53 +49,58 @@ function App() {
         toastOptions={{
           duration: 3000,
           style: {
-            background: '#131A2A',
-            color: '#fff',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '14px'
+            background: "#131A2A",
+            color: "#fff",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: "14px",
           },
           success: {
             iconTheme: {
-              primary: '#10b981',
-              secondary: '#fff'
-            }
+              primary: "#10b981",
+              secondary: "#fff",
+            },
           },
           error: {
             iconTheme: {
-              primary: '#ef4444',
-              secondary: '#fff'
-            }
-          }
+              primary: "#ef4444",
+              secondary: "#fff",
+            },
+          },
         }}
       />
       {!isAdminRoute && !isStaffRoute && <Navbar />}
+      
       <Routes>
         {/* === PUBLIC CLIENT ROUTES === */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        
+        {/* Map movie detail routes: old singular and new plural */}
         <Route path="/movie/:id" element={<MovieDetails />} />
+        <Route path="/movie-old/:id" element={<MovieDetail />} />
+        
+        <Route path="/booking/:showtimeId" element={<SeatSelection />} />
+        <Route path="/checkout" element={<Checkout />} />
+        
+        <Route path="/movies/now-showing" element={<MoviesPage key="now" initialType="now" />} />
+        <Route path="/movies/coming-soon" element={<MoviesPage key="soon" initialType="soon" />} />
 
         {/* === CUSTOMER PROTECTED ROUTES === */}
         <Route element={<ProtectedRoute allowedRoles={["CUSTOMER"]} />}>
           <Route path="/profile" element={<ClientProfile />} />
         </Route>
 
-        <Route path="/movies/now-showing" element={<MoviesPage key="now" initialType="now" />} />
-        <Route path="/movies/coming-soon" element={<MoviesPage key="soon" initialType="soon" />} />
-
         {/* === STAFF ROUTES (Role: STAFF) === */}
         <Route element={<ProtectedRoute allowedRoles={["STAFF"]} />}>
-          <Route path="/staff" element={<StaffLayout />}>
-            <Route index element={<Navigate to="/staff/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="sell-ticket" element={<SellTicketWizard />} />
-            <Route path="check-in" element={<CheckIn />} />
-            <Route path="profile" element={<StaffProfile />} />
-            <Route path="schedule" element={<Schedule />} />
-            <Route path="transactions" element={<TransactionHistory />} />
-          </Route>
+          <Route path="/staff" element={<StaffLayout />} />
+          <Route path="/staff/dashboard" element={<Dashboard />} />
+          <Route path="/staff/sell-ticket" element={<SellTicketWizard />} />
+          <Route path="/staff/check-in" element={<CheckIn />} />
+          <Route path="/staff/profile" element={<StaffProfile />} />
+          <Route path="/staff/schedule" element={<Schedule />} />
+          <Route path="/staff/transactions" element={<TransactionHistory />} />
         </Route>
 
         {/* === ADMIN ROUTES (Role: ADMIN) === */}
@@ -114,6 +122,7 @@ function App() {
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
       {!isAdminRoute && !isStaffRoute && <Footer />}
     </>
   );

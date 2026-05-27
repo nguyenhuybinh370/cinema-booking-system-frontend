@@ -56,6 +56,24 @@
   .accent-glow {
     box-shadow: 0 0 20px rgba(255, 176, 0, 0.15);
   }
+  
+  .animate-in {
+    animation-duration: 0.8s;
+    animation-fill-mode: both;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slide-in-from-left {
+    from { transform: translateX(-30px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .fade-in { animation-name: fade-in; }
+  .slide-in-from-left-10 { animation-name: slide-in-from-left; }
 }
 
 /* Custom scrollbar — cinema dark theme */
@@ -90,4 +108,13 @@
 }
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
