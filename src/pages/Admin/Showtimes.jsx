@@ -235,19 +235,19 @@ const Showtimes = () => {
           filterSlot={
             <>
               {/* Date Filter */}
-              <div className="flex items-center gap-2">
-                <span className="text-slate-500 text-xs font-semibold">Ngày chiếu:</span>
+              <div className="flex items-center gap-2 bg-white/[0.04] border border-white/10 rounded-xl px-4 py-[9px] focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20 transition-all">
+                <span className="text-slate-500 text-[10px] font-black uppercase tracking-wider select-none">Ngày:</span>
                 <input
                   type="date"
                   value={filters.date || ''}
                   onChange={e => setFilterVal('date', e.target.value || '')}
-                  className="bg-white/[0.04] border border-white/10 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer"
+                  className="bg-transparent border-none text-xs font-bold text-slate-300 focus:outline-none cursor-pointer p-0 [color-scheme:dark]"
                 />
                 {filters.date && (
                   <button
                     type="button"
                     onClick={() => setFilterVal('date', '')}
-                    className="text-xs text-red-400 hover:text-red-300 font-bold transition-all"
+                    className="text-xs text-red-400 hover:text-red-300 font-bold transition-all ml-1 cursor-pointer"
                   >
                     Xóa
                   </button>
@@ -258,7 +258,7 @@ const Showtimes = () => {
               <select
                 value={filters.movieId || 'All'}
                 onChange={e => setFilterVal('movieId', e.target.value)}
-                className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+                className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14] max-w-[200px]"
               >
                 <option value="All">Tất cả phim</option>
                 {movies.map(m => (
@@ -270,7 +270,7 @@ const Showtimes = () => {
               <select
                 value={filters.roomId || 'All'}
                 onChange={e => setFilterVal('roomId', e.target.value)}
-                className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+                className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14] max-w-[150px]"
               >
                 <option value="All">Tất cả phòng</option>
                 {rooms.map(r => (
@@ -282,7 +282,7 @@ const Showtimes = () => {
               <select
                 value={filters.activeStatus || 'All'}
                 onChange={e => setFilterVal('activeStatus', e.target.value)}
-                className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+                className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14] max-w-[150px]"
               >
                 <option value="All">Tất cả trạng thái</option>
                 <option value={1}>Khả dụng</option>

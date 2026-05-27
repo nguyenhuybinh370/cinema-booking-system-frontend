@@ -1,23 +1,48 @@
 import Modal from '../Common/Modal';
 
-const getSeatColor = (status, khaDung) => {
+const getSeatColor = (status, khaDung, isVIP) => {
   if (khaDung === 0) return 'bg-slate-800 border-slate-900 text-slate-600 cursor-not-allowed';
   if (status === 1) return 'bg-red-500 border-red-400 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]';
   if (status === 2) return 'bg-amber-500 border-amber-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]';
+  if (isVIP) return 'bg-purple-600/20 border-purple-500/30 text-purple-400 hover:bg-purple-500/30 shadow-[inset_0_0_8px_rgba(168,85,247,0.15)]';
   return 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30';
 };
 
 const SeatsGrid = ({ seats }) => {
+  if (!seats || !Array.isArray(seats) || seats.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-6 bg-black/40 rounded-3xl border border-white/5 w-full text-slate-500 text-sm font-semibold select-none">
+        Không có sơ đồ ghế cho suất chiếu này
+      </div>
+    );
+  }
+
   const rowsMap = {};
   seats.forEach(seat => {
+    if (!seat || !seat.MaGhe) return;
     const parts = seat.MaGhe.split('-');
-    const coord = parts[1] || 'A1';
-    const row = coord.match(/[A-Z]+/)[0];
-    const col = parseInt(coord.match(/\d+/)[0], 10);
+    const coord = parts[parts.length - 1] || 'A1';
+    
+    const rowMatch = coord.match(/[A-Za-z]+/);
+    const colMatch = coord.match(/\d+/);
+    
+    const row = rowMatch ? rowMatch[0].toUpperCase() : 'Unknown';
+    const col = colMatch ? parseInt(colMatch[0], 10) : 1;
+    
     if (!rowsMap[row]) rowsMap[row] = [];
-    rowsMap[row].push({ ...seat, col });
+    rowsMap[row].push({ ...seat, col, label: coord });
   });
-  Object.keys(rowsMap).forEach(r => rowsMap[r].sort((a, b) => a.col - b.col));
+
+  const rowKeys = Object.keys(rowsMap);
+  if (rowKeys.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-6 bg-black/40 rounded-3xl border border-white/5 w-full text-slate-500 text-sm font-semibold select-none">
+        Không có sơ đồ ghế cho suất chiếu này
+      </div>
+    );
+  }
+
+  rowKeys.forEach(r => rowsMap[r].sort((a, b) => a.col - b.col));
 
   return (
     <div className="flex flex-col items-center py-6 bg-black/40 rounded-3xl border border-white/5 overflow-x-auto">
@@ -25,19 +50,19 @@ const SeatsGrid = ({ seats }) => {
         <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-black uppercase tracking-[0.6em] text-slate-500">MÀN HÌNH</div>
       </div>
       <div className="space-y-2 px-6">
-        {Object.keys(rowsMap).sort().map(rowName => (
+        {rowKeys.sort().map(rowName => (
           <div key={rowName} className="flex gap-2 items-center justify-center">
             <span className="w-6 text-xs font-black text-slate-600 font-mono text-center">{rowName}</span>
             <div className="flex gap-2">
               {rowsMap[rowName].map(seat => {
-                const label = seat.MaGhe.split('-')[1];
+                const isVIP = seat.TenLoaiGhe?.toUpperCase().includes('VIP');
                 return (
                   <div
                     key={seat.MaGheSuatChieu}
-                    title={`Ghế: ${label} | ${seat.TrangThai === 0 ? 'Trống' : seat.TrangThai === 1 ? 'Đã đặt' : 'Đang giữ'}`}
-                    className={`w-8 h-8 rounded border text-[9px] font-black flex items-center justify-center transition-all ${getSeatColor(seat.TrangThai, seat.KhaDung)}`}
+                    title={`Ghế: ${seat.label} | Loại: ${seat.TenLoaiGhe || 'Thường'} | ${seat.TrangThai === 0 ? 'Trống' : seat.TrangThai === 1 ? 'Đã đặt' : 'Đang giữ'}`}
+                    className={`w-8 h-8 rounded border text-[9px] font-black flex items-center justify-center transition-all ${getSeatColor(seat.TrangThai, seat.KhaDung, isVIP)}`}
                   >
-                    {label}
+                    {seat.label}
                   </div>
                 );
               })}
@@ -49,6 +74,7 @@ const SeatsGrid = ({ seats }) => {
       <div className="mt-8 flex flex-wrap justify-center gap-6 text-[10px] uppercase font-black tracking-wider text-slate-400 border-t border-white/5 pt-6 w-full px-6">
         {[
           { color: 'bg-emerald-500/20 border-emerald-500/30', label: 'Trống' },
+          { color: 'bg-purple-600/20 border-purple-500/30', label: 'Ghế VIP' },
           { color: 'bg-amber-500 border-amber-400', label: 'Đang giữ' },
           { color: 'bg-red-500 border-red-400', label: 'Đã bán' },
           { color: 'bg-slate-800 border-slate-900', label: 'Bị khóa' },
