@@ -34,6 +34,7 @@ const shiftService = {
       TenCa: shift.TenCa,
       GioBatDau: shift.GioBatDau.length === 5 ? `${shift.GioBatDau}:00` : shift.GioBatDau,
       GioKetThuc: shift.GioKetThuc.length === 5 ? `${shift.GioKetThuc}:00` : shift.GioKetThuc,
+      SoNguoiToiDa: shift.SoNguoiToiDa ? parseInt(shift.SoNguoiToiDa, 10) : undefined,
     };
     const data = await axiosClient.post('/admin/ca-lam-viec', payload);
     return mapShift(data);
@@ -47,6 +48,9 @@ const shiftService = {
       }),
       ...(updates.GioKetThuc !== undefined && { 
         GioKetThuc: updates.GioKetThuc.length === 5 ? `${updates.GioKetThuc}:00` : updates.GioKetThuc 
+      }),
+      ...(updates.SoNguoiToiDa !== undefined && {
+        SoNguoiToiDa: updates.SoNguoiToiDa ? parseInt(updates.SoNguoiToiDa, 10) : undefined
       }),
     };
     const data = await axiosClient.put(`/admin/ca-lam-viec/${maCa}`, payload);
@@ -120,11 +124,10 @@ const shiftService = {
   },
 
   toggleShiftDetailStatus: async (maChiTietCa) => {
-    // Delete/cancel assignment
-    await axiosClient.delete(`/admin/ca-lam-viec/phan-ca/${maChiTietCa}`);
+    const data = await axiosClient.patch(`/admin/ca-lam-viec/phan-ca/${maChiTietCa}/toggle`);
     return {
       MaChiTietCa: maChiTietCa,
-      KhaDung: 0,
+      KhaDung: data.KhaDung ? 1 : 0,
     };
   },
 
