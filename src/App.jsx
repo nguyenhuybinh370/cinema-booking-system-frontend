@@ -3,7 +3,7 @@ import { Navigate } from "react-router-dom";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import SellTicketWizard from "./pages/Staff/SellTicket/SellTicketWizard";
 import StaffLayout from "./components/StaffLayout/StaffLayout";
-import CheckIn from "./pages/Staff/CheckIn";
+import CheckIn from "./pages/Staff/CheckInPage/index";
 import Dashboard from "./pages/Staff/Dashboard";
 import StaffProfile from "./pages/Staff/Profile/Profile";
 import Schedule from "./pages/Staff/Schedule/Schedule";
