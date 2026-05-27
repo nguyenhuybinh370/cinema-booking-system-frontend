@@ -7,15 +7,10 @@ import Footer from './components/Footer';
 import Home from './pages/Client/Home';
 import MovieDetails from './pages/Client/MovieDetails';
 import MoviesPage from './pages/Client/MoviesPage';
-import SeatSelection from './pages/Client/SeatSelection';
-import Checkout from './pages/Client/Checkout';
-import Profile from './pages/Client/Profile';
-import TicketConfirmation from './pages/Client/TicketConfirmation';
-
-// Auth Pages
-import ClientLogin from './pages/Auth/Login';
+import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import ForgotPassword from './pages/Auth/ForgotPassword';
+import ClientProfile from './pages/Client/Profile';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 
 // Admin Pages
@@ -34,40 +29,58 @@ import Transactions from './pages/Admin/Transactions';
 // Staff Pages
 import SellTicketWizard from './pages/Staff/SellTicket/SellTicketWizard';
 import StaffLayout from './components/StaffLayout/StaffLayout';
-import CheckIn from './pages/Staff/CheckIn';
+import CheckIn from './pages/Staff/CheckInPage/index';
 import Dashboard from './pages/Staff/Dashboard';
-import StaffProfile from './pages/Staff/Profile/Profile';
-import Schedule from './pages/Staff/Schedule/Schedule';
-import TransactionHistory from './pages/Staff/TransactionHistory';
+import StaffProfile from './pages/Staff/Profile/index';
+import Schedule from './pages/Staff/Schedule/index';
+import TransactionHistory from './pages/Staff/TransactionHistory/index';
 
 function App() {
   const isAdminRoute = useLocation().pathname.startsWith('/admin');
   const isStaffRoute = useLocation().pathname.startsWith('/staff');
 
-  const hideNavAndFooter = isAdminRoute || isStaffRoute;
-
   return (
     <>
-      <Toaster />
-      {!hideNavAndFooter && <Navbar />}
-      
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#131A2A',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '14px'
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff'
+            }
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff'
+            }
+          }
+        }}
+      />
+      {!isAdminRoute && !isStaffRoute && <Navbar />}
       <Routes>
         {/* === PUBLIC CLIENT ROUTES === */}
         <Route path="/" element={<Home />} />
-        <Route path="/login" element={<ClientLogin />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/movie/:id" element={<MovieDetails />} />
+
+        {/* === CUSTOMER PROTECTED ROUTES === */}
+        <Route element={<ProtectedRoute allowedRoles={["CUSTOMER"]} />}>
+          <Route path="/profile" element={<ClientProfile />} />
+        </Route>
+
         <Route path="/movies/now-showing" element={<MoviesPage key="now" initialType="now" />} />
         <Route path="/movies/coming-soon" element={<MoviesPage key="soon" initialType="soon" />} />
-
-        {/* === PROTECTED CLIENT ROUTES === */}
-        <Route element={<ProtectedRoute allowedRoles={["CLIENT", "STAFF", "ADMIN"]} />}>
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/booking/:showtimeId" element={<SeatSelection />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/ticket-confirmation" element={<TicketConfirmation />} />
-        </Route>
 
         {/* === STAFF ROUTES (Role: STAFF) === */}
         <Route element={<ProtectedRoute allowedRoles={["STAFF"]} />}>
@@ -101,8 +114,7 @@ function App() {
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-
-      {!hideNavAndFooter && <Footer />}
+      {!isAdminRoute && !isStaffRoute && <Footer />}
     </>
   );
 }

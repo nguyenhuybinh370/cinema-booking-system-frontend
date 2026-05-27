@@ -1,20 +1,19 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { User, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import axiosClient from '../../api/axiosClient';
+import toast from 'react-hot-toast';
 
 const Login = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ username: '', password: '' });
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setIsLoading(true);
-
     try {
       const response = await axiosClient.post("/auth/login", {
         TenDangNhap: formData.username,
@@ -27,25 +26,36 @@ const Login = () => {
         throw new Error("Phản hồi đăng nhập không hợp lệ từ máy chủ");
       }
 
-      // Store credentials
+      // Store tokens and metadata
       localStorage.setItem("accessToken", tokens.accessToken);
       localStorage.setItem("refreshToken", tokens.refreshToken);
       localStorage.setItem("userRole", taiKhoan.VaiTro);
       localStorage.setItem("userName", taiKhoan.HoTen);
       localStorage.setItem("userCode", taiKhoan.TenDangNhap);
+      localStorage.setItem("userInfo", JSON.stringify(taiKhoan));
 
-      // Redirect depending on role
-      if (taiKhoan.VaiTro === "ADMIN") {
-        navigate("/admin/rooms");
-      } else if (taiKhoan.VaiTro === "STAFF") {
-        navigate("/staff/dashboard");
+      toast.success("Đăng nhập thành công!");
+
+      // Role-based redirect
+      const from = location.state?.from;
+      const role = taiKhoan.VaiTro;
+
+      if (role === "CUSTOMER") {
+        navigate(from || "/", { replace: true });
+      } else if (role === "STAFF") {
+        // If from is a staff page, go there; otherwise staff dashboard
+        const staffTarget = from && from.startsWith("/staff") ? from : "/staff/dashboard";
+        navigate(staffTarget, { replace: true });
+      } else if (role === "ADMIN") {
+        const adminTarget = from && from.startsWith("/admin") ? from : "/admin";
+        navigate(adminTarget, { replace: true });
       } else {
-        navigate("/");
+        navigate("/", { replace: true });
       }
     } catch (err) {
       console.error("Login error:", err);
       const msg = err.response?.data?.message || err.message || "Đăng nhập thất bại. Vui lòng thử lại.";
-      setError(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
@@ -64,12 +74,6 @@ const Login = () => {
           <p className="text-sm text-gray-400">Vui lòng đăng nhập để tiếp tục đặt vé</p>
         </div>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-400 text-sm font-semibold text-center animate-pulse">
-            ⚠️ {error}
-          </div>
-        )}
-
         {/* Form Nhập Liệu */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-5 text-left">
           
@@ -80,7 +84,7 @@ const Login = () => {
               <input 
                 type="text" 
                 required
-                placeholder="Tên đăng nhập của bạn..."
+                placeholder="Tên đăng nhập"
                 value={formData.username}
                 onChange={(e) => setFormData({...formData, username: e.target.value})}
                 disabled={isLoading}
@@ -112,7 +116,8 @@ const Login = () => {
               <button 
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                disabled={isLoading}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors cursor-pointer disabled:opacity-50"
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -120,8 +125,8 @@ const Login = () => {
           </div>
 
           {/* Nút Đăng Nhập */}
-          <button type="submit" disabled={isLoading} className="btn-bright mt-4 w-full flex items-center justify-center gap-2 cursor-pointer py-3.5 rounded-xl normal-case text-base tracking-normal disabled:opacity-50 disabled:cursor-not-allowed">
-            <span>{isLoading ? "Đang Đăng Nhập..." : "Đăng Nhập"}</span>
+          <button type="submit" disabled={isLoading} className="btn-bright mt-4 w-full flex items-center justify-center gap-2 cursor-pointer py-3.5 rounded-xl normal-case text-base tracking-normal disabled:opacity-50">
+            <span>{isLoading ? "Đang xử lý..." : "Đăng Nhập"}</span>
             <ArrowRight size={18} />
           </button>
         </form>

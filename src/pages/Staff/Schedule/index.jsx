@@ -1,13 +1,10 @@
 import { useState, useEffect } from "react";
-import {
-  Calendar as CalendarIcon,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
-import ShiftCard from "./ShiftCard";
+import ScheduleHeader from "./ScheduleHeader";
+import ShiftCalendar from "./ShiftCalendar";
 import ShiftActionModal from "./ShiftActionModal";
 import axiosClient from "../../../api/axiosClient";
 import { generateWeek } from "../../../utils/dateHelper";
+import { showSuccess, showError, getErrorMessage } from "../../../utils/toastHelper";
 
 const Schedule = () => {
   const [weekOffset, setWeekOffset] = useState(0);
@@ -135,109 +132,54 @@ const Schedule = () => {
       if (isCurrentlyRegistered) {
         // Soft-delete cancellation
         if (!data.registrationId) {
-          alert("Lỗi hệ thống: Không tìm thấy mã định danh lịch đăng ký ca.");
+          showError("Lỗi hệ thống: Không tìm thấy mã định danh lịch đăng ký ca.");
           return;
         }
         await axiosClient.patch(`/staff/lich-lam-viec/${data.registrationId}/huy`);
-        alert("Hủy đăng ký ca làm việc thành công!");
+        showSuccess("Hủy đăng ký ca làm việc thành công!");
       } else {
         // Register shift
         await axiosClient.post("/staff/lich-lam-viec/dang-ky", {
           MaCa: template.MaCa,
           NgayLamViec: dateString,
         });
-        alert("Đăng ký ca làm việc thành công!");
+        showSuccess("Đăng ký ca làm việc thành công!");
       }
       await loadWeekData(); // refresh data
     } catch (err) {
       console.error("Shift registration toggle error:", err);
-      const msg = err.response?.data?.message || err.message || "Thao tác thất bại.";
-      alert(msg);
+      const msg = getErrorMessage(err, "Thao tác thất bại.");
+      showError(msg);
     } finally {
       setSelectedShift(null);
     }
   };
 
   return (
-    <div className="flex flex-col h-full space-y-8 relative">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-glow uppercase tracking-widest text-[var(--btn-neon)]">
-            Lịch Làm Việc
-          </h1>
-          <p className="text-white/50 mt-2">
-            Xem lịch và đăng ký ca làm việc hàng tuần
-          </p>
-        </div>
-
-        <div className="staff-card-flat rounded-full p-1 flex items-center shrink-0">
-          <button
-            onClick={() => setWeekOffset((prev) => prev - 1)}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white cursor-pointer"
-          >
-            <ChevronLeft size={20} />
-          </button>
-          <div className="px-6 py-2 flex items-center gap-2 font-bold text-sm min-w-[220px] justify-center">
-            <CalendarIcon size={16} className="text-[var(--btn-neon)]" />
-            <span>{weekDisplayTitle}</span>
-          </div>
-          <button
-            onClick={() => setWeekOffset((prev) => prev + 1)}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white cursor-pointer"
-          >
-            <ChevronRight size={20} />
-          </button>
-        </div>
-      </div>
+    <div className="flex flex-col h-full space-y-8 relative min-h-0">
+      <ScheduleHeader
+        setWeekOffset={setWeekOffset}
+        weekDisplayTitle={weekDisplayTitle}
+      />
 
       {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm font-semibold text-center">
+        <div className="p-4 bg-red-950/20 border border-red-500/30 rounded-2xl text-red-400 text-xs font-bold text-center animate-pulse">
           ⚠️ {error}
         </div>
       )}
 
       {isLoading ? (
-        <div className="flex-1 staff-card-flat rounded-3xl p-12 flex items-center justify-center text-white/50 font-bold uppercase tracking-wider">
-          Đang tải lịch làm việc...
+        <div className="flex-1 min-h-[350px] bg-[#131A2A]/40 border border-white/5 rounded-3xl p-12 flex flex-col items-center justify-center text-slate-400 font-bold uppercase tracking-wider">
+          <div className="w-12 h-12 border-4 border-[#FFB000] border-t-transparent rounded-full animate-spin mb-4"></div>
+          <span className="text-glow text-[#FFB000] text-sm">Đang tải lịch làm việc...</span>
         </div>
       ) : (
-        <div className="staff-card-flat rounded-3xl p-6 flex-1 overflow-x-auto min-h-[450px]">
-          <div className="min-w-[1000px] grid grid-cols-7 gap-4 h-full">
-            {currentWeek.map((day) => (
-              <div key={day.dateString} className="flex flex-col gap-4">
-                <div className="text-center pb-4 border-b border-white/10 shrink-0">
-                  <h3 className="font-bold text-lg text-white">{day.dayName}</h3>
-                  <p className="text-xs text-[var(--btn-neon)] font-mono mt-1">
-                    {day.displayDate}
-                  </p>
-                </div>
-                <div className="flex flex-col gap-3 flex-1 overflow-y-auto">
-                  {shiftTemplates.map((template) => (
-                    <ShiftCard
-                      key={template.MaCa}
-                      day={day}
-                      shiftTemplate={template}
-                      shiftData={
-                        shiftDetails[`${day.dateString}_${template.MaCa}`] || {
-                          registeredCount: 0,
-                          isMyShift: false,
-                          capacity: template.SoNguoiToiDa,
-                          conTrong: true,
-                        }
-                      }
-                      onClick={handleCardClick}
-                    />
-                  ))}
-                  {shiftTemplates.length === 0 && (
-                    <div className="text-white/20 text-center py-8 text-xs italic">
-                      Không có ca làm
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <ShiftCalendar
+          currentWeek={currentWeek}
+          shiftTemplates={shiftTemplates}
+          shiftDetails={shiftDetails}
+          onClick={handleCardClick}
+        />
       )}
 
       <ShiftActionModal
