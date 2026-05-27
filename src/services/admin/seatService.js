@@ -76,6 +76,24 @@ const seatService = {
     };
   },
 
+  updateSeatMap: async (id, data) => {
+    const payload = {
+      TenSoDo: data.TenSoDo || data.MaSoDoGhe || `Sơ đồ ${data.TongHang}x${data.TongCot}`,
+      SoHang: Number(data.TongHang),
+      SoCot: Number(data.TongCot),
+      KhaDung: data.KhaDung === 1
+    };
+    const res = await axiosClient.put(`/admin/so-do-ghe/${id}`, payload);
+    return {
+      MaSoDoGhe: res.MaSoDo,
+      TenSoDo: res.TenSoDo,
+      TongHang: res.SoHang,
+      TongCot: res.SoCot,
+      CauTruc: JSON.stringify({ aisles: { rows: [], cols: getAisles(res.SoCot) } }),
+      KhaDung: res.KhaDung ? 1 : 0
+    };
+  },
+
   deleteSeatMap: async (id) => {
     await axiosClient.delete(`/admin/so-do-ghe/${id}`);
     return true;

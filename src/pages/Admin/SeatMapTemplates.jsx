@@ -4,19 +4,21 @@ import Modal from '../../components/Admin/Common/Modal';
 import AdminTable from '../../components/Admin/Common/AdminTable';
 import adminService from '../../services/adminService';
 import useAdminForm from '../../hooks/useAdminForm';
-import { Plus, Eye, Code, Trash2 } from 'lucide-react';
+import { Plus, Eye, Trash2, Edit2 } from 'lucide-react';
 
 const SeatMapTemplates = () => {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState(null);
+  const [editingTemplate, setEditingTemplate] = useState(null);
 
   const initialFormState = {
     MaSoDoGhe: '',
     TongHang: 10,
     TongCot: 12,
-    CauTruc: '{"aisles": {"rows": [], "cols": [4, 9]}}'
+    CauTruc: '{"aisles": {"rows": [], "cols": [4, 9]}}',
+    KhaDung: 1
   };
 
   const loadData = async () => {
@@ -32,24 +34,54 @@ const SeatMapTemplates = () => {
 
   const {
     formData,
+    setFormData,
     handleChange,
     handleSubmit,
     resetForm
   } = useAdminForm(initialFormState, async (data) => {
     try {
-      await adminService.addSeatMap({
-        TenSoDo: data.MaSoDoGhe,
-        TongHang: Number(data.TongHang),
-        TongCot: Number(data.TongCot)
-      });
-      alert("Tạo sơ đồ mẫu mới thành công!");
+      if (editingTemplate) {
+        await adminService.updateSeatMap(editingTemplate.MaSoDoGhe, {
+          TenSoDo: data.MaSoDoGhe,
+          TongHang: Number(data.TongHang),
+          TongCot: Number(data.TongCot),
+          KhaDung: data.KhaDung === 1
+        });
+        alert("Cập nhật sơ đồ mẫu thành công!");
+      } else {
+        await adminService.addSeatMap({
+          TenSoDo: data.MaSoDoGhe,
+          TongHang: Number(data.TongHang),
+          TongCot: Number(data.TongCot)
+        });
+        alert("Tạo sơ đồ mẫu mới thành công!");
+      }
       await loadData();
       setIsModalOpen(false);
+      setEditingTemplate(null);
       resetForm();
     } catch (err) {
-      alert(`Lỗi khi tạo sơ đồ: ${err.message}`);
+      alert(`Lỗi: ${err.message}`);
     }
   });
+
+  const handleOpenAddModal = () => {
+    setEditingTemplate(null);
+    setFormData(initialFormState);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (template) => {
+    setEditingTemplate(template);
+    setFormData({
+      MaSoDoGhe: template.MaSoDoGhe,
+      TongHang: template.TongHang,
+      TongCot: template.TongCot,
+      CauTruc: template.CauTruc,
+      KhaDung: template.KhaDung ?? 1
+    });
+    setIsModalOpen(true);
+  };
 
   const handleDelete = async (id) => {
     if (window.confirm(`Bạn có chắc chắn muốn xóa sơ đồ mẫu ${id}?`)) {
@@ -83,6 +115,13 @@ const SeatMapTemplates = () => {
             title="Xem trước"
           >
             <Eye size={18} />
+          </button>
+          <button 
+            onClick={() => handleEdit(t)}
+            className="p-2 hover:bg-white/5 text-emerald-500 hover:text-emerald-400 rounded-xl transition-all cursor-pointer"
+            title="Sửa"
+          >
+            <Edit2 size={18} />
           </button>
           <button 
             onClick={() => handleDelete(t.MaSoDoGhe)}
@@ -133,8 +172,8 @@ const SeatMapTemplates = () => {
           <p className="text-slate-500 font-medium">Quản lý các khuôn mẫu sơ đồ ghế (Template) dùng khi tạo phòng chiếu.</p>
         </div>
         <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 flex items-center gap-2"
+          onClick={handleOpenAddModal}
+          className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 flex items-center gap-2 cursor-pointer"
         >
           <Plus size={20} />
           Tạo mẫu mới
@@ -147,20 +186,24 @@ const SeatMapTemplates = () => {
         <AdminTable columns={columns} data={templates} rowKey="MaSoDoGhe" />
       )}
 
-      {/* Create Modal */}
+      {/* Create/Edit Modal */}
       <Modal 
         isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)}
-        title="Tạo sơ đồ mẫu mới"
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingTemplate(null);
+        }}
+        title={editingTemplate ? "Cập nhật sơ đồ mẫu" : "Tạo sơ đồ mẫu mới"}
       >
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Mã sơ đồ (MaSoDoGhe)</label>
             <input 
               type="text" name="MaSoDoGhe" required
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white font-mono"
+              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white font-mono disabled:opacity-50"
               value={formData.MaSoDoGhe} onChange={handleChange}
               placeholder="VD: SM10x12"
+              disabled={!!editingTemplate}
             />
           </div>
 
@@ -193,9 +236,33 @@ const SeatMapTemplates = () => {
             <p className="text-[10px] text-slate-600">Định nghĩa vị trí lối đi (aisles) theo cột hoặc hàng.</p>
           </div>
 
+          {editingTemplate && (
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Khả dụng (KhaDung)</label>
+              <select 
+                name="KhaDung"
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-sm text-slate-300"
+                value={formData.KhaDung}
+                onChange={handleChange}
+              >
+                <option value={1} className="bg-[#0f1117]">1 (Khả dụng)</option>
+                <option value={0} className="bg-[#0f1117]">0 (Chưa khả dụng)</option>
+              </select>
+            </div>
+          )}
+
           <div className="flex gap-4 pt-4 border-t border-white/5">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="flex-grow py-3 rounded-xl font-bold text-slate-400 hover:bg-white/5 transition-all">Hủy</button>
-            <button type="submit" className="flex-grow py-3 rounded-xl font-bold bg-red-500 hover:bg-red-600 transition-all">Lưu mẫu</button>
+            <button 
+              type="button" 
+              onClick={() => {
+                setIsModalOpen(false);
+                setEditingTemplate(null);
+              }} 
+              className="flex-grow py-3 rounded-xl font-bold text-slate-400 hover:bg-white/5 transition-all cursor-pointer"
+            >
+              Hủy
+            </button>
+            <button type="submit" className="flex-grow py-3 rounded-xl font-bold bg-red-500 hover:bg-red-600 transition-all cursor-pointer">Lưu mẫu</button>
           </div>
         </form>
       </Modal>
