@@ -4,16 +4,17 @@ import Modal from '../../components/Admin/Common/Modal';
 import AdminTable from '../../components/Admin/Common/AdminTable';
 import StatusBadge from '../../components/Admin/Common/StatusBadge';
 import adminService from '../../services/adminService';
-import { Search, Landmark, CreditCard, DollarSign, RotateCcw, AlertTriangle } from 'lucide-react';
+import { Landmark, CreditCard, DollarSign, RotateCcw, AlertTriangle } from 'lucide-react';
 import { showSuccess, showError } from '../../utils/toastHelper';
 import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
+
+import { useClientPagination } from '../../hooks/useClientPagination';
+import AdminToolbar from '../../components/Admin/Common/AdminToolbar';
+import AdminPagination from '../../components/Admin/Common/AdminPagination';
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
-  const [methodFilter, setMethodFilter] = useState('All');
 
   // Refund states
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
@@ -63,20 +64,26 @@ const Transactions = () => {
     }
   };
 
-  // Filter Transactions
-  const filteredTransactions = transactions.filter(t => {
-    const matchesSearch = 
-      t.MaGiaoDich.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.MaPhieuDatVe.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.MaThamChieuDoiTac.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.KhachHang.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.Phim.toLowerCase().includes(searchQuery.toLowerCase());
-      
-    const matchesStatus = statusFilter === 'All' || t.TrangThai === statusFilter;
-    const matchesMethod = methodFilter === 'All' || t.PhuongThucThanhToan === methodFilter;
-    
-    return matchesSearch && matchesStatus && matchesMethod;
-  });
+  const {
+    searchQuery,
+    setSearchQuery,
+    filters,
+    setFilterVal,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    paginatedItems
+  } = useClientPagination(
+    transactions,
+    ['MaGiaoDich', 'MaPhieuDatVe', 'MaThamChieuDoiTac', 'KhachHang', 'Phim'],
+    (t, f) => {
+      const matchStatus = !f.status || f.status === 'All' || t.TrangThai === f.status;
+      const matchMethod = !f.method || f.method === 'All' || t.PhuongThucThanhToan === f.method;
+      return matchStatus && matchMethod;
+    }
+  );
 
   const columns = [
     {
@@ -177,48 +184,61 @@ const Transactions = () => {
         subtitle="Giám sát toàn bộ luồng tiền giao dịch vé thực tế (bảng GIAODICH) từ các cổng thanh toán."
       />
 
-      {/* Filter panel */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="md:col-span-2 flex items-center gap-3 bg-white/[0.04] border border-white/10 rounded-2xl px-4 py-3.5 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20 transition-all">
-          <Search size={18} className="text-slate-500" />
-          <input 
-            type="text" 
-            placeholder="Tìm theo mã giao dịch, mã vé, khách hàng, tên phim..." 
-            className="bg-transparent border-none focus:outline-none text-sm text-white placeholder:text-slate-500 w-full font-bold"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <select 
-          className="bg-white/[0.04] border border-white/10 rounded-2xl px-6 py-3.5 text-sm font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
-          value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
-        >
-          <option value="All">Tất cả trạng thái</option>
-          <option value="Success">Thành công (Success)</option>
-          <option value="Refunded">Đã hoàn tiền (Refunded)</option>
-          <option value="Failed">Thất bại (Failed)</option>
-        </select>
-        <select 
-          className="bg-white/[0.04] border border-white/10 rounded-2xl px-6 py-3.5 text-sm font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
-          value={methodFilter}
-          onChange={e => setMethodFilter(e.target.value)}
-        >
-          <option value="All">Phương thức thanh toán</option>
-          <option value="VNPay">VNPay</option>
-          <option value="MoMo">MoMo</option>
-          <option value="Card">Thẻ Quốc tế</option>
-          <option value="Cash">Tiền mặt</option>
-        </select>
-      </div>
+      {/* Filters and search using AdminToolbar */}
+      <AdminToolbar
+        searchPlaceholder="Tìm theo mã giao dịch, mã vé, khách hàng, tên phim..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        filterSlot={
+          <>
+            {/* Status Filter */}
+            <select 
+              className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+              value={filters.status || 'All'}
+              onChange={e => setFilterVal('status', e.target.value)}
+            >
+              <option value="All">Tất cả trạng thái</option>
+              <option value="Success">Thành công (Success)</option>
+              <option value="Refunded">Đã hoàn tiền (Refunded)</option>
+              <option value="Failed">Thất bại (Failed)</option>
+            </select>
+
+            {/* Method Filter */}
+            <select 
+              className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+              value={filters.method || 'All'}
+              onChange={e => setFilterVal('method', e.target.value)}
+            >
+              <option value="All">Phương thức thanh toán</option>
+              <option value="VNPay">VNPay</option>
+              <option value="MoMo">MoMo</option>
+              <option value="Card">Thẻ Quốc tế</option>
+              <option value="Cash">Tiền mặt</option>
+            </select>
+          </>
+        }
+      />
 
       {/* Table grid with horizontal scroll wrapper */}
       {loading ? (
         <div className="bg-white/5 border border-white/5 rounded-3xl h-64 animate-pulse" />
-      ) : (
-        <div className="overflow-x-auto w-full custom-scrollbar">
-          <AdminTable columns={columns} data={filteredTransactions} rowKey="MaGiaoDich" />
+      ) : paginatedItems.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 text-slate-500 bg-white/[0.02] border border-white/10 rounded-3xl text-sm font-semibold">
+          Không tìm thấy dữ liệu phù hợp
         </div>
+      ) : (
+        <>
+          <div className="overflow-x-auto w-full custom-scrollbar">
+            <AdminTable columns={columns} data={paginatedItems} rowKey="MaGiaoDich" />
+          </div>
+          <AdminPagination
+            page={page}
+            pageSize={pageSize}
+            total={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
+        </>
       )}
 
       {/* Refund Confirmation Modal */}

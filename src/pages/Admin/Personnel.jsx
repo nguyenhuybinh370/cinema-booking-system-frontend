@@ -4,9 +4,12 @@ import adminService from '../../services/adminService';
 import PersonnelTable from '../../components/Admin/Personnel/PersonnelTable';
 import PersonnelModal from '../../components/Admin/Personnel/PersonnelModal';
 import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
-import { Search } from 'lucide-react';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { showSuccess, showError } from '../../utils/toastHelper';
+
+import { useClientPagination } from '../../hooks/useClientPagination';
+import AdminToolbar from '../../components/Admin/Common/AdminToolbar';
+import AdminPagination from '../../components/Admin/Common/AdminPagination';
 
 const defaultForm = {
   HoTen: '', SoDienThoai: '', Email: '', ChucVu: '', Role: 'Staff',
@@ -18,7 +21,6 @@ const Personnel = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState(defaultForm);
   const [confirmState, setConfirmState] = useState({ isOpen: false, data: null });
   const [isToggling, setIsToggling] = useState(false);
@@ -79,11 +81,26 @@ const Personnel = () => {
     finally { setLoading(false); }
   };
 
-  const filteredStaff = staff.filter(p => {
-    return p.HoTen.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.Email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.SoDienThoai.includes(searchQuery);
-  });
+  const {
+    searchQuery,
+    setSearchQuery,
+    filters,
+    setFilterVal,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    paginatedItems
+  } = useClientPagination(
+    staff,
+    ['HoTen', 'Email', 'SoDienThoai', 'ChucVu'],
+    (p, f) => {
+      const matchRole = !f.role || f.role === 'All' || p.Role === f.role;
+      const matchKhaDung = !f.activeStatus || f.activeStatus === 'All' || p.KhaDung === Number(f.activeStatus);
+      return matchRole && matchKhaDung;
+    }
+  );
 
   return (
     <AdminLayout>
@@ -100,21 +117,56 @@ const Personnel = () => {
         }
       />
 
-      {/* Search */}
-      <div className="flex gap-4 mb-8">
-        <div className="flex-grow flex items-center gap-3 bg-white/[0.04] border border-white/10 rounded-2xl px-4 py-3.5 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20 transition-all">
-          <Search size={18} className="text-slate-500" />
-          <input type="text" placeholder="Tìm theo tên, email hoặc số điện thoại..."
-            className="bg-transparent border-none focus:outline-none text-sm text-white placeholder:text-slate-500 w-full font-bold"
-            value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-        </div>
-      </div>
+      {/* Filters and search using AdminToolbar */}
+      <AdminToolbar
+        searchPlaceholder="Tìm theo tên, email, số điện thoại hoặc chức vụ..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        filterSlot={
+          <>
+            {/* Role filter */}
+            <select
+              value={filters.role || 'All'}
+              onChange={e => setFilterVal('role', e.target.value)}
+              className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+            >
+              <option value="All">Tất cả vai trò</option>
+              <option value="Staff">Nhân viên (Staff)</option>
+              <option value="Admin">Quản trị viên (Admin)</option>
+            </select>
+
+            {/* Active Status filter */}
+            <select
+              value={filters.activeStatus || 'All'}
+              onChange={e => setFilterVal('activeStatus', e.target.value)}
+              className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+            >
+              <option value="All">Tất cả trạng thái</option>
+              <option value={1}>Khả dụng</option>
+              <option value={0}>Đã khóa</option>
+            </select>
+          </>
+        }
+      />
 
       {/* Table */}
       {loading && staff.length === 0 ? (
         <div className="bg-white/5 border border-white/5 rounded-3xl h-64 animate-pulse" />
+      ) : paginatedItems.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 text-slate-500 bg-white/[0.02] border border-white/10 rounded-3xl text-sm font-semibold">
+          Không tìm thấy dữ liệu phù hợp
+        </div>
       ) : (
-        <PersonnelTable staff={filteredStaff} onEdit={openEdit} onToggleStatus={handleToggleStatus} />
+        <>
+          <PersonnelTable staff={paginatedItems} onEdit={openEdit} onToggleStatus={handleToggleStatus} />
+          <AdminPagination
+            page={page}
+            pageSize={pageSize}
+            total={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
+        </>
       )}
 
       <PersonnelModal

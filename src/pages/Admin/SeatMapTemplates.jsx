@@ -7,6 +7,10 @@ import useAdminForm from '../../hooks/useAdminForm';
 import { Plus, Eye, Trash2, Edit2 } from 'lucide-react';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { showSuccess, showError } from '../../utils/toastHelper';
+import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
+import { useClientPagination } from '../../hooks/useClientPagination';
+import AdminToolbar from '../../components/Admin/Common/AdminToolbar';
+import AdminPagination from '../../components/Admin/Common/AdminPagination';
 
 const SeatMapTemplates = () => {
   const [templates, setTemplates] = useState([]);
@@ -108,6 +112,26 @@ const SeatMapTemplates = () => {
     }
   };
 
+  const {
+    searchQuery,
+    setSearchQuery,
+    filters,
+    setFilterVal,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    paginatedItems
+  } = useClientPagination(
+    templates,
+    ['TenSoDo', 'MaSoDoGhe'],
+    (t, f) => {
+      const matchKhaDung = !f.activeStatus || f.activeStatus === 'All' || t.KhaDung === Number(f.activeStatus);
+      return matchKhaDung;
+    }
+  );
+
   const columns = [
     { header: 'Mã sơ đồ', accessor: 'MaSoDoGhe', className: 'font-mono font-bold text-white' },
     { header: 'Tên sơ đồ', accessor: 'TenSoDo', className: 'text-slate-400' },
@@ -148,6 +172,7 @@ const SeatMapTemplates = () => {
     }
   ];
 
+  // Preview Matrix Logic
   const previewMatrix = useMemo(() => {
     if (!previewTemplate) return [];
     const { TongHang, TongCot, CauTruc } = previewTemplate;
@@ -199,12 +224,47 @@ const SeatMapTemplates = () => {
         }
       />
 
+      {/* Filters and search using AdminToolbar */}
+      <AdminToolbar
+        searchPlaceholder="Tìm theo tên sơ đồ hoặc mã sơ đồ..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        filterSlot={
+          <>
+            {/* Active Status filter */}
+            <select
+              value={filters.activeStatus || 'All'}
+              onChange={e => setFilterVal('activeStatus', e.target.value)}
+              className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+            >
+              <option value="All">Tất cả trạng thái</option>
+              <option value={1}>Khả dụng</option>
+              <option value={0}>Không khả dụng</option>
+            </select>
+          </>
+        }
+      />
+
       {loading ? (
         <div className="bg-white/5 border border-white/5 rounded-3xl h-64 animate-pulse"></div>
+      ) : paginatedItems.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 text-slate-500 bg-white/[0.02] border border-white/10 rounded-3xl text-sm font-semibold">
+          Không tìm thấy dữ liệu phù hợp
+        </div>
       ) : (
-        <AdminTable columns={columns} data={templates} rowKey="MaSoDoGhe" />
+        <>
+          <AdminTable columns={columns} data={paginatedItems} rowKey="MaSoDoGhe" />
+          <AdminPagination
+            page={page}
+            pageSize={pageSize}
+            total={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
+        </>
       )}
 
+      {/* Create/Edit Modal */}
       <Modal 
         isOpen={isModalOpen} 
         onClose={() => {
@@ -285,6 +345,7 @@ const SeatMapTemplates = () => {
         </form>
       </Modal>
 
+      {/* Preview Modal */}
       <Modal
         isOpen={!!previewTemplate}
         onClose={() => setPreviewTemplate(null)}

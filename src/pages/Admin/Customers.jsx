@@ -9,12 +9,13 @@ import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { showSuccess, showError } from '../../utils/toastHelper';
 
 import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
+import { useClientPagination } from '../../hooks/useClientPagination';
+import AdminToolbar from '../../components/Admin/Common/AdminToolbar';
+import AdminPagination from '../../components/Admin/Common/AdminPagination';
 
 const Customers = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
   
   // Modals state
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -105,17 +106,25 @@ const Customers = () => {
     }
   };
 
-  // Filter customers
-  const filteredCustomers = customers.filter(c => {
-    const matchesSearch = 
-      c.HoTen.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.Email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.SoDienThoai.includes(searchQuery);
-    
-    const matchesStatus = statusFilter === 'All' || c.TrangThai === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+  const {
+    searchQuery,
+    setSearchQuery,
+    filters,
+    setFilterVal,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    paginatedItems
+  } = useClientPagination(
+    customers,
+    ['HoTen', 'Email', 'SoDienThoai'],
+    (c, f) => {
+      const matchStatus = !f.status || f.status === 'All' || c.TrangThai === f.status;
+      return matchStatus;
+    }
+  );
 
   const columns = [
     {
@@ -176,34 +185,42 @@ const Customers = () => {
         subtitle="Tra cứu hồ sơ khách hàng, xem lịch sử giao dịch và quản lý khóa/mở tài khoản."
       />
 
-      {/* Search & Filter */}
-      <div className="flex flex-col md:flex-row gap-4 mb-8">
-        <div className="flex-grow flex items-center gap-3 bg-white/[0.04] border border-white/10 rounded-2xl px-4 py-3.5 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20 transition-all">
-          <Search size={18} className="text-slate-500" />
-          <input 
-            type="text" 
-            placeholder="Tìm kiếm khách hàng theo tên, email, sđt..." 
-            className="bg-transparent border-none focus:outline-none text-sm text-white placeholder:text-slate-500 w-full font-bold"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <select 
-          className="bg-white/[0.04] border border-white/10 rounded-2xl px-6 py-3.5 text-sm font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
-          value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
-        >
-          <option value="All">Tất cả trạng thái</option>
-          <option value="Active">Đang hoạt động</option>
-          <option value="Banned">Bị khóa</option>
-        </select>
-      </div>
+      {/* Filters and search using AdminToolbar */}
+      <AdminToolbar
+        searchPlaceholder="Tìm kiếm khách hàng theo tên, email, sđt..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        filterSlot={
+          <select 
+            className="bg-white/[0.04] border border-white/10 rounded-xl px-6 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+            value={filters.status || 'All'}
+            onChange={e => setFilterVal('status', e.target.value)}
+          >
+            <option value="All">Tất cả trạng thái</option>
+            <option value="Active">Đang hoạt động</option>
+            <option value="Banned">Bị khóa</option>
+          </select>
+        }
+      />
 
       {/* Table */}
       {loading ? (
         <div className="bg-white/5 border border-white/5 rounded-3xl h-64 animate-pulse" />
+      ) : paginatedItems.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 text-slate-500 bg-white/[0.02] border border-white/10 rounded-3xl text-sm font-semibold">
+          Không tìm thấy dữ liệu phù hợp
+        </div>
       ) : (
-        <AdminTable columns={columns} data={filteredCustomers} rowKey="MaKhachHang" />
+        <>
+          <AdminTable columns={columns} data={paginatedItems} rowKey="MaKhachHang" />
+          <AdminPagination
+            page={page}
+            pageSize={pageSize}
+            total={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
+        </>
       )}
 
       {/* Side Drawer: Transaction History */}

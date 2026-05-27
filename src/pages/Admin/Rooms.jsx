@@ -11,6 +11,10 @@ import { LayoutGrid, Plus, Edit2, Trash2, Calendar, AlertCircle } from 'lucide-r
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { showSuccess, showError } from '../../utils/toastHelper';
 
+import { useClientPagination } from '../../hooks/useClientPagination';
+import AdminToolbar from '../../components/Admin/Common/AdminToolbar';
+import AdminPagination from '../../components/Admin/Common/AdminPagination';
+
 const Rooms = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
@@ -135,6 +139,38 @@ const Rooms = () => {
     }
   };
 
+  // Pre-inject room type names for client-side search
+  const roomsWithTypes = useMemo(() => {
+    return rooms.map(room => {
+      const type = roomTypes.find(t => t.MaLoaiPhong === room.MaLoaiPhong);
+      return {
+        ...room,
+        TenLoaiPhong: type ? type.TenLoaiPhong : ''
+      };
+    });
+  }, [rooms, roomTypes]);
+
+  const {
+    searchQuery,
+    setSearchQuery,
+    filters,
+    setFilterVal,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    paginatedItems
+  } = useClientPagination(
+    roomsWithTypes,
+    ['TenPhong', 'TenLoaiPhong'],
+    (room, f) => {
+      const matchType = !f.roomType || f.roomType === 'All' || room.MaLoaiPhong === f.roomType;
+      const matchKhaDung = !f.activeStatus || f.activeStatus === 'All' || room.KhaDung === Number(f.activeStatus);
+      return matchType && matchKhaDung;
+    }
+  );
+
   const columns = [
     {
       header: 'Mã phòng chiếu',
@@ -220,7 +256,7 @@ const Rooms = () => {
         action={
           <button 
             onClick={handleOpenAddModal}
-            className="w-full md:w-auto bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full md:w-auto bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2 cursor-pointer text-sm"
           >
             <Plus size={18} />
             Thêm phòng chiếu
@@ -228,10 +264,58 @@ const Rooms = () => {
         }
       />
 
+      {/* Filters and search using AdminToolbar */}
+      <AdminToolbar
+        searchPlaceholder="Tìm theo tên phòng, tên loại phòng..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        filterSlot={
+          <>
+            {/* Room Type filter */}
+            <select
+              value={filters.roomType || 'All'}
+              onChange={e => setFilterVal('roomType', e.target.value)}
+              className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+            >
+              <option value="All">Tất cả loại phòng</option>
+              {roomTypes.map(type => (
+                <option key={type.MaLoaiPhong} value={type.MaLoaiPhong}>
+                  {type.TenLoaiPhong} ({type.MaLoaiPhong})
+                </option>
+              ))}
+            </select>
+
+            {/* Active Status filter */}
+            <select
+              value={filters.activeStatus || 'All'}
+              onChange={e => setFilterVal('activeStatus', e.target.value)}
+              className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+            >
+              <option value="All">Tất cả trạng thái</option>
+              <option value={1}>Khả dụng</option>
+              <option value={0}>Không khả dụng</option>
+            </select>
+          </>
+        }
+      />
+
       {loading ? (
         <div className="bg-white/5 border border-white/5 rounded-3xl h-64 animate-pulse"></div>
+      ) : paginatedItems.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 text-slate-500 bg-white/[0.02] border border-white/10 rounded-3xl text-sm font-semibold">
+          Không tìm thấy dữ liệu phù hợp
+        </div>
       ) : (
-        <AdminTable columns={columns} data={rooms} rowKey="MaPhongChieu" />
+        <>
+          <AdminTable columns={columns} data={paginatedItems} rowKey="MaPhongChieu" />
+          <AdminPagination
+            page={page}
+            pageSize={pageSize}
+            total={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
+        </>
       )}
 
       <Modal 

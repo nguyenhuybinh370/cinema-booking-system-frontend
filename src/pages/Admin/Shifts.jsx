@@ -6,9 +6,13 @@ import ShiftDetailTable from '../../components/Admin/Shifts/ShiftDetailTable';
 import ShiftModal from '../../components/Admin/Shifts/ShiftModal';
 import ShiftRegistrationModal from '../../components/Admin/Shifts/ShiftRegistrationModal';
 import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { showSuccess, showError } from '../../utils/toastHelper';
+
+import { useClientPagination } from '../../hooks/useClientPagination';
+import AdminToolbar from '../../components/Admin/Common/AdminToolbar';
+import AdminPagination from '../../components/Admin/Common/AdminPagination';
 
 const Shifts = () => {
   const [activeTab, setActiveTab] = useState('shifts');
@@ -16,8 +20,6 @@ const Shifts = () => {
   const [registrations, setRegistrations] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [shiftSearch, setShiftSearch] = useState('');
-  const [regSearch, setRegSearch] = useState('');
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
   const [isRegModalOpen, setIsRegModalOpen] = useState(false);
   const [editingShift, setEditingShift] = useState(null);
@@ -111,8 +113,25 @@ const Shifts = () => {
     }
   };
 
-  const filteredShifts = shifts.filter(s => s.TenCa.toLowerCase().includes(shiftSearch.toLowerCase()) || s.MaCaLamViec.toLowerCase().includes(shiftSearch.toLowerCase()));
-  const filteredRegs = registrations.filter(r => r.HoTen.toLowerCase().includes(regSearch.toLowerCase()) || r.TenCa.toLowerCase().includes(regSearch.toLowerCase()) || r.MaChiTietCa.toLowerCase().includes(regSearch.toLowerCase()));
+  const shiftPagination = useClientPagination(
+    shifts,
+    ['TenCa', 'MaCaLamViec'],
+    (s, f) => {
+      const matchKhaDung = !f.activeStatus || f.activeStatus === 'All' || s.KhaDung === Number(f.activeStatus);
+      return matchKhaDung;
+    }
+  );
+
+  const regPagination = useClientPagination(
+    registrations,
+    ['HoTen', 'TenCa', 'MaChiTietCa', 'GhiChu'],
+    (r, f) => {
+      const matchKhaDung = !f.activeStatus || f.activeStatus === 'All' || r.KhaDung === Number(f.activeStatus);
+      const matchDate = !f.date || r.NgayLam === f.date;
+      return matchKhaDung && matchDate;
+    }
+  );
+
   const cancelledCount = registrations.filter(r => r.KhaDung === 0).length;
   const tabs = [
     { id: 'shifts', label: 'Danh sách Ca làm việc (CALAMVIEC)' },
@@ -147,25 +166,112 @@ const Shifts = () => {
         ))}
       </div>
 
-      {/* Search */}
-      <div className="flex gap-4 mb-8">
-        <div className="flex-grow flex items-center gap-3 bg-white/[0.04] border border-white/10 rounded-2xl px-4 py-3.5 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20 transition-all">
-          <Search size={18} className="text-slate-500" />
-          <input type="text" placeholder={activeTab === 'shifts' ? 'Tìm theo tên ca...' : 'Tìm theo tên nhân viên, ca...'}
-            className="bg-transparent border-none focus:outline-none text-sm text-white placeholder:text-slate-500 w-full font-bold"
-            value={activeTab === 'shifts' ? shiftSearch : regSearch}
-            onChange={e => activeTab === 'shifts' ? setShiftSearch(e.target.value) : setRegSearch(e.target.value)}
-          />
-        </div>
-      </div>
+      {/* Filters and search using AdminToolbar */}
+      {activeTab === 'shifts' ? (
+        <AdminToolbar
+          searchPlaceholder="Tìm theo tên ca, mã ca làm việc..."
+          searchValue={shiftPagination.searchQuery}
+          onSearchChange={shiftPagination.setSearchQuery}
+          filterSlot={
+            <select
+              value={shiftPagination.filters.activeStatus || 'All'}
+              onChange={e => shiftPagination.setFilterVal('activeStatus', e.target.value)}
+              className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+            >
+              <option value="All">Tất cả trạng thái</option>
+              <option value={1}>Khả dụng</option>
+              <option value={0}>Không khả dụng</option>
+            </select>
+          }
+        />
+      ) : (
+        <AdminToolbar
+          searchPlaceholder="Tìm theo tên nhân viên, ca, ghi chú..."
+          searchValue={regPagination.searchQuery}
+          onSearchChange={regPagination.setSearchQuery}
+          filterSlot={
+            <>
+              {/* Date Filter */}
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500 text-xs font-semibold">Ngày làm:</span>
+                <input
+                  type="date"
+                  value={regPagination.filters.date || ''}
+                  onChange={e => regPagination.setFilterVal('date', e.target.value || '')}
+                  className="bg-white/[0.04] border border-white/10 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer"
+                />
+                {regPagination.filters.date && (
+                  <button
+                    type="button"
+                    onClick={() => regPagination.setFilterVal('date', '')}
+                    className="text-xs text-red-400 hover:text-red-300 font-bold transition-all"
+                  >
+                    Xóa
+                  </button>
+                )}
+              </div>
+
+              {/* Status Filter */}
+              <select
+                value={regPagination.filters.activeStatus || 'All'}
+                onChange={e => regPagination.setFilterVal('activeStatus', e.target.value)}
+                className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+              >
+                <option value="All">Tất cả trạng thái</option>
+                <option value={1}>Hoạt động (Đăng ký)</option>
+                <option value={0}>Đã hủy</option>
+              </select>
+            </>
+          }
+        />
+      )}
 
       {/* Table */}
       {loading ? (
         <div className="bg-white/5 border border-white/5 rounded-3xl h-64 animate-pulse" />
       ) : activeTab === 'shifts' ? (
-        <ShiftTable shifts={filteredShifts} onEdit={openEditShift} onDelete={handleDeleteShift} onToggleStatus={handleToggleShift} />
+        shiftPagination.paginatedItems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 text-slate-500 bg-white/[0.02] border border-white/10 rounded-3xl text-sm font-semibold">
+            Không tìm thấy dữ liệu phù hợp
+          </div>
+        ) : (
+          <>
+            <ShiftTable 
+              shifts={shiftPagination.paginatedItems} 
+              onEdit={openEditShift} 
+              onDelete={handleDeleteShift} 
+              onToggleStatus={handleToggleShift} 
+            />
+            <AdminPagination
+              page={shiftPagination.page}
+              pageSize={shiftPagination.pageSize}
+              total={shiftPagination.totalItems}
+              onPageChange={shiftPagination.setPage}
+              onPageSizeChange={shiftPagination.setPageSize}
+            />
+          </>
+        )
       ) : (
-        <ShiftDetailTable registrations={filteredRegs} onToggleStatus={handleToggleReg} onDelete={handleDeleteReg} />
+        regPagination.paginatedItems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 text-slate-500 bg-white/[0.02] border border-white/10 rounded-3xl text-sm font-semibold">
+            Không tìm thấy dữ liệu phù hợp
+          </div>
+        ) : (
+          <>
+            <ShiftDetailTable 
+              registrations={regPagination.paginatedItems} 
+              onToggleStatus={handleToggleReg} 
+              onDelete={handleDeleteReg} 
+            />
+            <AdminPagination
+              page={regPagination.page}
+              pageSize={regPagination.pageSize}
+              total={regPagination.totalItems}
+              onPageChange={regPagination.setPage}
+              onPageSizeChange={regPagination.setPageSize}
+            />
+          </>
+        )
       )}
 
       {/* Modals */}

@@ -10,6 +10,10 @@ import { List, Calendar as CalendarIcon, Plus } from 'lucide-react';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { showSuccess, showError, showWarning } from '../../utils/toastHelper';
 
+import { useClientPagination } from '../../hooks/useClientPagination';
+import AdminToolbar from '../../components/Admin/Common/AdminToolbar';
+import AdminPagination from '../../components/Admin/Common/AdminPagination';
+
 const today = new Date().toISOString().substring(0, 10);
 
 const Showtimes = () => {
@@ -157,6 +161,29 @@ const Showtimes = () => {
 
   const closeModal = () => { setIsModalOpen(false); setEditingShowtime(null); };
 
+  const {
+    searchQuery,
+    setSearchQuery,
+    filters,
+    setFilterVal,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    paginatedItems
+  } = useClientPagination(
+    showtimes,
+    ['TenPhim', 'TenPhong', 'MaSuatChieu'],
+    (st, f) => {
+      const matchMovie = !f.movieId || f.movieId === 'All' || st.MaPhim === f.movieId;
+      const matchRoom = !f.roomId || f.roomId === 'All' || st.MaPhongChieu === f.roomId;
+      const matchKhaDung = !f.activeStatus || f.activeStatus === 'All' || st.KhaDung === Number(f.activeStatus);
+      const matchDate = !f.date || st.NgayChieu === f.date;
+      return matchMovie && matchRoom && matchKhaDung && matchDate;
+    }
+  );
+
   if (loading) return (
     <AdminLayout>
       <div className="flex items-center justify-center h-64 text-slate-500">
@@ -199,6 +226,73 @@ const Showtimes = () => {
         }
       />
 
+      {/* Filters and search using AdminToolbar */}
+      {viewMode === 'List' && (
+        <AdminToolbar
+          searchPlaceholder="Tìm theo tên phim, tên phòng, mã suất..."
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          filterSlot={
+            <>
+              {/* Date Filter */}
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500 text-xs font-semibold">Ngày chiếu:</span>
+                <input
+                  type="date"
+                  value={filters.date || ''}
+                  onChange={e => setFilterVal('date', e.target.value || '')}
+                  className="bg-white/[0.04] border border-white/10 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer"
+                />
+                {filters.date && (
+                  <button
+                    type="button"
+                    onClick={() => setFilterVal('date', '')}
+                    className="text-xs text-red-400 hover:text-red-300 font-bold transition-all"
+                  >
+                    Xóa
+                  </button>
+                )}
+              </div>
+
+              {/* Movie Filter */}
+              <select
+                value={filters.movieId || 'All'}
+                onChange={e => setFilterVal('movieId', e.target.value)}
+                className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+              >
+                <option value="All">Tất cả phim</option>
+                {movies.map(m => (
+                  <option key={m.MaPhim} value={m.MaPhim}>{m.TenPhim}</option>
+                ))}
+              </select>
+
+              {/* Room Filter */}
+              <select
+                value={filters.roomId || 'All'}
+                onChange={e => setFilterVal('roomId', e.target.value)}
+                className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+              >
+                <option value="All">Tất cả phòng</option>
+                {rooms.map(r => (
+                  <option key={r.MaPhongChieu} value={r.MaPhongChieu}>{r.TenPhong}</option>
+                ))}
+              </select>
+
+              {/* Active Status Filter */}
+              <select
+                value={filters.activeStatus || 'All'}
+                onChange={e => setFilterVal('activeStatus', e.target.value)}
+                className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+              >
+                <option value="All">Tất cả trạng thái</option>
+                <option value={1}>Khả dụng</option>
+                <option value={0}>Không khả dụng</option>
+              </select>
+            </>
+          }
+        />
+      )}
+
       {/* View */}
       {viewMode === 'Timeline' ? (
         <ShowtimeTimeline
@@ -207,8 +301,21 @@ const Showtimes = () => {
           onNextDay={() => { const d = new Date(selectedDate); d.setDate(d.getDate() + 1); setSelectedDate(d.toISOString().substring(0, 10)); }}
           onClickShowtime={handleViewSeatMap}
         />
+      ) : paginatedItems.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 text-slate-500 bg-white/[0.02] border border-white/10 rounded-3xl text-sm font-semibold">
+          Không tìm thấy dữ liệu phù hợp
+        </div>
       ) : (
-        <ShowtimeTable showtimes={showtimes} onEdit={handleEdit} onDelete={handleDelete} onViewSeatMap={handleViewSeatMap} />
+        <>
+          <ShowtimeTable showtimes={paginatedItems} onEdit={handleEdit} onDelete={handleDelete} onViewSeatMap={handleViewSeatMap} />
+          <AdminPagination
+            page={page}
+            pageSize={pageSize}
+            total={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
+        </>
       )}
 
       {/* Modals */}
