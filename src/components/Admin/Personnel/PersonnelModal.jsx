@@ -64,22 +64,11 @@ const PersonnelModal = ({ isOpen, onClose, editingStaff, formData, onChange, onS
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Chức vụ</label>
-          <input type="text" name="ChucVu" required placeholder="VD: Quản lý ca"
-            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 text-white text-sm"
-            value={formData.ChucVu} onChange={onChange} />
-        </div>
-        <div className="space-y-2">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Vai trò hệ thống</label>
-          <select name="Role" value={formData.Role} onChange={onChange}
-            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 text-slate-300 text-sm">
-            <option value="Staff" className="bg-[#0f1117]">Staff (Nhân viên)</option>
-            <option value="Manager" className="bg-[#0f1117]">Manager (Quản lý)</option>
-            <option value="Admin" className="bg-[#0f1117]">Admin (Quản trị viên)</option>
-          </select>
-        </div>
+      <div className="space-y-2">
+        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Chức vụ</label>
+        <input type="text" name="ChucVu" required placeholder="VD: Nhân viên ca tối"
+          className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 text-white text-sm"
+          value={formData.ChucVu} onChange={onChange} />
       </div>
 
       <div className="space-y-2">

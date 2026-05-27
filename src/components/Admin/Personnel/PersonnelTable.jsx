@@ -23,16 +23,7 @@ const PersonnelTable = ({ staff, onEdit, onToggleStatus, onOpenPermissions }) =>
     { header: 'Ngày sinh', accessor: 'NgaySinh', className: 'text-sm text-slate-400 font-mono' },
     { header: 'Giới tính', render: (p) => <span className="text-sm text-slate-400">{p.GioiTinh === 1 ? 'Nam' : 'Nữ'}</span> },
     { header: 'Chức vụ', accessor: 'ChucVu', className: 'text-sm text-slate-400 font-medium' },
-    {
-      header: 'Vai trò',
-      render: (person) => (
-        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
-          person.Role === 'Admin' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
-          person.Role === 'Manager' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-          'bg-slate-500/10 text-slate-400 border border-white/5'
-        }`}>{person.Role}</span>
-      ),
-    },
+
     {
       header: 'Trạng thái',
       render: (person) => (
@@ -48,9 +39,7 @@ const PersonnelTable = ({ staff, onEdit, onToggleStatus, onOpenPermissions }) =>
       className: 'text-right',
       render: (person) => (
         <div className="flex justify-end gap-2">
-          <button onClick={() => onOpenPermissions(person)} className="p-2 hover:bg-emerald-500/10 text-slate-500 hover:text-emerald-500 rounded-xl transition-all cursor-pointer" title="Phân quyền">
-            <ShieldCheck size={18} />
-          </button>
+
           <button onClick={() => onEdit(person)} className="p-2 hover:bg-white/5 text-slate-500 hover:text-white rounded-xl transition-all cursor-pointer" title="Sửa">
             <Edit2 size={18} />
           </button>
