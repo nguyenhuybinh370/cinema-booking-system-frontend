@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axiosClient from "../../../api/axiosClient";
 import SaleResultModal from "./SaleResultModal";
+import { showError, getErrorMessage } from "../../../utils/toastHelper";
 
 const PAYMENT_METHODS = [
   { id: "TIEN_MAT", name: "Tiền mặt", icon: "💵" },
@@ -103,7 +104,7 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
       setCheckoutResult(result);
     } catch (err) {
       console.error("POS Checkout error:", err);
-      alert(err.response?.data?.message || err.message || "Thanh toán vé thất bại.");
+      showError(getErrorMessage(err, "Thanh toán vé thất bại."));
     } finally {
       setIsProcessing(false);
     }

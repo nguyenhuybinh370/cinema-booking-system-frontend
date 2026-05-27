@@ -4,6 +4,7 @@ import ShiftCalendar from "./ShiftCalendar";
 import ShiftActionModal from "./ShiftActionModal";
 import axiosClient from "../../../api/axiosClient";
 import { generateWeek } from "../../../utils/dateHelper";
+import { showSuccess, showError, getErrorMessage } from "../../../utils/toastHelper";
 
 const Schedule = () => {
   const [weekOffset, setWeekOffset] = useState(0);
@@ -131,24 +132,24 @@ const Schedule = () => {
       if (isCurrentlyRegistered) {
         // Soft-delete cancellation
         if (!data.registrationId) {
-          alert("Lỗi hệ thống: Không tìm thấy mã định danh lịch đăng ký ca.");
+          showError("Lỗi hệ thống: Không tìm thấy mã định danh lịch đăng ký ca.");
           return;
         }
         await axiosClient.patch(`/staff/lich-lam-viec/${data.registrationId}/huy`);
-        alert("Hủy đăng ký ca làm việc thành công!");
+        showSuccess("Hủy đăng ký ca làm việc thành công!");
       } else {
         // Register shift
         await axiosClient.post("/staff/lich-lam-viec/dang-ky", {
           MaCa: template.MaCa,
           NgayLamViec: dateString,
         });
-        alert("Đăng ký ca làm việc thành công!");
+        showSuccess("Đăng ký ca làm việc thành công!");
       }
       await loadWeekData(); // refresh data
     } catch (err) {
       console.error("Shift registration toggle error:", err);
-      const msg = err.response?.data?.message || err.message || "Thao tác thất bại.";
-      alert(msg);
+      const msg = getErrorMessage(err, "Thao tác thất bại.");
+      showError(msg);
     } finally {
       setSelectedShift(null);
     }

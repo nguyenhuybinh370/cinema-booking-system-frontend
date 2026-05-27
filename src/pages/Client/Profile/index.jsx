@@ -16,6 +16,7 @@ import BookingDetailModal from './BookingDetailModal';
 import RefundRequestsTab from './RefundRequestsTab';
 import CancelBookingModal from './CancelBookingModal';
 import RefundRequestModal from './RefundRequestModal';
+import ConfirmDialog from '../../../components/common/ConfirmDialog';
 
 // ─────────────────────────────────────────────
 // Helper: parse "YYYY-MM-DD" from backend date
@@ -37,6 +38,8 @@ const Profile = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('account');
+  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // --- REVIEW STATE (legacy, kept for backward compat) ---
   const [isReviewOpen, setIsReviewOpen] = useState(false);
@@ -311,8 +314,9 @@ const Profile = () => {
   };
 
   // ─── Logout ─────────────────────────────────
-  const handleLogout = async () => {
-    toast.loading('Đang đăng xuất...');
+  const handleLogoutSubmit = async () => {
+    setIsLoggingOut(true);
+    const toastId = toast.loading('Đang đăng xuất...');
     try {
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
@@ -321,13 +325,15 @@ const Profile = () => {
     } catch (e) {
       console.error('Logout API error:', e);
     } finally {
+      setIsLoggingOut(false);
+      setIsLogoutConfirmOpen(false);
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('userRole');
       localStorage.removeItem('userName');
       localStorage.removeItem('userCode');
       localStorage.removeItem('userInfo');
-      toast.dismiss();
+      toast.dismiss(toastId);
       toast.success('Đã đăng xuất tài khoản!');
       navigate('/login');
     }
@@ -359,7 +365,7 @@ const Profile = () => {
         upcomingCount={upcomingTickets.length}
         pastCount={pastTickets.length}
         refundCount={refundRequests.length}
-        onLogout={handleLogout}
+        onLogout={() => setIsLogoutConfirmOpen(true)}
       />
 
       {/* MAIN CONTENT */}
@@ -475,6 +481,18 @@ const Profile = () => {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={isLogoutConfirmOpen}
+        title="Xác nhận đăng xuất"
+        message="Bạn có chắc chắn muốn đăng xuất khỏi tài khoản của mình không?"
+        confirmText="Đăng xuất"
+        cancelText="Hủy bỏ"
+        variant="danger"
+        isLoading={isLoggingOut}
+        onConfirm={handleLogoutSubmit}
+        onCancel={() => setIsLogoutConfirmOpen(false)}
+      />
     </div>
   );
 };

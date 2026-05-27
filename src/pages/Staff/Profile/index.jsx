@@ -4,6 +4,7 @@ import UpdateInfoModal from "./UpdateInfoModal";
 import ChangePasswordModal from "./ChangePasswordModal";
 import StaffProfileCard from "./StaffProfileCard";
 import axiosClient from "../../../api/axiosClient";
+import { showSuccess, showError, showWarning, getErrorMessage } from "../../../utils/toastHelper";
 
 const Profile = () => {
   const [staffInfo, setStaffInfo] = useState(null);
@@ -57,19 +58,19 @@ const Profile = () => {
       };
 
       await axiosClient.put("/staff/ho-so", payload);
-      alert("Cập nhật thông tin cá nhân thành công!");
+      showSuccess("Cập nhật thông tin cá nhân thành công!");
       await loadProfile();
       setIsUpdateModalOpen(false);
     } catch (err) {
       console.error("Update profile error:", err);
-      alert(err.response?.data?.message || err.message || "Cập nhật thông tin thất bại.");
+      showError(getErrorMessage(err, "Cập nhật thông tin thất bại."));
     }
   };
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      alert("Xác nhận mật khẩu mới không khớp!");
+      showWarning("Xác nhận mật khẩu mới không khớp!");
       return;
     }
 
@@ -81,7 +82,7 @@ const Profile = () => {
       };
 
       await axiosClient.put("/staff/doi-mat-khau", payload);
-      alert("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
+      showSuccess("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
       setIsPasswordModalOpen(false);
 
       // Clean tokens and force log in again
@@ -93,7 +94,7 @@ const Profile = () => {
       window.location.href = "/login";
     } catch (err) {
       console.error("Change password error:", err);
-      alert(err.response?.data?.message || err.message || "Đổi mật khẩu thất bại.");
+      showError(getErrorMessage(err, "Đổi mật khẩu thất bại."));
     }
   };
 

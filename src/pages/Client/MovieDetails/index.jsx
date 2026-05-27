@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { showWarning } from '../../../utils/toastHelper';
 
 // ── Hooks ──────────────────────────────────────────────────────────────────
 import useMovieDetail from '../../../hooks/customer/useMovieDetail';
@@ -76,7 +77,7 @@ const MovieDetails = () => {
 
   // ── Seat hold timer ───────────────────────────────────────────────────────
   const handleHoldExpiry = async () => {
-    alert('Thời gian giữ ghế đã hết. Các ghế bạn chọn đã được giải phóng.');
+    showWarning('Thời gian giữ ghế đã hết. Các ghế bạn chọn đã được giải phóng.');
     setConfirmedSeats([]);
     setConfirmedTotalPrice(0);
     setBookingStage('seat');

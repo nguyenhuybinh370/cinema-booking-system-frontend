@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axiosClient from "../../../api/axiosClient";
 import StaffSeatMap from "./StaffSeatMap";
 import SeatLegend from "./SeatLegend";
+import { showError } from "../../../utils/toastHelper";
 
 const HOLD_TIME_SECONDS = 300; // 5 phút visual-only
 
@@ -20,7 +21,7 @@ const Step2_SelectSeat = ({ onNext, onPrev, bookingData }) => {
         setSeatMapData(res);
       } catch (err) {
         console.error("Error loading seat map:", err);
-        alert("Không thể tải sơ đồ ghế của suất chiếu này.");
+        showError("Không thể tải sơ đồ ghế của suất chiếu này.");
       } finally {
         setIsLoading(false);
       }

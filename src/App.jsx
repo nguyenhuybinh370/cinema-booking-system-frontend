@@ -27,7 +27,30 @@ function App() {
 
   return (
     <>
-      <Toaster />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#131A2A',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '14px'
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff'
+            }
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff'
+            }
+          }
+        }}
+      />
       {!isAdminRoute && !isStaffRoute && <Navbar />}
       <Routes>
         {/* === PUBLIC ROUTES === */}
