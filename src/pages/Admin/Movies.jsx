@@ -4,6 +4,7 @@ import adminService from '../../services/adminService';
 import useAdminForm from '../../hooks/useAdminForm';
 import MovieCard, { getMovieStatus } from '../../components/Admin/Movies/MovieCard';
 import MovieModal from '../../components/Admin/Movies/MovieModal';
+import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
 import { Search, Plus } from 'lucide-react';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { showSuccess, showError } from '../../utils/toastHelper';
@@ -96,30 +97,45 @@ const Movies = () => {
 
   return (
     <AdminLayout>
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-white text-glow">Quản lý phim</h1>
-          <p className="text-slate-500 font-medium">Quản lý toàn bộ thông tin hiển thị và vòng đời của tác phẩm điện ảnh.</p>
-        </div>
-        <button onClick={openAddModal} className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-red-500/20 cursor-pointer">
-          <Plus size={20} /> Thêm phim mới
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Quản lý phim"
+        subtitle="Quản lý toàn bộ thông tin hiển thị và vòng đời của tác phẩm điện ảnh."
+        action={
+          <button 
+            onClick={openAddModal} 
+            className="w-full md:w-auto bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <Plus size={18} /> Thêm phim mới
+          </button>
+        }
+      />
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4 mb-8 bg-white/5 p-2 rounded-2xl border border-white/5">
-        {Object.entries(STATUS_LABELS).map(([key, label]) => (
-          <button key={key} onClick={() => setFilter(key)}
-            className={`px-6 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${filter === key ? 'bg-white/10 text-white shadow-xl' : 'text-slate-500 hover:text-slate-300'}`}>
-            {label}
-          </button>
-        ))}
-        <div className="ml-auto flex items-center gap-2 bg-black/20 rounded-xl px-4 py-2 border border-white/5 min-w-[280px]">
-          <Search size={18} className="text-slate-500" />
-          <input type="text" placeholder="Tìm kiếm theo tên, thể loại, đạo diễn..."
-            value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-            className="bg-transparent border-none focus:outline-none text-sm text-white w-full" />
+      <div className="flex flex-wrap items-center gap-4 mb-8 bg-[#131A2A]/40 backdrop-blur-md p-2 rounded-2xl border border-white/[0.06] shadow-xl w-full">
+        <div className="flex flex-wrap gap-1.5">
+          {Object.entries(STATUS_LABELS).map(([key, label]) => (
+            <button 
+              key={key} 
+              onClick={() => setFilter(key)}
+              className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                filter === key 
+                  ? 'bg-red-500/10 text-red-400 border-red-500/20 shadow-md' 
+                  : 'text-slate-400 hover:bg-white/5 hover:text-slate-200 border-transparent'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="ml-auto flex items-center gap-2.5 bg-white/[0.04] rounded-xl px-4 py-2.5 border border-white/10 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20 transition-all min-w-[300px]">
+          <Search size={16} className="text-slate-500" />
+          <input 
+            type="text" 
+            placeholder="Tìm kiếm theo tên, thể loại, đạo diễn..."
+            value={searchQuery} 
+            onChange={e => setSearchQuery(e.target.value)}
+            className="bg-transparent border-none focus:outline-none text-sm text-white placeholder:text-slate-500 w-full font-bold" 
+          />
         </div>
       </div>
 

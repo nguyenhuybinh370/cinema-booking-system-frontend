@@ -1,32 +1,52 @@
 const StatusBadge = ({ status }) => {
   const getStyles = () => {
-    // Shared status types
     switch (status) {
       // General Status
       case 'Active':
       case 1:
       case 'Showing':
-        return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+        return {
+          wrapper: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.05)]',
+          dot: 'bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+        };
       
       case 'Inactive':
       case 0:
       case 'Ended':
       case 'Maintenance':
-        return 'bg-slate-500/10 text-slate-500 border-slate-500/20';
+        return {
+          wrapper: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
+          dot: 'bg-slate-400'
+        };
       
       case 'Coming Soon':
-        return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+        return {
+          wrapper: 'bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.05)]',
+          dot: 'bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.5)]'
+        };
 
       // Roles (Personnel)
       case 'Admin':
-        return 'bg-red-500/10 text-red-500 border-red-500/20';
+        return {
+          wrapper: 'bg-red-500/10 text-red-400 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.05)]',
+          dot: 'bg-red-400 shadow-[0_0_8px_rgba(239,68,68,0.5)]'
+        };
       case 'Manager':
-        return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
+        return {
+          wrapper: 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.05)]',
+          dot: 'bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+        };
       case 'Staff':
-        return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+        return {
+          wrapper: 'bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.05)]',
+          dot: 'bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.5)]'
+        };
 
       default:
-        return 'bg-slate-500/10 text-slate-400 border-white/5';
+        return {
+          wrapper: 'bg-slate-500/10 text-slate-400 border-white/5',
+          dot: 'bg-slate-400'
+        };
     }
   };
 
@@ -38,8 +58,11 @@ const StatusBadge = ({ status }) => {
     return status;
   };
 
+  const styles = getStyles();
+
   return (
-    <span className={`px-3 py-1 rounded-full text-[10px] font-bold border whitespace-nowrap uppercase tracking-wider ${getStyles()}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border whitespace-nowrap uppercase tracking-wider ${styles.wrapper}`}>
+      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${styles.dot}`} />
       {getLabel()}
     </span>
   );

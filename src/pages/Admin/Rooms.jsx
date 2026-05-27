@@ -4,6 +4,7 @@ import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import Modal from '../../components/Admin/Common/Modal';
 import AdminTable from '../../components/Admin/Common/AdminTable';
 import StatusBadge from '../../components/Admin/Common/StatusBadge';
+import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
 import adminService from '../../services/adminService';
 import useAdminForm from '../../hooks/useAdminForm';
 import { LayoutGrid, Plus, Edit2, Trash2, Calendar, AlertCircle } from 'lucide-react';
@@ -169,13 +170,7 @@ const Rooms = () => {
     },
     {
       header: 'Khả dụng',
-      render: (room) => (
-        <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${
-          room.KhaDung === 1 ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'
-        }`}>
-          {room.KhaDung === 1 ? '1 (Khả dụng)' : '0 (Chưa khả dụng)'}
-        </span>
-      )
+      render: (room) => <StatusBadge status={room.KhaDung} />
     },
     {
       header: 'Thời gian',
@@ -219,19 +214,19 @@ const Rooms = () => {
 
   return (
     <AdminLayout>
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-white text-glow">Quản lý phòng chiếu</h1>
-          <p className="text-slate-500 font-medium">Định nghĩa và kiểm soát cơ sở hạ tầng phòng chiếu vật lý.</p>
-        </div>
-        <button 
-          onClick={handleOpenAddModal}
-          className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 flex items-center gap-2 cursor-pointer"
-        >
-          <Plus size={20} />
-          Thêm phòng chiếu
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Quản lý phòng chiếu"
+        subtitle="Định nghĩa và kiểm soát cơ sở hạ tầng phòng chiếu vật lý."
+        action={
+          <button 
+            onClick={handleOpenAddModal}
+            className="w-full md:w-auto bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <Plus size={18} />
+            Thêm phòng chiếu
+          </button>
+        }
+      />
 
       {loading ? (
         <div className="bg-white/5 border border-white/5 rounded-3xl h-64 animate-pulse"></div>
@@ -261,7 +256,7 @@ const Rooms = () => {
               type="text" 
               name="TenPhong"
               required
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-white font-bold"
+              className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-white font-bold placeholder:text-slate-500"
               value={formData.TenPhong}
               onChange={handleChange}
               placeholder="VD: Phòng Chiếu 01"
@@ -273,12 +268,12 @@ const Rooms = () => {
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Mã loại phòng (MaLoaiPhong)</label>
               <select 
                 name="MaLoaiPhong"
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-sm text-slate-300"
+                className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-sm text-slate-200 font-bold [&>option]:bg-[#0a0d14] cursor-pointer"
                 value={formData.MaLoaiPhong}
                 onChange={handleChange}
               >
                 {roomTypes.map(type => (
-                  <option key={type.MaLoaiPhong} value={type.MaLoaiPhong} className="bg-[#0f1117]">
+                  <option key={type.MaLoaiPhong} value={type.MaLoaiPhong}>
                     {type.MaLoaiPhong} ({type.TenLoaiPhong})
                   </option>
                 ))}
@@ -288,12 +283,12 @@ const Rooms = () => {
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Mã sơ đồ ghế (MaSoDoGhe)</label>
               <select 
                 name="MaSoDoGhe"
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-sm text-slate-300"
+                className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-sm text-slate-200 font-bold [&>option]:bg-[#0a0d14] cursor-pointer"
                 value={formData.MaSoDoGhe}
                 onChange={handleChange}
               >
                 {seatMaps.map(map => (
-                  <option key={map.MaSoDoGhe} value={map.MaSoDoGhe} className="bg-[#0f1117]">
+                  <option key={map.MaSoDoGhe} value={map.MaSoDoGhe}>
                     {map.MaSoDoGhe} ({map.TongHang}x{map.TongCot})
                   </option>
                 ))}
@@ -304,7 +299,7 @@ const Rooms = () => {
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Số ghế (SoGhe - Tự tính)</label>
-              <div className="w-full bg-white/5 border border-white/5 rounded-xl py-3 px-4 text-slate-500 font-bold font-mono">
+              <div className="w-full bg-white/[0.04] border border-white/5 rounded-xl py-3.5 px-4 text-slate-400 font-bold font-mono">
                 {getSeatCount(formData.MaSoDoGhe)} ghế
               </div>
             </div>
@@ -312,12 +307,12 @@ const Rooms = () => {
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Khả dụng (KhaDung)</label>
               <select 
                 name="KhaDung"
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-sm text-slate-300"
+                className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-sm text-slate-200 font-bold [&>option]:bg-[#0a0d14] cursor-pointer"
                 value={formData.KhaDung}
                 onChange={handleChange}
               >
-                <option value={1} className="bg-[#0f1117]">1 (Khả dụng)</option>
-                <option value={0} className="bg-[#0f1117]">0 (Chưa khả dụng)</option>
+                <option value={1}>1 (Khả dụng)</option>
+                <option value={0}>0 (Chưa khả dụng)</option>
               </select>
             </div>
           </div>
@@ -336,13 +331,13 @@ const Rooms = () => {
                 setIsModalOpen(false);
                 setEditingRoom(null);
               }}
-              className="flex-grow py-3 px-6 rounded-xl font-bold text-slate-400 hover:bg-white/5 transition-all uppercase tracking-widest text-xs cursor-pointer"
+              className="flex-grow py-3 px-6 rounded-xl font-bold text-slate-400 hover:bg-white/5 transition-all border border-white/5 hover:border-white/10 active:scale-95 uppercase tracking-widest text-xs cursor-pointer"
             >
               Hủy
             </button>
             <button 
               type="submit"
-              className="flex-grow py-3 px-6 rounded-xl font-bold bg-red-500 hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 uppercase tracking-widest text-xs cursor-pointer"
+              className="flex-grow py-3 px-6 rounded-xl font-bold bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 transition-all shadow-lg shadow-red-500/20 text-white active:scale-95 uppercase tracking-widest text-xs cursor-pointer"
             >
               {editingRoom ? "Cập nhật" : "Thêm phòng"}
             </button>

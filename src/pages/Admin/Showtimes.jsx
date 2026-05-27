@@ -5,6 +5,7 @@ import ShowtimeTable from '../../components/Admin/Showtimes/ShowtimeTable';
 import ShowtimeTimeline from '../../components/Admin/Showtimes/ShowtimeTimeline';
 import ShowtimeModal from '../../components/Admin/Showtimes/ShowtimeModal';
 import SeatMapViewerModal from '../../components/Admin/Showtimes/SeatMapViewerModal';
+import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
 import { List, Calendar as CalendarIcon, Plus } from 'lucide-react';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { showSuccess, showError, showWarning } from '../../utils/toastHelper';
@@ -167,29 +168,36 @@ const Showtimes = () => {
 
   return (
     <AdminLayout>
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-white text-glow">Quản lý suất chiếu</h1>
-          <p className="text-slate-500 font-medium">Lên lịch chiếu phim, phân bổ phòng chiếu và thiết lập giá vé.</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
-            {[{ mode: 'List', Icon: List, title: 'Danh sách' }, { mode: 'Timeline', Icon: CalendarIcon, title: 'Lịch chiếu' }].map(({ mode, Icon, title }) => (
-              <button key={mode} onClick={() => setViewMode(mode)} title={title}
-                className={`p-2 rounded-lg transition-all ${viewMode === mode ? 'bg-white/10 text-white font-bold' : 'text-slate-500'}`}
-              >
-                <Icon size={20} />
-              </button>
-            ))}
+      <AdminPageHeader
+        title="Quản lý suất chiếu"
+        subtitle="Lên lịch chiếu phim, phân bổ phòng chiếu và thiết lập giá vé."
+        action={
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="flex bg-white/[0.03] p-1 rounded-xl border border-white/5 shadow-md">
+              {[{ mode: 'List', Icon: List, title: 'Danh sách' }, { mode: 'Timeline', Icon: CalendarIcon, title: 'Lịch chiếu' }].map(({ mode, Icon, title }) => (
+                <button 
+                  key={mode} 
+                  onClick={() => setViewMode(mode)} 
+                  title={title}
+                  className={`p-2 rounded-lg transition-all cursor-pointer ${
+                    viewMode === mode 
+                      ? 'bg-red-500/10 text-red-400 border border-red-500/20 font-bold shadow-md' 
+                      : 'text-slate-500 hover:text-slate-300 border border-transparent'
+                  }`}
+                >
+                  <Icon size={18} />
+                </button>
+              ))}
+            </div>
+            <button 
+              onClick={openAddModal}
+              className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 active:scale-95 flex items-center gap-2 cursor-pointer text-sm"
+            >
+              <Plus size={18} /> Thêm suất chiếu
+            </button>
           </div>
-          <button onClick={openAddModal}
-            className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 flex items-center gap-2 cursor-pointer text-sm"
-          >
-            <Plus size={20} /> Thêm suất chiếu
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* View */}
       {viewMode === 'Timeline' ? (

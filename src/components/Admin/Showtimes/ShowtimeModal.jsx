@@ -19,12 +19,12 @@ const ShowtimeModal = ({
       <div className="space-y-2">
         <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Chọn phim</label>
         <select
-          className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-sm text-slate-300 font-bold"
+          className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-sm text-slate-200 font-bold [&>option]:bg-[#0a0d14] cursor-pointer"
           value={formData.MaPhim}
           onChange={e => onFormChange('MaPhim', e.target.value)}
         >
           {movies.map(m => (
-            <option key={m.MaPhim} value={m.MaPhim} className="bg-[#0f1117]">
+            <option key={m.MaPhim} value={m.MaPhim}>
               {m.TenPhim} ({m.ThoiLuong} phút)
             </option>
           ))}
@@ -40,11 +40,11 @@ const ShowtimeModal = ({
           <div key={field} className="space-y-2">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">{label}</label>
             <select
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 text-sm text-slate-300 font-bold"
+              className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-sm text-slate-200 font-bold [&>option]:bg-[#0a0d14] cursor-pointer"
               value={formData[field]}
               onChange={e => onFormChange(field, e.target.value)}
             >
-              {options.map(o => <option key={o.value} value={o.value} className="bg-[#0f1117]">{o.label}</option>)}
+              {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
         ))}
@@ -55,7 +55,7 @@ const ShowtimeModal = ({
         <div className="space-y-2">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Ngày chiếu</label>
           <input type="date" required
-            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 text-sm text-white font-mono font-bold"
+            className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-sm text-white font-mono font-bold"
             value={formData.NgayChieu}
             onChange={e => onFormChange('NgayChieu', e.target.value)}
           />
@@ -63,7 +63,7 @@ const ShowtimeModal = ({
         <div className="space-y-2">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Giờ chiếu</label>
           <input type="time" required
-            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 text-sm text-white font-mono font-bold"
+            className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-sm text-white font-mono font-bold"
             value={formData.GioChieu}
             onChange={e => onFormChange('GioChieu', e.target.value)}
           />
@@ -71,7 +71,7 @@ const ShowtimeModal = ({
         <div className="space-y-2">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-widest opacity-60">Giờ kết thúc</label>
           <input type="time" readOnly
-            className="w-full bg-white/5 border border-white/5 rounded-xl py-3 px-4 text-sm text-slate-500 font-mono font-bold"
+            className="w-full bg-white/[0.02] border border-white/5 rounded-xl py-3 px-4 text-sm text-slate-500 font-mono font-bold"
             value={formData.GioKetThuc}
           />
         </div>
@@ -83,7 +83,7 @@ const ShowtimeModal = ({
           <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Giá vé cơ bản (VND)</label>
           <div className="relative">
             <input type="number" min="0" required
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-red-500 text-sm text-white font-mono font-bold"
+              className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-sm text-white font-mono font-bold placeholder:text-slate-500"
               value={formData.GiaVeCoBan}
               onChange={e => onFormChange('GiaVeCoBan', e.target.value)}
             />
@@ -93,12 +93,12 @@ const ShowtimeModal = ({
         <div className="space-y-2">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Khả dụng</label>
           <select
-            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 text-sm text-slate-300 font-bold"
+            className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-sm text-slate-200 font-bold [&>option]:bg-[#0a0d14] cursor-pointer"
             value={formData.KhaDung}
             onChange={e => onFormChange('KhaDung', parseInt(e.target.value, 10))}
           >
-            <option value={1} className="bg-[#0f1117]">1 (Khả dụng)</option>
-            <option value={0} className="bg-[#0f1117]">0 (Khóa)</option>
+            <option value={1}>1 (Khả dụng)</option>
+            <option value={0}>0 (Khóa)</option>
           </select>
         </div>
       </div>
@@ -113,7 +113,7 @@ const ShowtimeModal = ({
 
       {/* Conflict warning */}
       {conflict && (
-        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex gap-3 text-red-500">
+        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex gap-3 text-red-400">
           <AlertCircle size={20} className="shrink-0" />
           <p className="text-xs font-bold">⚠️ {conflict}</p>
         </div>
@@ -122,15 +122,15 @@ const ShowtimeModal = ({
       {/* Actions */}
       <div className="flex gap-4 pt-4 border-t border-white/5">
         <button type="button" onClick={onClose}
-          className="flex-grow py-3 rounded-xl font-bold border border-white/10 hover:bg-white/5 text-xs uppercase tracking-widest text-slate-400 cursor-pointer"
+          className="flex-grow py-3 rounded-xl font-bold border border-white/5 hover:border-white/10 hover:bg-white/5 text-xs uppercase tracking-widest text-slate-400 cursor-pointer active:scale-95 transition-all"
         >
           Hủy
         </button>
         <button type="submit" disabled={!!conflict || submitting}
-          className={`flex-grow py-3 rounded-xl font-bold text-xs uppercase tracking-widest cursor-pointer transition-all shadow-lg ${
+          className={`flex-grow py-3 rounded-xl font-bold text-xs uppercase tracking-widest cursor-pointer transition-all shadow-lg active:scale-95 ${
             conflict || submitting
-              ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
-              : 'bg-red-500 hover:bg-red-600 text-white shadow-red-500/20'
+              ? 'bg-slate-800 text-slate-600 cursor-not-allowed shadow-none'
+              : 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white shadow-red-500/20'
           }`}
         >
           {submitting ? 'Đang lưu...' : 'Lưu suất chiếu'}
