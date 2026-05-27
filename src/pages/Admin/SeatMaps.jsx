@@ -63,11 +63,28 @@ const SeatMaps = () => {
     const rows = template.TongHang;
     const cols = template.TongCot;
     const result = [];
+
+    let struct = { aisles: { rows: [], cols: [] } };
+    if (template.CauTruc) {
+      try {
+        struct = typeof template.CauTruc === 'string' ? JSON.parse(template.CauTruc) : template.CauTruc;
+      } catch (e) {
+        console.error("JSON Parse error", e);
+      }
+    }
     
     for (let r = 0; r < rows; r++) {
       const row = [];
       const rowChar = String.fromCharCode(65 + r);
       for (let c = 0; c < cols; c++) {
+        let isAisle = struct?.aisles?.cols?.includes(c + 1) || struct?.aisles?.rows?.includes(r + 1);
+        if (!isAisle && struct?.aisles?.custom) {
+          const customRow = struct.aisles.custom.find(item => item.row === r);
+          if (customRow) {
+            isAisle = customRow.cols.includes(c) || customRow.cols.includes(c + 1);
+          }
+        }
+
         const seatId = `${room.MaPhongChieu}-${rowChar}${c + 1}`;
         const baseSeat = {
           MaChiTietSoDo: seatId,
@@ -75,7 +92,8 @@ const SeatMaps = () => {
           MaLoaiGhe: seatTypes[0]?.MaLoaiGhe || 'LG01',
           Hang: rowChar,
           Cot: c + 1,
-          KhaDung: 1
+          KhaDung: 1,
+          isAisle
         };
         // Apply overrides
         row.push({ ...baseSeat, ...(overrides[seatId] || {}) });
@@ -245,25 +263,32 @@ const SeatMaps = () => {
               className="inline-grid gap-2 p-8 bg-black/20 rounded-[2rem] border border-white/5" 
               style={{ gridTemplateColumns: `repeat(${template.TongCot}, minmax(0, 1fr))` }}
             >
-              {matrix.flat().map((seat) => (
-                <button
-                  key={seat.MaChiTietSoDo}
-                  onClick={(e) => handleSeatClick(seat.MaChiTietSoDo, e)}
-                  className={`
-                    w-9 h-9 rounded-md border text-[9px] font-black transition-all
-                    flex items-center justify-center relative group/seat
-                    ${getSeatColor(seat.MaLoaiGhe, seat.KhaDung)}
-                    ${selectedSeats.includes(seat.MaChiTietSoDo) ? 'ring-2 ring-white ring-offset-4 ring-offset-[#0f1117] scale-110 z-10 shadow-2xl' : 'hover:scale-105'}
-                  `}
-                >
-                  {seat.KhaDung === 0 ? <Lock size={12} className="opacity-50" /> : `${seat.Hang}${seat.Cot}`}
-                  
-                  {/* Tooltip on hover */}
-                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-black rounded text-[8px] text-white opacity-0 group-hover/seat:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none border border-white/10">
-                    Hàng {seat.Hang} - Cột {seat.Cot}
-                  </div>
-                </button>
-              ))}
+              {matrix.flat().map((seat) => {
+                if (seat.isAisle) {
+                  return (
+                    <div key={seat.MaChiTietSoDo} className="w-9 h-9 shrink-0"></div>
+                  );
+                }
+                return (
+                  <button
+                    key={seat.MaChiTietSoDo}
+                    onClick={(e) => handleSeatClick(seat.MaChiTietSoDo, e)}
+                    className={`
+                      w-9 h-9 rounded-md border text-[9px] font-black transition-all
+                      flex items-center justify-center relative group/seat
+                      ${getSeatColor(seat.MaLoaiGhe, seat.KhaDung)}
+                      ${selectedSeats.includes(seat.MaChiTietSoDo) ? 'ring-2 ring-white ring-offset-4 ring-offset-[#0f1117] scale-110 z-10 shadow-2xl' : 'hover:scale-105'}
+                    `}
+                  >
+                    {seat.KhaDung === 0 ? <Lock size={12} className="opacity-50" /> : `${seat.Hang}${seat.Cot}`}
+                    
+                    {/* Tooltip on hover */}
+                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-black rounded text-[8px] text-white opacity-0 group-hover/seat:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none border border-white/10">
+                      Hàng {seat.Hang} - Cột {seat.Cot}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Legend */}

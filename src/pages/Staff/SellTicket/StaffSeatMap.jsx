@@ -64,7 +64,23 @@ const StaffSeatMap = ({ seatMapData, selectedSeats, onSeatClick }) => {
                 const colNum = idx + 1;
                 const seat = colMap[colNum];
 
-                if (!seat) {
+                let isAisle = false;
+                if (SoDoGhe?.CauTruc) {
+                  try {
+                    const struct = typeof SoDoGhe.CauTruc === 'string' ? JSON.parse(SoDoGhe.CauTruc) : SoDoGhe.CauTruc;
+                    const rIndex = rowLetter.charCodeAt(0) - 65;
+                    const cIndex = colNum - 1;
+                    isAisle = struct?.aisles?.cols?.includes(cIndex + 1) || struct?.aisles?.rows?.includes(rIndex + 1);
+                    if (!isAisle && struct?.aisles?.custom) {
+                      const customRow = struct.aisles.custom.find(item => item.row === rIndex);
+                      if (customRow) {
+                        isAisle = customRow.cols.includes(cIndex) || customRow.cols.includes(cIndex + 1);
+                      }
+                    }
+                  } catch (e) {}
+                }
+
+                if (!seat || isAisle) {
                   return <div key={`aisle-${rowLetter}-${colNum}`} className="w-9 h-9 shrink-0" />;
                 }
 
