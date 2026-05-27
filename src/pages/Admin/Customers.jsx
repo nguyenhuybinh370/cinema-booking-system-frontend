@@ -5,6 +5,8 @@ import AdminTable from '../../components/Admin/Common/AdminTable';
 import StatusBadge from '../../components/Admin/Common/StatusBadge';
 import adminService from '../../services/adminService';
 import { Search, UserX, UserCheck, History, X, CheckSquare, AlertTriangle } from 'lucide-react';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import { showSuccess, showError } from '../../utils/toastHelper';
 
 const Customers = () => {
   const [customers, setCustomers] = useState([]);
@@ -21,6 +23,8 @@ const Customers = () => {
   // Transactions state
   const [transactions, setTransactions] = useState([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [confirmState, setConfirmState] = useState({ isOpen: false, data: null });
+  const [isUnlocking, setIsUnlocking] = useState(false);
 
   const loadCustomers = async () => {
     try {
@@ -52,13 +56,13 @@ const Customers = () => {
       setIsLockModalOpen(false);
       setLockReason('');
       
-      alert(
-        `KHÓA TÀI KHOẢN THÀNH CÔNG!\n\n` +
-        `1. [CSDL - KHACHHANG]: Đã cập nhật KhaDung = 0 và lưu LyDoKhoa: "${result.reason}".\n` +
-        `2. [HỆ THỐNG EMAIL]: Đã gửi thư thông báo chi tiết lý do khóa đến khách hàng tại địa chỉ email: ${result.email}.`
+      showSuccess(
+        `KHÓA TÀI KHOẢN THÀNH CÔNG!\n` +
+        `1. Cập nhật KhaDung = 0 và LyDoKhoa: "${result.reason}".\n` +
+        `2. Đã gửi thư thông báo đến địa chỉ: ${result.email}.`
       );
     } catch (error) {
-      alert("Lỗi khi khóa tài khoản: " + error.message);
+      showError("Lỗi khi khóa tài khoản: " + error.message);
     }
   };
 
@@ -68,15 +72,22 @@ const Customers = () => {
       setLockReason('');
       setIsLockModalOpen(true);
     } else {
-      if (window.confirm(`Bạn có chắc chắn muốn mở khóa tài khoản cho ${cust.HoTen}?`)) {
-        try {
-          await adminService.unlockCustomerAccount(cust.MaKhachHang);
-          await loadCustomers();
-          alert(`Đã mở khóa tài khoản của ${cust.HoTen} thành công. Trạng thái đã chuyển sang Đang hoạt động (KhaDung = 1).`);
-        } catch (error) {
-          alert("Lỗi khi mở khóa tài khoản: " + error.message);
-        }
-      }
+      setConfirmState({ isOpen: true, data: cust });
+    }
+  };
+
+  const handleConfirmUnlock = async () => {
+    const cust = confirmState.data;
+    setIsUnlocking(true);
+    try {
+      await adminService.unlockCustomerAccount(cust.MaKhachHang);
+      await loadCustomers();
+      showSuccess(`Đã mở khóa tài khoản của ${cust.HoTen} thành công. Trạng thái đã chuyển sang Đang hoạt động.`);
+    } catch (error) {
+      showError("Lỗi khi mở khóa tài khoản: " + error.message);
+    } finally {
+      setIsUnlocking(false);
+      setConfirmState({ isOpen: false, data: null });
     }
   };
 
@@ -88,7 +99,7 @@ const Customers = () => {
       const trans = await adminService.getCustomerTransactions(cust.MaKhachHang);
       setTransactions(trans);
     } catch (error) {
-      alert("Lỗi tải lịch sử giao dịch: " + error.message);
+      showError("Lỗi tải lịch sử giao dịch: " + error.message);
     } finally {
       setLoadingTransactions(false);
     }
@@ -297,6 +308,18 @@ const Customers = () => {
           </div>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        title="Mở khóa tài khoản"
+        message={confirmState.data ? `Bạn có chắc chắn muốn mở khóa tài khoản cho ${confirmState.data.HoTen}?` : ''}
+        confirmText="Mở khóa"
+        cancelText="Hủy"
+        variant="default"
+        isLoading={isUnlocking}
+        onConfirm={handleConfirmUnlock}
+        onCancel={() => setConfirmState({ isOpen: false, data: null })}
+      />
     </AdminLayout>
   );
 };

@@ -7,6 +7,8 @@ import StatusBadge from '../../components/Admin/Common/StatusBadge';
 import adminService from '../../services/adminService';
 import useAdminForm from '../../hooks/useAdminForm';
 import { LayoutGrid, Plus, Edit2, Trash2, Calendar, AlertCircle } from 'lucide-react';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import { showSuccess, showError } from '../../utils/toastHelper';
 
 const Rooms = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -15,6 +17,8 @@ const Rooms = () => {
   const [loading, setLoading] = useState(true);
   const [roomTypes, setRoomTypes] = useState([]);
   const [seatMaps, setSeatMaps] = useState([]);
+  const [confirmState, setConfirmState] = useState({ isOpen: false, data: null });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const initialFormState = {
     TenPhong: '',
@@ -75,10 +79,10 @@ const Rooms = () => {
 
     if (editingRoom) {
       await adminService.updateRoom(editingRoom.MaPhongChieu, processedData);
-      alert("Cập nhật phòng chiếu thành công!");
+      showSuccess("Cập nhật phòng chiếu thành công!");
     } else {
       await adminService.addRoom(processedData);
-      alert("Thêm phòng chiếu mới thành công!");
+      showSuccess("Thêm phòng chiếu mới thành công!");
     }
     
     await loadData();
@@ -109,17 +113,24 @@ const Rooms = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa phòng chiếu ${id} khỏi cơ sở dữ liệu?`)) {
-      try {
-        const success = await adminService.deleteRoom(id);
-        if (success) {
-          alert("Xóa phòng chiếu khỏi cơ sở dữ liệu thành công!");
-          await loadData();
-        }
-      } catch (err) {
-        alert(`Lỗi khi xóa: ${err.message}`);
+  const handleDelete = (id) => {
+    setConfirmState({ isOpen: true, data: id });
+  };
+
+  const handleConfirmDelete = async () => {
+    const id = confirmState.data;
+    setIsDeleting(true);
+    try {
+      const success = await adminService.deleteRoom(id);
+      if (success) {
+        showSuccess("Xóa phòng chiếu khỏi cơ sở dữ liệu thành công!");
+        await loadData();
       }
+    } catch (err) {
+      showError(`Lỗi khi xóa: ${err.message}`);
+    } finally {
+      setIsDeleting(false);
+      setConfirmState({ isOpen: false, data: null });
     }
   };
 
@@ -338,6 +349,18 @@ const Rooms = () => {
           </div>
         </form>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        title="Xóa phòng chiếu"
+        message={`Bạn có chắc chắn muốn xóa phòng chiếu ${confirmState.data} khỏi cơ sở dữ liệu?`}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        variant="danger"
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmState({ isOpen: false, data: null })}
+      />
     </AdminLayout>
   );
 };

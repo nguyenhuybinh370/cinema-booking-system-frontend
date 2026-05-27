@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import adminService from '../../services/adminService';
 import { Lock, Unlock, ChevronLeft, Save } from 'lucide-react';
+import { showSuccess, showError } from '../../utils/toastHelper';
 
 const SeatMaps = () => {
   const { roomId } = useParams();
@@ -127,9 +128,9 @@ const SeatMaps = () => {
     setLoading(true);
     try {
       await adminService.saveSeatConfig(roomId, overrides);
-      alert("Cấu hình sơ đồ ghế đã được lưu thành công!");
+      showSuccess("Cấu hình sơ đồ ghế đã được lưu thành công!");
     } catch (error) {
-      alert("Lỗi khi lưu cấu hình: " + error.message);
+      showError("Lỗi khi lưu cấu hình: " + error.message);
     } finally {
       setLoading(false);
     }

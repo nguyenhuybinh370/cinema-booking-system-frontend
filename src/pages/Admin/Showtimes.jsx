@@ -6,6 +6,8 @@ import ShowtimeTimeline from '../../components/Admin/Showtimes/ShowtimeTimeline'
 import ShowtimeModal from '../../components/Admin/Showtimes/ShowtimeModal';
 import SeatMapViewerModal from '../../components/Admin/Showtimes/SeatMapViewerModal';
 import { List, Calendar as CalendarIcon, Plus } from 'lucide-react';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import { showSuccess, showError, showWarning } from '../../utils/toastHelper';
 
 const today = new Date().toISOString().substring(0, 10);
 
@@ -23,6 +25,8 @@ const Showtimes = () => {
 
   const [selectedShowtimeSeats, setSelectedShowtimeSeats] = useState(null);
   const [editingShowtime, setEditingShowtime] = useState(null);
+  const [confirmState, setConfirmState] = useState({ isOpen: false, data: null });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [formData, setFormData] = useState({
     MaPhim: '', MaPhongChieu: '', NgayChieu: today,
@@ -93,7 +97,7 @@ const Showtimes = () => {
   };
 
   const handleEdit = (st) => {
-    if (st.DaDat > 0) { alert(`Không thể sửa vì đã có ${st.DaDat} ghế được đặt!`); return; }
+    if (st.DaDat > 0) { showWarning(`Không thể sửa vì đã có ${st.DaDat} ghế được đặt!`); return; }
     setEditingShowtime(st);
     setFormData({
       MaPhim: st.MaPhim, MaPhongChieu: st.MaPhongChieu, NgayChieu: st.NgayChieu,
@@ -103,14 +107,24 @@ const Showtimes = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (st) => {
-    if (st.DaDat > 0) { alert(`Không thể xóa vì đã có ${st.DaDat} ghế được đặt!`); return; }
-    if (!window.confirm(`Xóa suất chiếu ${st.MaSuatChieu} của phim "${st.TenPhim}"?`)) return;
+  const handleDelete = (st) => {
+    if (st.DaDat > 0) { showWarning(`Không thể xóa vì đã có ${st.DaDat} ghế được đặt!`); return; }
+    setConfirmState({ isOpen: true, data: st });
+  };
+
+  const handleConfirmDelete = async () => {
+    const st = confirmState.data;
+    setIsDeleting(true);
     try {
       await adminService.deleteShowtime(st.MaSuatChieu);
-      alert('Xóa suất chiếu thành công!');
+      showSuccess('Xóa suất chiếu thành công!');
       await loadData();
-    } catch (err) { alert('Lỗi khi xóa: ' + err.message); }
+    } catch (err) {
+      showError('Lỗi khi xóa: ' + err.message);
+    } finally {
+      setIsDeleting(false);
+      setConfirmState({ isOpen: false, data: null });
+    }
   };
 
   const handleSave = async (e) => {
@@ -121,15 +135,15 @@ const Showtimes = () => {
       const payload = { ...formData, KhaDung: parseInt(formData.KhaDung, 10), GiaVeCoBan: parseFloat(formData.GiaVeCoBan) };
       if (editingShowtime) {
         await adminService.updateShowtime(editingShowtime.MaSuatChieu, payload);
-        alert('Cập nhật suất chiếu thành công!');
+        showSuccess('Cập nhật suất chiếu thành công!');
       } else {
         await adminService.addShowtime(payload);
-        alert('Thêm suất chiếu mới thành công!');
+        showSuccess('Thêm suất chiếu mới thành công!');
       }
       setIsModalOpen(false);
       setEditingShowtime(null);
       await loadData();
-    } catch (err) { alert('Lỗi khi lưu: ' + err.message); }
+    } catch (err) { showError('Lỗi khi lưu: ' + err.message); }
     finally { setSubmitting(false); }
   };
 
@@ -137,7 +151,7 @@ const Showtimes = () => {
     try {
       const seats = await adminService.getShowtimeSeats(st.MaSuatChieu);
       setSelectedShowtimeSeats({ showtime: st, seats });
-    } catch (err) { alert('Lỗi tải sơ đồ ghế: ' + err.message); }
+    } catch (err) { showError('Lỗi tải sơ đồ ghế: ' + err.message); }
   };
 
   const closeModal = () => { setIsModalOpen(false); setEditingShowtime(null); };
@@ -200,6 +214,18 @@ const Showtimes = () => {
       <SeatMapViewerModal
         selectedShowtimeSeats={selectedShowtimeSeats}
         onClose={() => setSelectedShowtimeSeats(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        title="Xóa suất chiếu"
+        message={confirmState.data ? `Bạn có chắc chắn muốn xóa suất chiếu ${confirmState.data.MaSuatChieu} của phim "${confirmState.data.TenPhim}"?` : ''}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        variant="danger"
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmState({ isOpen: false, data: null })}
       />
     </AdminLayout>
   );

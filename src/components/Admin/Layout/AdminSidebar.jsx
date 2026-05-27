@@ -1,7 +1,9 @@
 
+import { useState } from 'react';
 import logo from '../../../assets/logo.png';
 import { NavLink } from 'react-router-dom';
 import axiosClient from '../../../api/axiosClient';
+import ConfirmDialog from '../../common/ConfirmDialog';
 import {
   LayoutDashboard,
   Film,
@@ -19,6 +21,9 @@ import {
 const AdminSidebar = () => {
   const userName = localStorage.getItem('userName') || 'Administrator';
   const userRole = localStorage.getItem('userRole') || 'ADMIN';
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
   const getInitials = (name) => {
     const parts = name.trim().split(' ');
     if (parts.length >= 2) {
@@ -28,18 +33,25 @@ const AdminSidebar = () => {
   };
   const initials = getInitials(userName);
 
-  const handleLogout = async () => {
+  const handleLogoutSubmit = async () => {
+    setIsLoggingOut(true);
     try {
-      await axiosClient.post('/auth/logout');
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (refreshToken) {
+        await axiosClient.post('/auth/logout', { refreshToken });
+      }
     } catch (err) {
       console.error('Logout error:', err);
+    } finally {
+      setIsLoggingOut(false);
+      setIsConfirmOpen(false);
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("userRole");
+      localStorage.removeItem("userName");
+      localStorage.removeItem("userCode");
+      window.location.href = "/login";
     }
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userCode");
-    window.location.href = "/login";
   };
 
   const menuItems = [
@@ -94,11 +106,23 @@ const AdminSidebar = () => {
             <span className="text-xs text-slate-500">{userRole}</span>
           </div>
         </div>
-        <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-red-500 transition-colors cursor-pointer">
+        <button onClick={() => setIsConfirmOpen(true)} className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-red-500 transition-colors cursor-pointer">
           <LogOut size={20} />
           <span className="font-medium">Đăng xuất</span>
         </button>
       </div>
+
+      <ConfirmDialog
+        isOpen={isConfirmOpen}
+        title="Xác nhận đăng xuất"
+        message="Bạn có chắc chắn muốn đăng xuất khỏi tài khoản Quản trị viên?"
+        confirmText="Đăng xuất"
+        cancelText="Quay lại"
+        variant="danger"
+        isLoading={isLoggingOut}
+        onConfirm={handleLogoutSubmit}
+        onCancel={() => setIsConfirmOpen(false)}
+      />
     </aside>
   );
 };

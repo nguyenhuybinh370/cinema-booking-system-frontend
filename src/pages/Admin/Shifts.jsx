@@ -6,6 +6,8 @@ import ShiftDetailTable from '../../components/Admin/Shifts/ShiftDetailTable';
 import ShiftModal from '../../components/Admin/Shifts/ShiftModal';
 import ShiftRegistrationModal from '../../components/Admin/Shifts/ShiftRegistrationModal';
 import { Plus, Search } from 'lucide-react';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import { showSuccess, showError } from '../../utils/toastHelper';
 
 const Shifts = () => {
   const [activeTab, setActiveTab] = useState('shifts');
@@ -18,6 +20,7 @@ const Shifts = () => {
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
   const [isRegModalOpen, setIsRegModalOpen] = useState(false);
   const [editingShift, setEditingShift] = useState(null);
+  const [confirmState, setConfirmState] = useState({ isOpen: false, type: '', data: null });
 
   const [shiftForm, setShiftForm] = useState({ TenCa: '', GioBatDau: '', GioKetThuc: '', SoNguoiToiDa: 5, KhaDung: 1 });
   const [regForm, setRegForm] = useState({ MaNhanVien: '', MaCaLamViec: '', NgayLam: '', GhiChu: '', KieuLap: '', NgayLap: '' });
@@ -29,7 +32,7 @@ const Shifts = () => {
       setShifts(s);
       setRegistrations(r);
       setStaffList(staff.filter(x => x.KhaDung === 1));
-    } catch (err) { alert('Lỗi tải dữ liệu: ' + err.message); }
+    } catch (err) { showError('Lỗi tải dữ liệu: ' + err.message); }
     finally { setLoading(false); }
   };
 
@@ -47,24 +50,20 @@ const Shifts = () => {
     setIsShiftModalOpen(true);
   };
   const handleShiftSubmit = async (e) => {
-    e.preventDefault(); setLoading(true);
     try {
-      if (editingShift) { await adminService.updateShift(editingShift.MaCaLamViec, shiftForm); alert('Cập nhật ca thành công!'); }
-      else { await adminService.addShift(shiftForm); alert('Thêm ca làm việc thành công!'); }
+      if (editingShift) { await adminService.updateShift(editingShift.MaCaLamViec, shiftForm); showSuccess('Cập nhật ca thành công!'); }
+      else { await adminService.addShift(shiftForm); showSuccess('Thêm ca làm việc thành công!'); }
       await fetchData(); setIsShiftModalOpen(false);
-    } catch (err) { alert('Lỗi: ' + err.message); }
+    } catch (err) { showError('Lỗi: ' + err.message); }
     finally { setLoading(false); }
   };
-  const handleDeleteShift = async (shift) => {
-    if (!window.confirm(`Xóa ca "${shift.TenCa}"?`)) return; setLoading(true);
-    try { await adminService.deleteShift(shift.MaCaLamViec); alert('Xóa ca thành công!'); await fetchData(); }
-    catch (err) { alert('Lỗi: ' + err.message); }
-    finally { setLoading(false); }
+  const handleDeleteShift = (shift) => {
+    setConfirmState({ isOpen: true, type: 'deleteShift', data: shift });
   };
   const handleToggleShift = async (shift) => {
     const newKD = shift.KhaDung === 1 ? 0 : 1;
-    try { await adminService.updateShift(shift.MaCaLamViec, { KhaDung: newKD }); alert(`${newKD === 1 ? 'Kích hoạt' : 'Vô hiệu hóa'} ca thành công!`); await fetchData(); }
-    catch (err) { alert('Lỗi: ' + err.message); }
+    try { await adminService.updateShift(shift.MaCaLamViec, { KhaDung: newKD }); showSuccess(`${newKD === 1 ? 'Kích hoạt' : 'Vô hiệu hóa'} ca thành công!`); await fetchData(); }
+    catch (err) { showError('Lỗi: ' + err.message); }
   };
 
   // Registration CRUD
@@ -76,22 +75,39 @@ const Shifts = () => {
     e.preventDefault(); setLoading(true);
     try {
       const payload = { ...regForm, KieuLap: regForm.KieuLap === '' ? null : parseInt(regForm.KieuLap, 10), NgayLap: regForm.KieuLap === '' ? null : regForm.NgayLap || null };
-      await adminService.addShiftDetail(payload); alert('Đăng ký ca thành công!'); await fetchData(); setIsRegModalOpen(false);
-    } catch (err) { alert('Lỗi: ' + err.message); }
+      await adminService.addShiftDetail(payload); showSuccess('Đăng ký ca thành công!'); await fetchData(); setIsRegModalOpen(false);
+    } catch (err) { showError('Lỗi: ' + err.message); }
     finally { setLoading(false); }
   };
-  const handleToggleReg = async (reg) => {
-    const action = reg.KhaDung === 1 ? 'Hủy đăng ký' : 'Đăng ký lại';
-    if (!window.confirm(`${action} ca này?`)) return; setLoading(true);
-    try { await adminService.toggleShiftDetailStatus(reg.MaChiTietCa); alert(`${action} thành công!`); await fetchData(); }
-    catch (err) { alert('Lỗi: ' + err.message); }
-    finally { setLoading(false); }
+  const handleToggleReg = (reg) => {
+    setConfirmState({ isOpen: true, type: 'toggleReg', data: reg });
   };
-  const handleDeleteReg = async (reg) => {
-    if (!window.confirm('Xóa bản ghi đăng ký ca này?')) return; setLoading(true);
-    try { await adminService.deleteShiftDetail(reg.MaChiTietCa); alert('Xóa thành công!'); await fetchData(); }
-    catch (err) { alert('Lỗi: ' + err.message); }
-    finally { setLoading(false); }
+  const handleDeleteReg = (reg) => {
+    setConfirmState({ isOpen: true, type: 'deleteReg', data: reg });
+  };
+
+  const handleConfirmAction = async () => {
+    const { type, data } = confirmState;
+    setConfirmState({ isOpen: false, type: '', data: null });
+    setLoading(true);
+    try {
+      if (type === 'deleteShift') {
+        await adminService.deleteShift(data.MaCaLamViec);
+        showSuccess('Xóa ca thành công!');
+      } else if (type === 'toggleReg') {
+        const action = data.KhaDung === 1 ? 'Hủy đăng ký' : 'Đăng ký lại';
+        await adminService.toggleShiftDetailStatus(data.MaChiTietCa);
+        showSuccess(`${action} thành công!`);
+      } else if (type === 'deleteReg') {
+        await adminService.deleteShiftDetail(data.MaChiTietCa);
+        showSuccess('Xóa thành công!');
+      }
+      await fetchData();
+    } catch (err) {
+      showError('Lỗi: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filteredShifts = shifts.filter(s => s.TenCa.toLowerCase().includes(shiftSearch.toLowerCase()) || s.MaCaLamViec.toLowerCase().includes(shiftSearch.toLowerCase()));
@@ -161,6 +177,24 @@ const Shifts = () => {
         isOpen={isRegModalOpen} onClose={() => setIsRegModalOpen(false)}
         formData={regForm} onChange={(f, v) => setRegForm(prev => ({ ...prev, [f]: v }))}
         onSubmit={handleRegSubmit} staffList={staffList} shifts={shifts}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        title={
+          confirmState.type === 'deleteShift' ? 'Xóa ca làm việc' :
+          confirmState.type === 'toggleReg' ? (confirmState.data?.KhaDung === 1 ? 'Hủy đăng ký ca' : 'Đăng ký lại ca') : 'Xóa đăng ký ca'
+        }
+        message={
+          confirmState.type === 'deleteShift' ? `Bạn có chắc chắn muốn xóa ca "${confirmState.data?.TenCa}"?` :
+          confirmState.type === 'toggleReg' ? `Bạn có chắc chắn muốn ${confirmState.data?.KhaDung === 1 ? 'hủy đăng ký' : 'đăng ký lại'} ca này?` :
+          'Bạn có chắc chắn muốn xóa bản ghi đăng ký ca này?'
+        }
+        confirmText="Xác nhận"
+        cancelText="Hủy"
+        variant={confirmState.type === 'deleteShift' || confirmState.type === 'deleteReg' || (confirmState.type === 'toggleReg' && confirmState.data?.KhaDung === 1) ? 'danger' : 'default'}
+        onConfirm={handleConfirmAction}
+        onCancel={() => setConfirmState({ isOpen: false, type: '', data: null })}
       />
     </AdminLayout>
   );

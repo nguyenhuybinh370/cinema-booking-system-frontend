@@ -5,6 +5,7 @@ import AdminTable from '../../components/Admin/Common/AdminTable';
 import StatusBadge from '../../components/Admin/Common/StatusBadge';
 import adminService from '../../services/adminService';
 import { Search, Landmark, CreditCard, DollarSign, RotateCcw, AlertTriangle } from 'lucide-react';
+import { showSuccess, showError } from '../../utils/toastHelper';
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState([]);
@@ -49,15 +50,15 @@ const Transactions = () => {
       await adminService.refundTransaction(selectedTx.MaGiaoDich, refundReason);
       await loadTransactions();
       setIsRefundModalOpen(false);
-      alert(
-        `HOÀN TIỀN THÀNH CÔNG!\n\n` +
-        `1. [CSDL - GIAODICH]: Đã chuyển trạng thái sang "Refunded" và cập nhật Ghi chú: "${refundReason}".\n` +
-        `2. [CSDL - PHIEUDATVE]: Đã chuyển trạng thái hóa đơn liên quan sang "Đã hủy".\n` +
-        `3. [CSDL - GHE_SUATCHIEU]: Đã tự động giải phóng tất cả ghế trong suất chiếu của hóa đơn này về trạng thái Trống (0).`
+      showSuccess(
+        `HOÀN TIỀN THÀNH CÔNG!\n` +
+        `1. Giao dịch đã chuyển sang "Refunded" và lưu ghi chú: "${refundReason}".\n` +
+        `2. Phiếu đặt vé liên quan chuyển sang "Đã hủy".\n` +
+        `3. Đã tự động giải phóng tất cả ghế trong suất chiếu.`
       );
     } catch (error) {
       console.error("Failed to refund transaction:", error);
-      alert("Đã xảy ra lỗi khi hoàn tiền giao dịch!");
+      showError("Đã xảy ra lỗi khi hoàn tiền giao dịch!");
     }
   };
 

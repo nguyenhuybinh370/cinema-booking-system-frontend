@@ -3,6 +3,8 @@ import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import adminService from '../../services/adminService';
 import PriceTable from '../../components/Admin/Pricing/PriceTable';
 import PricingModal from '../../components/Admin/Pricing/PricingModal';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import { showSuccess, showError } from '../../utils/toastHelper';
 
 const formatPrice = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v);
 
@@ -18,6 +20,8 @@ const Pricing = () => {
   const [formData, setFormData] = useState({ name: '', surcharge: 0, description: '', KhaDung: 1 });
 
   const [calc, setCalc] = useState({ basePrice: 85000, roomType: '', seatType: '', dayType: '' });
+  const [confirmState, setConfirmState] = useState({ isOpen: false, category: '', id: '' });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadData = async () => {
     const [rooms, seats, days] = await Promise.all([
@@ -52,16 +56,25 @@ const Pricing = () => {
     setFormData({ name: item.TenLoaiPhong || item.TenLoaiGhe || item.TenLoaiNgay || '', surcharge: item.GiaPhuThu || 0, description: item.MoTa || '', KhaDung: item.KhaDung ?? 1 });
     setIsModalOpen(true);
   };
-  const handleDelete = async (cat, id) => {
-    if (!window.confirm('Xóa mục này khỏi cơ sở dữ liệu?')) return;
-    setLoading(true);
+  const handleDelete = (cat, id) => {
+    setConfirmState({ isOpen: true, category: cat, id });
+  };
+
+  const handleConfirmDelete = async () => {
+    const { category, id } = confirmState;
+    setIsDeleting(true);
     try {
-      if (cat === 'room') await adminService.deleteRoomType(id);
-      else if (cat === 'seat') await adminService.deleteSeatType(id);
+      if (category === 'room') await adminService.deleteRoomType(id);
+      else if (category === 'seat') await adminService.deleteSeatType(id);
       else await adminService.deleteDayType(id);
-      alert('Xóa thành công!'); await loadData();
-    } catch (e) { alert('Lỗi khi xóa: ' + e.message); }
-    finally { setLoading(false); }
+      showSuccess('Xóa thành công!');
+      await loadData();
+    } catch (e) {
+      showError('Lỗi khi xóa: ' + e.message);
+    } finally {
+      setIsDeleting(false);
+      setConfirmState({ isOpen: false, category: '', id: '' });
+    }
   };
   const handleFormSubmit = async (e) => {
     e.preventDefault(); setLoading(true);
@@ -73,15 +86,15 @@ const Pricing = () => {
         if (modalCategory === 'room') await adminService.updateRoomType(id, { ...namePatch, ...base });
         else if (modalCategory === 'seat') await adminService.updateSeatType(id, { ...namePatch, ...base });
         else await adminService.updateDayType(id, { ...namePatch, ...base });
-        alert('Cập nhật cấu hình thành công!');
+        showSuccess('Cập nhật cấu hình thành công!');
       } else {
         if (modalCategory === 'room') await adminService.addRoomType({ ...namePatch, ...base });
         else if (modalCategory === 'seat') await adminService.addSeatType({ ...namePatch, ...base });
         else await adminService.addDayType({ ...namePatch, ...base });
-        alert('Thêm cấu hình mới thành công!');
+        showSuccess('Thêm cấu hình mới thành công!');
       }
       await loadData(); setIsModalOpen(false);
-    } catch (err) { alert('Lỗi khi lưu: ' + err.message); }
+    } catch (err) { showError('Lỗi khi lưu: ' + err.message); }
     finally { setLoading(false); }
   };
 
@@ -160,6 +173,18 @@ const Pricing = () => {
         modalCategory={modalCategory} editingItem={editingItem} formData={formData}
         onChange={(k, v) => setFormData(p => ({ ...p, [k]: v }))}
         onSubmit={handleFormSubmit}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        title="Xóa cấu hình phụ thu"
+        message="Bạn có chắc chắn muốn xóa mục này khỏi cơ sở dữ liệu?"
+        confirmText="Xóa"
+        cancelText="Hủy"
+        variant="danger"
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmState({ isOpen: false, category: '', id: '' })}
       />
     </AdminLayout>
   );

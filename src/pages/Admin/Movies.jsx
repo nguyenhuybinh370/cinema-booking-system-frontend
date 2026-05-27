@@ -5,6 +5,8 @@ import useAdminForm from '../../hooks/useAdminForm';
 import MovieCard, { getMovieStatus } from '../../components/Admin/Movies/MovieCard';
 import MovieModal from '../../components/Admin/Movies/MovieModal';
 import { Search, Plus } from 'lucide-react';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import { showSuccess, showError } from '../../utils/toastHelper';
 
 const STATUS_LABELS = { All: 'Tất cả', Showing: 'Đang chiếu', 'Coming Soon': 'Sắp ra mắt', Ended: 'Ngừng chiếu' };
 
@@ -20,6 +22,8 @@ const Movies = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMovie, setEditingMovie] = useState(null);
+  const [confirmState, setConfirmState] = useState({ isOpen: false, data: null });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadMovies = async () => {
     const data = await adminService.getMovies();
@@ -40,8 +44,8 @@ const Movies = () => {
         HinhAnh: data.HinhAnh?.trim() || null,
         NoiDung: data.NoiDung?.trim() || null,
       };
-      if (editingMovie) { await adminService.updateMovie(editingMovie.MaPhim, processed); alert('Cập nhật phim thành công!'); }
-      else { await adminService.addMovie(processed); alert('Thêm phim mới thành công!'); }
+      if (editingMovie) { await adminService.updateMovie(editingMovie.MaPhim, processed); showSuccess('Cập nhật phim thành công!'); }
+      else { await adminService.addMovie(processed); showSuccess('Thêm phim mới thành công!'); }
       await loadMovies();
       setIsModalOpen(false);
       setEditingMovie(null);
@@ -61,10 +65,23 @@ const Movies = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm(`Xóa phim ${id} khỏi cơ sở dữ liệu?`)) return;
-    try { await adminService.deleteMovie(id); alert('Xóa phim thành công!'); await loadMovies(); }
-    catch (err) { alert(`Lỗi khi xóa: ${err.message}`); }
+  const handleDelete = (id) => {
+    setConfirmState({ isOpen: true, data: id });
+  };
+
+  const handleConfirmDelete = async () => {
+    const id = confirmState.data;
+    setIsDeleting(true);
+    try {
+      await adminService.deleteMovie(id);
+      showSuccess('Xóa phim thành công!');
+      await loadMovies();
+    } catch (err) {
+      showError(`Lỗi khi xóa: ${err.message}`);
+    } finally {
+      setIsDeleting(false);
+      setConfirmState({ isOpen: false, data: null });
+    }
   };
 
   const filteredMovies = movies.filter(m => {
@@ -123,6 +140,18 @@ const Movies = () => {
         isOpen={isModalOpen} onClose={closeModal}
         editingMovie={editingMovie} formData={formData} errors={errors}
         onChange={handleChange} onSubmit={handleSubmit}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        title="Xóa phim"
+        message={`Bạn có chắc chắn muốn xóa phim ${confirmState.data} khỏi cơ sở dữ liệu?`}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        variant="danger"
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmState({ isOpen: false, data: null })}
       />
     </AdminLayout>
   );

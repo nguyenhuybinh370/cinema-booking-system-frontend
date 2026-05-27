@@ -5,6 +5,7 @@ import KPICard from '../../components/Admin/Common/KPICard';
 import StatsCharts from '../../components/Admin/Stats/StatsCharts';
 import adminService from '../../services/adminService';
 import { TrendingUp, Users, Ticket, Film, Download, Calendar, RefreshCw, FileText, Table } from 'lucide-react';
+import { showSuccess, showError } from '../../utils/toastHelper';
 
 const formatPrice = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v);
 
@@ -54,9 +55,9 @@ const Stats = () => {
       a.href = url; a.download = result.fileName;
       document.body.appendChild(a); a.click();
       document.body.removeChild(a); URL.revokeObjectURL(url);
-      alert(`Xuất báo cáo ${format} thành công!`);
+      showSuccess(`Xuất báo cáo ${format} thành công!`);
       setIsExportModalOpen(false);
-    } catch { alert('Lỗi xuất báo cáo!'); }
+    } catch { showError('Lỗi xuất báo cáo!'); }
     finally { setIsExporting(false); }
   };
 

@@ -4,6 +4,8 @@ import adminService from '../../services/adminService';
 import PersonnelTable from '../../components/Admin/Personnel/PersonnelTable';
 import PersonnelModal from '../../components/Admin/Personnel/PersonnelModal';
 import { Search } from 'lucide-react';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import { showSuccess, showError } from '../../utils/toastHelper';
 
 const defaultForm = {
   HoTen: '', SoDienThoai: '', Email: '', ChucVu: '', Role: 'Staff',
@@ -17,12 +19,14 @@ const Personnel = () => {
   const [editingStaff, setEditingStaff] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState(defaultForm);
+  const [confirmState, setConfirmState] = useState({ isOpen: false, data: null });
+  const [isToggling, setIsToggling] = useState(false);
 
   const loadStaff = async () => {
     try {
       const data = await adminService.getStaff();
       setStaff(data);
-    } catch (err) { alert('Lỗi tải dữ liệu: ' + err.message); }
+    } catch (err) { showError('Lỗi tải dữ liệu: ' + err.message); }
     finally { setLoading(false); }
   };
 
@@ -43,25 +47,34 @@ const Personnel = () => {
     setIsModalOpen(true);
   };
 
-  const handleToggleStatus = async (person) => {
+  const handleToggleStatus = (person) => {
+    setConfirmState({ isOpen: true, data: person });
+  };
+
+  const handleConfirmToggle = async () => {
+    const person = confirmState.data;
     const newKhaDung = person.KhaDung === 1 ? 0 : 1;
     const actionName = newKhaDung === 0 ? 'Vô hiệu hóa' : 'Kích hoạt';
-    if (!window.confirm(`${actionName} nhân viên ${person.HoTen}?`)) return;
-    setLoading(true);
+    setIsToggling(true);
     try {
       await adminService.updateStaff(person.MaNhanVien, { KhaDung: newKhaDung });
-      await loadStaff(); alert(`${actionName} thành công!`);
-    } catch (e) { alert('Lỗi: ' + e.message); }
-    finally { setLoading(false); }
+      await loadStaff();
+      showSuccess(`${actionName} thành công!`);
+    } catch (e) {
+      showError('Lỗi: ' + e.message);
+    } finally {
+      setIsToggling(false);
+      setConfirmState({ isOpen: false, data: null });
+    }
   };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault(); setLoading(true);
     try {
-      if (editingStaff) { await adminService.updateStaff(editingStaff.MaNhanVien, formData); alert('Cập nhật hồ sơ thành công!'); }
-      else { await adminService.addStaff(formData); alert('Thêm nhân viên thành công!'); }
+      if (editingStaff) { await adminService.updateStaff(editingStaff.MaNhanVien, formData); showSuccess('Cập nhật hồ sơ thành công!'); }
+      else { await adminService.addStaff(formData); showSuccess('Thêm nhân viên thành công!'); }
       await loadStaff(); setIsModalOpen(false);
-    } catch (err) { alert('Lỗi: ' + err.message); }
+    } catch (err) { showError('Lỗi: ' + err.message); }
     finally { setLoading(false); }
   };
 
@@ -106,6 +119,18 @@ const Personnel = () => {
         isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}
         editingStaff={editingStaff} formData={formData}
         onChange={handleInputChange} onSubmit={handleFormSubmit}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        title={confirmState.data?.KhaDung === 1 ? "Vô hiệu hóa tài khoản" : "Kích hoạt tài khoản"}
+        message={confirmState.data ? `Bạn có chắc chắn muốn ${confirmState.data.KhaDung === 1 ? 'vô hiệu hóa' : 'kích hoạt'} tài khoản nhân viên ${confirmState.data.HoTen}?` : ''}
+        confirmText="Xác nhận"
+        cancelText="Quay lại"
+        variant={confirmState.data?.KhaDung === 1 ? "danger" : "default"}
+        isLoading={isToggling}
+        onConfirm={handleConfirmToggle}
+        onCancel={() => setConfirmState({ isOpen: false, data: null })}
       />
     </AdminLayout>
   );

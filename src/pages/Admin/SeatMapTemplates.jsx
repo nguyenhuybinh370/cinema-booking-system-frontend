@@ -5,6 +5,8 @@ import AdminTable from '../../components/Admin/Common/AdminTable';
 import adminService from '../../services/adminService';
 import useAdminForm from '../../hooks/useAdminForm';
 import { Plus, Eye, Trash2, Edit2 } from 'lucide-react';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import { showSuccess, showError } from '../../utils/toastHelper';
 
 const SeatMapTemplates = () => {
   const [templates, setTemplates] = useState([]);
@@ -12,6 +14,8 @@ const SeatMapTemplates = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState(null);
   const [editingTemplate, setEditingTemplate] = useState(null);
+  const [confirmState, setConfirmState] = useState({ isOpen: false, data: null });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const initialFormState = {
     MaSoDoGhe: '',
@@ -48,7 +52,7 @@ const SeatMapTemplates = () => {
           CauTruc: data.CauTruc,
           KhaDung: data.KhaDung === 1
         });
-        alert("Cập nhật sơ đồ mẫu thành công!");
+        showSuccess("Cập nhật sơ đồ mẫu thành công!");
       } else {
         await adminService.addSeatMap({
           TenSoDo: data.MaSoDoGhe,
@@ -56,14 +60,14 @@ const SeatMapTemplates = () => {
           TongCot: Number(data.TongCot),
           CauTruc: data.CauTruc
         });
-        alert("Tạo sơ đồ mẫu mới thành công!");
+        showSuccess("Tạo sơ đồ mẫu mới thành công!");
       }
       await loadData();
       setIsModalOpen(false);
       setEditingTemplate(null);
       resetForm();
     } catch (err) {
-      alert(`Lỗi: ${err.message}`);
+      showError(`Lỗi: ${err.message}`);
     }
   });
 
@@ -85,15 +89,22 @@ const SeatMapTemplates = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa sơ đồ mẫu ${id}?`)) {
-      try {
-        await adminService.deleteSeatMap(id);
-        alert("Xóa sơ đồ mẫu thành công!");
-        await loadData();
-      } catch (err) {
-        alert(`Lỗi khi xóa: ${err.message}`);
-      }
+  const handleDelete = (id) => {
+    setConfirmState({ isOpen: true, data: id });
+  };
+
+  const handleConfirmDelete = async () => {
+    const id = confirmState.data;
+    setIsDeleting(true);
+    try {
+      await adminService.deleteSeatMap(id);
+      showSuccess("Xóa sơ đồ mẫu thành công!");
+      await loadData();
+    } catch (err) {
+      showError(`Lỗi khi xóa: ${err.message}`);
+    } finally {
+      setIsDeleting(false);
+      setConfirmState({ isOpen: false, data: null });
     }
   };
 
@@ -304,6 +315,18 @@ const SeatMapTemplates = () => {
           </div>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        title="Xóa sơ đồ mẫu"
+        message={`Bạn có chắc chắn muốn xóa sơ đồ mẫu ${confirmState.data}?`}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        variant="danger"
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmState({ isOpen: false, data: null })}
+      />
     </AdminLayout>
   );
 };
