@@ -5,7 +5,7 @@ import SellTicketWizard from "./pages/Staff/SellTicket/SellTicketWizard";
 import StaffLayout from "./components/StaffLayout/StaffLayout";
 import CheckIn from "./pages/Staff/CheckInPage/index";
 import Dashboard from "./pages/Staff/Dashboard";
-import StaffProfile from "./pages/Staff/Profile/Profile";
+import StaffProfile from "./pages/Staff/Profile/index";
 import Schedule from "./pages/Staff/Schedule/index";
 import TransactionHistory from "./pages/Staff/TransactionHistory/index";
 
