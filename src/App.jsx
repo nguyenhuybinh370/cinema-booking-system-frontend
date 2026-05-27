@@ -7,7 +7,7 @@ import CheckIn from "./pages/Staff/CheckIn";
 import Dashboard from "./pages/Staff/Dashboard";
 import StaffProfile from "./pages/Staff/Profile/Profile";
 import Schedule from "./pages/Staff/Schedule/Schedule";
-import TransactionHistory from "./pages/Staff/TransactionHistory";
+import TransactionHistory from "./pages/Staff/TransactionHistory/index";
 
 import { Route, Routes, useLocation } from 'react-router-dom'
 import Home from './pages/Client/Home'
