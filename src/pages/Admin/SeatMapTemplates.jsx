@@ -45,6 +45,7 @@ const SeatMapTemplates = () => {
           TenSoDo: data.MaSoDoGhe,
           TongHang: Number(data.TongHang),
           TongCot: Number(data.TongCot),
+          CauTruc: data.CauTruc,
           KhaDung: data.KhaDung === 1
         });
         alert("Cập nhật sơ đồ mẫu thành công!");
@@ -52,7 +53,8 @@ const SeatMapTemplates = () => {
         await adminService.addSeatMap({
           TenSoDo: data.MaSoDoGhe,
           TongHang: Number(data.TongHang),
-          TongCot: Number(data.TongCot)
+          TongCot: Number(data.TongCot),
+          CauTruc: data.CauTruc
         });
         alert("Tạo sơ đồ mẫu mới thành công!");
       }
@@ -154,9 +156,16 @@ const SeatMapTemplates = () => {
       const row = [];
       const rowChar = String.fromCharCode(65 + r);
       for (let c = 0; c < TongCot; c++) {
+        let isAisle = struct?.aisles?.cols?.includes(c + 1) || struct?.aisles?.rows?.includes(r + 1);
+        if (!isAisle && struct?.aisles?.custom) {
+          const customRow = struct.aisles.custom.find(item => item.row === r);
+          if (customRow) {
+            isAisle = customRow.cols.includes(c) || customRow.cols.includes(c + 1);
+          }
+        }
         row.push({
           id: `${rowChar}${c + 1}`,
-          isAisle: struct?.aisles?.cols?.includes(c + 1) || struct?.aisles?.rows?.includes(r + 1)
+          isAisle
         });
       }
       result.push(row);

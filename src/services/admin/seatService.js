@@ -14,7 +14,7 @@ const seatService = {
       TenSoDo: r.TenSoDo,
       TongHang: r.SoHang,
       TongCot: r.SoCot,
-      CauTruc: JSON.stringify({ aisles: { rows: [], cols: getAisles(r.SoCot) } }),
+      CauTruc: r.CauTruc || JSON.stringify({ aisles: { rows: [], cols: getAisles(r.SoCot) } }),
       KhaDung: r.KhaDung ? 1 : 0
     }));
   },
@@ -27,7 +27,7 @@ const seatService = {
       TenSoDo: template.TenSoDo,
       TongHang: template.SoHang,
       TongCot: template.SoCot,
-      CauTruc: JSON.stringify({ aisles: { rows: [], cols: getAisles(template.SoCot) } }),
+      CauTruc: template.CauTruc || JSON.stringify({ aisles: { rows: [], cols: getAisles(template.SoCot) } }),
       KhaDung: template.KhaDung ? 1 : 0
     };
   },
@@ -63,7 +63,8 @@ const seatService = {
     const payload = {
       TenSoDo: data.TenSoDo || data.MaSoDoGhe || `Sơ đồ ${data.TongHang}x${data.TongCot}`,
       SoHang: Number(data.TongHang),
-      SoCot: Number(data.TongCot)
+      SoCot: Number(data.TongCot),
+      CauTruc: data.CauTruc
     };
     const res = await axiosClient.post('/admin/so-do-ghe', payload);
     return {
@@ -71,7 +72,7 @@ const seatService = {
       TenSoDo: res.TenSoDo,
       TongHang: res.SoHang,
       TongCot: res.SoCot,
-      CauTruc: JSON.stringify({ aisles: { rows: [], cols: getAisles(res.SoCot) } }),
+      CauTruc: res.CauTruc || JSON.stringify({ aisles: { rows: [], cols: getAisles(res.SoCot) } }),
       KhaDung: res.KhaDung ? 1 : 0
     };
   },
@@ -81,6 +82,7 @@ const seatService = {
       TenSoDo: data.TenSoDo || data.MaSoDoGhe || `Sơ đồ ${data.TongHang}x${data.TongCot}`,
       SoHang: Number(data.TongHang),
       SoCot: Number(data.TongCot),
+      CauTruc: data.CauTruc,
       KhaDung: data.KhaDung === 1
     };
     const res = await axiosClient.put(`/admin/so-do-ghe/${id}`, payload);
@@ -89,7 +91,7 @@ const seatService = {
       TenSoDo: res.TenSoDo,
       TongHang: res.SoHang,
       TongCot: res.SoCot,
-      CauTruc: JSON.stringify({ aisles: { rows: [], cols: getAisles(res.SoCot) } }),
+      CauTruc: res.CauTruc || JSON.stringify({ aisles: { rows: [], cols: getAisles(res.SoCot) } }),
       KhaDung: res.KhaDung ? 1 : 0
     };
   },
