@@ -1,8 +1,20 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { QRCodeSVG } from 'qrcode.react';
 import { Copy, Check, ExternalLink, X, Clock, AlertCircle, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getPayOSPaymentStatus } from '../../api/paymentApi';
 import { formatVND } from '../../utils/formatHelper';
+
+const isImageUrl = (url) => {
+  if (typeof url !== 'string') return false;
+  return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:image/');
+};
+
+const isBase64Image = (str) => {
+  if (typeof str !== 'string') return false;
+  return /^[A-Za-z0-9+/]+={0,2}$/.test(str) && str.length > 100;
+};
 
 const PayOSModal = ({
   isOpen,
@@ -110,11 +122,78 @@ const PayOSModal = ({
   const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
   const seconds = (timeLeft % 60).toString().padStart(2, '0');
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+  const renderQRCodeContent = () => {
+    // Case A: valid image URL
+    if (qrCode && isImageUrl(qrCode)) {
+      return (
+        <img 
+          src={qrCode} 
+          alt="PayOS QR Code" 
+          className="w-full h-full object-contain"
+        />
+      );
+    }
+
+    // Case B: raw base64 without prefix
+    if (qrCode && isBase64Image(qrCode)) {
+      return (
+        <img 
+          src={`data:image/png;base64,${qrCode}`} 
+          alt="PayOS QR Code" 
+          className="w-full h-full object-contain"
+        />
+      );
+    }
+
+    // Case C: VietQR string (usually what PayOS returns)
+    if (qrCode && typeof qrCode === 'string' && qrCode.length > 0) {
+      return (
+        <QRCodeSVG 
+          value={qrCode}
+          size={256}
+          className="w-full h-full object-contain"
+          bgColor="#ffffff"
+          fgColor="#000000"
+          level="M"
+        />
+      );
+    }
+
+    // Fallback: Generate QR from checkoutUrl
+    if (checkoutUrl) {
+      return (
+        <QRCodeSVG 
+          value={checkoutUrl}
+          size={256}
+          className="w-full h-full object-contain"
+          bgColor="#ffffff"
+          fgColor="#000000"
+          level="M"
+        />
+      );
+    }
+
+    // Case D: Failure / No QR data
+    return (
+      <div className="flex flex-col items-center justify-center text-center p-4 gap-2 text-red-400">
+        <AlertCircle size={32} />
+        <span className="text-xs font-bold leading-normal">
+          Không nhận được dữ liệu QR thanh toán từ hệ thống.
+        </span>
+      </div>
+    );
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"
+        onClick={onCancel}
+      />
       
       {/* Container Modal Glassmorphism */}
-      <div className="relative w-full max-w-lg bg-zinc-900/90 border border-white/10 rounded-2xl p-6 md:p-8 flex flex-col gap-6 shadow-2xl overflow-y-auto max-h-[90vh] text-left text-white backdrop-blur-md">
+      <div className="relative z-[10000] w-full max-w-lg bg-zinc-900/90 border border-white/10 rounded-2xl p-6 md:p-8 flex flex-col gap-6 shadow-2xl overflow-y-auto max-h-[90vh] text-left text-white backdrop-blur-md animate-in zoom-in-95 duration-300">
         
         {/* Nút Đóng Modal */}
         <button 
@@ -145,19 +224,8 @@ const PayOSModal = ({
         {/* Nội dung thanh toán QR */}
         <div className="flex flex-col md:flex-row items-center gap-6 justify-center bg-white/5 p-4 rounded-xl border border-white/5">
           {/* QR Code Container */}
-          <div className="relative w-48 h-48 bg-white p-2 rounded-xl flex items-center justify-center shrink-0 shadow-lg">
-            {qrCode ? (
-              <img 
-                src={qrCode} 
-                alt="PayOS QR Code" 
-                className="w-full h-full object-contain"
-              />
-            ) : (
-              <div className="flex flex-col items-center gap-2 text-zinc-400 text-xs font-semibold">
-                <Loader2 className="animate-spin text-blue-500" size={24} />
-                <span>Đang tải mã QR...</span>
-              </div>
-            )}
+          <div className="w-56 h-56 md:w-64 md:h-64 bg-white p-3 rounded-xl flex items-center justify-center shrink-0 shadow-lg overflow-hidden">
+            {renderQRCodeContent()}
           </div>
 
           {/* Chi tiết đơn hàng */}
@@ -230,7 +298,8 @@ const PayOSModal = ({
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
