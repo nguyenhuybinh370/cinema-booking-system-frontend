@@ -1,12 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import Modal from '../../components/Admin/Common/Modal';
 import AdminTable from '../../components/Admin/Common/AdminTable';
 import StatusBadge from '../../components/Admin/Common/StatusBadge';
+import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
 import adminService from '../../services/adminService';
 import useAdminForm from '../../hooks/useAdminForm';
 import { LayoutGrid, Plus, Edit2, Trash2, Calendar, AlertCircle } from 'lucide-react';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import { showSuccess, showError } from '../../utils/toastHelper';
+
+import { useClientPagination } from '../../hooks/useClientPagination';
+import AdminToolbar from '../../components/Admin/Common/AdminToolbar';
+import AdminPagination from '../../components/Admin/Common/AdminPagination';
 
 const Rooms = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -15,6 +22,8 @@ const Rooms = () => {
   const [loading, setLoading] = useState(true);
   const [roomTypes, setRoomTypes] = useState([]);
   const [seatMaps, setSeatMaps] = useState([]);
+  const [confirmState, setConfirmState] = useState({ isOpen: false, data: null });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const initialFormState = {
     TenPhong: '',
@@ -75,10 +84,10 @@ const Rooms = () => {
 
     if (editingRoom) {
       await adminService.updateRoom(editingRoom.MaPhongChieu, processedData);
-      alert("Cập nhật phòng chiếu thành công!");
+      showSuccess("Cập nhật phòng chiếu thành công!");
     } else {
       await adminService.addRoom(processedData);
-      alert("Thêm phòng chiếu mới thành công!");
+      showSuccess("Thêm phòng chiếu mới thành công!");
     }
     
     await loadData();
@@ -109,19 +118,58 @@ const Rooms = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa phòng chiếu ${id} khỏi cơ sở dữ liệu?`)) {
-      try {
-        const success = await adminService.deleteRoom(id);
-        if (success) {
-          alert("Xóa phòng chiếu khỏi cơ sở dữ liệu thành công!");
-          await loadData();
-        }
-      } catch (err) {
-        alert(`Lỗi khi xóa: ${err.message}`);
+  const handleDelete = (id) => {
+    setConfirmState({ isOpen: true, data: id });
+  };
+
+  const handleConfirmDelete = async () => {
+    const id = confirmState.data;
+    setIsDeleting(true);
+    try {
+      const success = await adminService.deleteRoom(id);
+      if (success) {
+        showSuccess("Xóa phòng chiếu khỏi cơ sở dữ liệu thành công!");
+        await loadData();
       }
+    } catch (err) {
+      showError(`Lỗi khi xóa: ${err.message}`);
+    } finally {
+      setIsDeleting(false);
+      setConfirmState({ isOpen: false, data: null });
     }
   };
+
+  // Pre-inject room type names for client-side search
+  const roomsWithTypes = useMemo(() => {
+    return rooms.map(room => {
+      const type = roomTypes.find(t => t.MaLoaiPhong === room.MaLoaiPhong);
+      return {
+        ...room,
+        TenLoaiPhong: type ? type.TenLoaiPhong : ''
+      };
+    });
+  }, [rooms, roomTypes]);
+
+  const {
+    searchQuery,
+    setSearchQuery,
+    filters,
+    setFilterVal,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    paginatedItems
+  } = useClientPagination(
+    roomsWithTypes,
+    ['TenPhong', 'TenLoaiPhong'],
+    (room, f) => {
+      const matchType = !f.roomType || f.roomType === 'All' || room.MaLoaiPhong === f.roomType;
+      const matchKhaDung = !f.activeStatus || f.activeStatus === 'All' || room.KhaDung === Number(f.activeStatus);
+      return matchType && matchKhaDung;
+    }
+  );
 
   const columns = [
     {
@@ -158,13 +206,7 @@ const Rooms = () => {
     },
     {
       header: 'Khả dụng',
-      render: (room) => (
-        <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${
-          room.KhaDung === 1 ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'
-        }`}>
-          {room.KhaDung === 1 ? '1 (Khả dụng)' : '0 (Chưa khả dụng)'}
-        </span>
-      )
+      render: (room) => <StatusBadge status={room.KhaDung} />
     },
     {
       header: 'Thời gian',
@@ -208,24 +250,72 @@ const Rooms = () => {
 
   return (
     <AdminLayout>
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-white text-glow">Quản lý phòng chiếu</h1>
-          <p className="text-slate-500 font-medium">Định nghĩa và kiểm soát cơ sở hạ tầng phòng chiếu vật lý.</p>
-        </div>
-        <button 
-          onClick={handleOpenAddModal}
-          className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 flex items-center gap-2 cursor-pointer"
-        >
-          <Plus size={20} />
-          Thêm phòng chiếu
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Quản lý phòng chiếu"
+        subtitle="Định nghĩa và kiểm soát cơ sở hạ tầng phòng chiếu vật lý."
+        action={
+          <button 
+            onClick={handleOpenAddModal}
+            className="w-full md:w-auto bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2 cursor-pointer text-sm"
+          >
+            <Plus size={18} />
+            Thêm phòng chiếu
+          </button>
+        }
+      />
+
+      {/* Filters and search using AdminToolbar */}
+      <AdminToolbar
+        searchPlaceholder="Tìm theo tên phòng, tên loại phòng..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        filterSlot={
+          <>
+            {/* Room Type filter */}
+            <select
+              value={filters.roomType || 'All'}
+              onChange={e => setFilterVal('roomType', e.target.value)}
+              className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+            >
+              <option value="All">Tất cả loại phòng</option>
+              {roomTypes.map(type => (
+                <option key={type.MaLoaiPhong} value={type.MaLoaiPhong}>
+                  {type.TenLoaiPhong} ({type.MaLoaiPhong})
+                </option>
+              ))}
+            </select>
+
+            {/* Active Status filter */}
+            <select
+              value={filters.activeStatus || 'All'}
+              onChange={e => setFilterVal('activeStatus', e.target.value)}
+              className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+            >
+              <option value="All">Tất cả trạng thái</option>
+              <option value={1}>Khả dụng</option>
+              <option value={0}>Không khả dụng</option>
+            </select>
+          </>
+        }
+      />
 
       {loading ? (
         <div className="bg-white/5 border border-white/5 rounded-3xl h-64 animate-pulse"></div>
+      ) : paginatedItems.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 text-slate-500 bg-white/[0.02] border border-white/10 rounded-3xl text-sm font-semibold">
+          Không tìm thấy dữ liệu phù hợp
+        </div>
       ) : (
-        <AdminTable columns={columns} data={rooms} rowKey="MaPhongChieu" />
+        <>
+          <AdminTable columns={columns} data={paginatedItems} rowKey="MaPhongChieu" />
+          <AdminPagination
+            page={page}
+            pageSize={pageSize}
+            total={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
+        </>
       )}
 
       <Modal 
@@ -250,7 +340,7 @@ const Rooms = () => {
               type="text" 
               name="TenPhong"
               required
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-white font-bold"
+              className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-white font-bold placeholder:text-slate-500"
               value={formData.TenPhong}
               onChange={handleChange}
               placeholder="VD: Phòng Chiếu 01"
@@ -262,12 +352,12 @@ const Rooms = () => {
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Mã loại phòng (MaLoaiPhong)</label>
               <select 
                 name="MaLoaiPhong"
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-sm text-slate-300"
+                className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-sm text-slate-200 font-bold [&>option]:bg-[#0a0d14] cursor-pointer"
                 value={formData.MaLoaiPhong}
                 onChange={handleChange}
               >
                 {roomTypes.map(type => (
-                  <option key={type.MaLoaiPhong} value={type.MaLoaiPhong} className="bg-[#0f1117]">
+                  <option key={type.MaLoaiPhong} value={type.MaLoaiPhong}>
                     {type.MaLoaiPhong} ({type.TenLoaiPhong})
                   </option>
                 ))}
@@ -277,12 +367,12 @@ const Rooms = () => {
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Mã sơ đồ ghế (MaSoDoGhe)</label>
               <select 
                 name="MaSoDoGhe"
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-sm text-slate-300"
+                className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-sm text-slate-200 font-bold [&>option]:bg-[#0a0d14] cursor-pointer"
                 value={formData.MaSoDoGhe}
                 onChange={handleChange}
               >
                 {seatMaps.map(map => (
-                  <option key={map.MaSoDoGhe} value={map.MaSoDoGhe} className="bg-[#0f1117]">
+                  <option key={map.MaSoDoGhe} value={map.MaSoDoGhe}>
                     {map.MaSoDoGhe} ({map.TongHang}x{map.TongCot})
                   </option>
                 ))}
@@ -293,7 +383,7 @@ const Rooms = () => {
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Số ghế (SoGhe - Tự tính)</label>
-              <div className="w-full bg-white/5 border border-white/5 rounded-xl py-3 px-4 text-slate-500 font-bold font-mono">
+              <div className="w-full bg-white/[0.04] border border-white/5 rounded-xl py-3.5 px-4 text-slate-400 font-bold font-mono">
                 {getSeatCount(formData.MaSoDoGhe)} ghế
               </div>
             </div>
@@ -301,12 +391,12 @@ const Rooms = () => {
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Khả dụng (KhaDung)</label>
               <select 
                 name="KhaDung"
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-sm text-slate-300"
+                className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-sm text-slate-200 font-bold [&>option]:bg-[#0a0d14] cursor-pointer"
                 value={formData.KhaDung}
                 onChange={handleChange}
               >
-                <option value={1} className="bg-[#0f1117]">1 (Khả dụng)</option>
-                <option value={0} className="bg-[#0f1117]">0 (Chưa khả dụng)</option>
+                <option value={1}>1 (Khả dụng)</option>
+                <option value={0}>0 (Chưa khả dụng)</option>
               </select>
             </div>
           </div>
@@ -325,19 +415,31 @@ const Rooms = () => {
                 setIsModalOpen(false);
                 setEditingRoom(null);
               }}
-              className="flex-grow py-3 px-6 rounded-xl font-bold text-slate-400 hover:bg-white/5 transition-all uppercase tracking-widest text-xs cursor-pointer"
+              className="flex-grow py-3 px-6 rounded-xl font-bold text-slate-400 hover:bg-white/5 transition-all border border-white/5 hover:border-white/10 active:scale-95 uppercase tracking-widest text-xs cursor-pointer"
             >
               Hủy
             </button>
             <button 
               type="submit"
-              className="flex-grow py-3 px-6 rounded-xl font-bold bg-red-500 hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 uppercase tracking-widest text-xs cursor-pointer"
+              className="flex-grow py-3 px-6 rounded-xl font-bold bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 transition-all shadow-lg shadow-red-500/20 text-white active:scale-95 uppercase tracking-widest text-xs cursor-pointer"
             >
               {editingRoom ? "Cập nhật" : "Thêm phòng"}
             </button>
           </div>
         </form>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        title="Xóa phòng chiếu"
+        message={`Bạn có chắc chắn muốn xóa phòng chiếu ${confirmState.data} khỏi cơ sở dữ liệu?`}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        variant="danger"
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmState({ isOpen: false, data: null })}
+      />
     </AdminLayout>
   );
 };

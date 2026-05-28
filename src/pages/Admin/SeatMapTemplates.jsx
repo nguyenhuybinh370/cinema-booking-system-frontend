@@ -5,6 +5,12 @@ import AdminTable from '../../components/Admin/Common/AdminTable';
 import adminService from '../../services/adminService';
 import useAdminForm from '../../hooks/useAdminForm';
 import { Plus, Eye, Trash2, Edit2 } from 'lucide-react';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import { showSuccess, showError } from '../../utils/toastHelper';
+import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
+import { useClientPagination } from '../../hooks/useClientPagination';
+import AdminToolbar from '../../components/Admin/Common/AdminToolbar';
+import AdminPagination from '../../components/Admin/Common/AdminPagination';
 
 const SeatMapTemplates = () => {
   const [templates, setTemplates] = useState([]);
@@ -12,6 +18,8 @@ const SeatMapTemplates = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState(null);
   const [editingTemplate, setEditingTemplate] = useState(null);
+  const [confirmState, setConfirmState] = useState({ isOpen: false, data: null });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const initialFormState = {
     MaSoDoGhe: '',
@@ -48,7 +56,7 @@ const SeatMapTemplates = () => {
           CauTruc: data.CauTruc,
           KhaDung: data.KhaDung === 1
         });
-        alert("Cập nhật sơ đồ mẫu thành công!");
+        showSuccess("Cập nhật sơ đồ mẫu thành công!");
       } else {
         await adminService.addSeatMap({
           TenSoDo: data.MaSoDoGhe,
@@ -56,14 +64,14 @@ const SeatMapTemplates = () => {
           TongCot: Number(data.TongCot),
           CauTruc: data.CauTruc
         });
-        alert("Tạo sơ đồ mẫu mới thành công!");
+        showSuccess("Tạo sơ đồ mẫu mới thành công!");
       }
       await loadData();
       setIsModalOpen(false);
       setEditingTemplate(null);
       resetForm();
     } catch (err) {
-      alert(`Lỗi: ${err.message}`);
+      showError(`Lỗi: ${err.message}`);
     }
   });
 
@@ -85,17 +93,44 @@ const SeatMapTemplates = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa sơ đồ mẫu ${id}?`)) {
-      try {
-        await adminService.deleteSeatMap(id);
-        alert("Xóa sơ đồ mẫu thành công!");
-        await loadData();
-      } catch (err) {
-        alert(`Lỗi khi xóa: ${err.message}`);
-      }
+  const handleDelete = (id) => {
+    setConfirmState({ isOpen: true, data: id });
+  };
+
+  const handleConfirmDelete = async () => {
+    const id = confirmState.data;
+    setIsDeleting(true);
+    try {
+      await adminService.deleteSeatMap(id);
+      showSuccess("Xóa sơ đồ mẫu thành công!");
+      await loadData();
+    } catch (err) {
+      showError(`Lỗi khi xóa: ${err.message}`);
+    } finally {
+      setIsDeleting(false);
+      setConfirmState({ isOpen: false, data: null });
     }
   };
+
+  const {
+    searchQuery,
+    setSearchQuery,
+    filters,
+    setFilterVal,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    paginatedItems
+  } = useClientPagination(
+    templates,
+    ['TenSoDo', 'MaSoDoGhe'],
+    (t, f) => {
+      const matchKhaDung = !f.activeStatus || f.activeStatus === 'All' || t.KhaDung === Number(f.activeStatus);
+      return matchKhaDung;
+    }
+  );
 
   const columns = [
     { header: 'Mã sơ đồ', accessor: 'MaSoDoGhe', className: 'font-mono font-bold text-white' },
@@ -113,24 +148,24 @@ const SeatMapTemplates = () => {
         <div className="flex justify-end gap-2">
           <button 
             onClick={() => setPreviewTemplate(t)}
-            className="p-2 hover:bg-white/5 text-blue-500 hover:text-blue-400 rounded-xl transition-all cursor-pointer"
+            className="p-2 bg-white/5 hover:bg-white/10 border border-white/5 text-blue-500 hover:text-blue-400 rounded-xl transition-all cursor-pointer"
             title="Xem trước"
           >
-            <Eye size={18} />
+            <Eye size={16} />
           </button>
           <button 
             onClick={() => handleEdit(t)}
-            className="p-2 hover:bg-white/5 text-emerald-500 hover:text-emerald-400 rounded-xl transition-all cursor-pointer"
+            className="p-2 bg-white/5 hover:bg-white/10 border border-white/5 text-emerald-500 hover:text-emerald-400 rounded-xl transition-all cursor-pointer"
             title="Sửa"
           >
-            <Edit2 size={18} />
+            <Edit2 size={16} />
           </button>
           <button 
             onClick={() => handleDelete(t.MaSoDoGhe)}
-            className="p-2 hover:bg-white/5 text-red-500 hover:text-red-400 rounded-xl transition-all cursor-pointer"
+            className="p-2 bg-white/5 hover:bg-white/10 border border-white/5 text-red-500 hover:text-red-400 rounded-xl transition-all cursor-pointer"
             title="Xóa"
           >
-            <Trash2 size={18} />
+            <Trash2 size={16} />
           </button>
         </div>
       )
@@ -175,24 +210,58 @@ const SeatMapTemplates = () => {
 
   return (
     <AdminLayout>
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-white text-glow">Sơ đồ ghế mẫu</h1>
-          <p className="text-slate-500 font-medium">Quản lý các khuôn mẫu sơ đồ ghế (Template) dùng khi tạo phòng chiếu.</p>
-        </div>
-        <button 
-          onClick={handleOpenAddModal}
-          className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 flex items-center gap-2 cursor-pointer"
-        >
-          <Plus size={20} />
-          Tạo mẫu mới
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Sơ đồ ghế mẫu"
+        subtitle="Quản lý các khuôn mẫu sơ đồ ghế (Template) dùng khi tạo phòng chiếu."
+        action={
+          <button 
+            onClick={handleOpenAddModal}
+            className="w-full md:w-auto bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2 cursor-pointer text-sm"
+          >
+            <Plus size={18} />
+            Tạo mẫu mới
+          </button>
+        }
+      />
+
+      {/* Filters and search using AdminToolbar */}
+      <AdminToolbar
+        searchPlaceholder="Tìm theo tên sơ đồ hoặc mã sơ đồ..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        filterSlot={
+          <>
+            {/* Active Status filter */}
+            <select
+              value={filters.activeStatus || 'All'}
+              onChange={e => setFilterVal('activeStatus', e.target.value)}
+              className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+            >
+              <option value="All">Tất cả trạng thái</option>
+              <option value={1}>Khả dụng</option>
+              <option value={0}>Không khả dụng</option>
+            </select>
+          </>
+        }
+      />
 
       {loading ? (
         <div className="bg-white/5 border border-white/5 rounded-3xl h-64 animate-pulse"></div>
+      ) : paginatedItems.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 text-slate-500 bg-white/[0.02] border border-white/10 rounded-3xl text-sm font-semibold">
+          Không tìm thấy dữ liệu phù hợp
+        </div>
       ) : (
-        <AdminTable columns={columns} data={templates} rowKey="MaSoDoGhe" />
+        <>
+          <AdminTable columns={columns} data={paginatedItems} rowKey="MaSoDoGhe" />
+          <AdminPagination
+            page={page}
+            pageSize={pageSize}
+            total={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
+        </>
       )}
 
       {/* Create/Edit Modal */}
@@ -209,7 +278,7 @@ const SeatMapTemplates = () => {
             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Mã sơ đồ (MaSoDoGhe)</label>
             <input 
               type="text" name="MaSoDoGhe" required
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white font-mono disabled:opacity-50"
+              className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 text-white font-mono disabled:opacity-50 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
               value={formData.MaSoDoGhe} onChange={handleChange}
               placeholder="VD: SM10x12"
               disabled={!!editingTemplate}
@@ -221,7 +290,7 @@ const SeatMapTemplates = () => {
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Tổng số hàng</label>
               <input 
                 type="number" name="TongHang" required
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white"
+                className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
                 value={formData.TongHang} onChange={handleChange}
               />
             </div>
@@ -229,7 +298,7 @@ const SeatMapTemplates = () => {
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Tổng số cột</label>
               <input 
                 type="number" name="TongCot" required
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white"
+                className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
                 value={formData.TongCot} onChange={handleChange}
               />
             </div>
@@ -239,7 +308,7 @@ const SeatMapTemplates = () => {
             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Cấu trúc (JSON)</label>
             <textarea 
               name="CauTruc"
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white font-mono text-xs min-h-[100px]"
+              className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 text-white font-mono text-xs min-h-[100px] focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
               value={formData.CauTruc} onChange={handleChange}
             ></textarea>
             <p className="text-[10px] text-slate-600">Định nghĩa vị trí lối đi (aisles) theo cột hoặc hàng.</p>
@@ -250,12 +319,12 @@ const SeatMapTemplates = () => {
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Khả dụng (KhaDung)</label>
               <select 
                 name="KhaDung"
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-colors text-sm text-slate-300"
+                className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-sm text-slate-300 [&>option]:bg-[#0a0d14]"
                 value={formData.KhaDung}
                 onChange={handleChange}
               >
-                <option value={1} className="bg-[#0f1117]">1 (Khả dụng)</option>
-                <option value={0} className="bg-[#0f1117]">0 (Chưa khả dụng)</option>
+                <option value={1}>1 (Khả dụng)</option>
+                <option value={0}>0 (Chưa khả dụng)</option>
               </select>
             </div>
           )}
@@ -267,11 +336,11 @@ const SeatMapTemplates = () => {
                 setIsModalOpen(false);
                 setEditingTemplate(null);
               }} 
-              className="flex-grow py-3 rounded-xl font-bold text-slate-400 hover:bg-white/5 transition-all cursor-pointer"
+              className="flex-grow py-3 rounded-xl font-bold border border-white/10 hover:bg-white/5 hover:text-white transition-all text-xs uppercase tracking-widest cursor-pointer text-slate-400"
             >
               Hủy
             </button>
-            <button type="submit" className="flex-grow py-3 rounded-xl font-bold bg-red-500 hover:bg-red-600 transition-all cursor-pointer">Lưu mẫu</button>
+            <button type="submit" className="flex-grow py-3 rounded-xl font-bold bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white shadow-lg shadow-red-500/20 transition-all text-xs uppercase tracking-widest cursor-pointer">Lưu mẫu</button>
           </div>
         </form>
       </Modal>
@@ -283,12 +352,12 @@ const SeatMapTemplates = () => {
         title={`Xem trước: ${previewTemplate?.MaSoDoGhe}`}
       >
         <div className="flex flex-col items-center p-8">
-          <div className="w-full max-w-md h-1 bg-slate-800 rounded-full mb-12 relative">
-            <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-black text-slate-600 uppercase tracking-widest">Screen</span>
+          <div className="w-full max-w-md h-1 bg-slate-700 rounded-full mb-12 relative">
+            <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-black text-slate-500 uppercase tracking-[0.8em]">Screen</span>
           </div>
           
           <div 
-            className="inline-grid gap-1.5 p-4 bg-black/20 rounded-2xl border border-white/5"
+            className="inline-grid gap-1.5 p-4 bg-black/40 rounded-2xl border border-white/5 overflow-auto max-w-full custom-scrollbar"
             style={{ gridTemplateColumns: `repeat(${previewTemplate?.TongCot}, minmax(0, 1fr))` }}
           >
             {previewMatrix.flat().map((cell, i) => (
@@ -304,6 +373,18 @@ const SeatMapTemplates = () => {
           </div>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        title="Xóa sơ đồ mẫu"
+        message={`Bạn có chắc chắn muốn xóa sơ đồ mẫu ${confirmState.data}?`}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        variant="danger"
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmState({ isOpen: false, data: null })}
+      />
     </AdminLayout>
   );
 };

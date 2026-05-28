@@ -18,7 +18,7 @@ const STATUS_CLASSES = {
 const MovieCard = ({ movie, onEdit, onDelete }) => {
   const status = getMovieStatus(movie);
   return (
-    <div className="group bg-[#0f1117] border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-white/20 transition-all hover:-translate-y-2 shadow-2xl flex flex-col justify-between">
+    <div className="group bg-[#131A2A]/40 backdrop-blur-md border border-white/[0.06] rounded-[2.5rem] overflow-hidden hover:border-red-500/30 transition-all duration-300 hover:-translate-y-2 shadow-2xl flex flex-col justify-between">
       <div>
         <div className="relative aspect-video">
           {movie.HinhAnh ? (
@@ -26,7 +26,7 @@ const MovieCard = ({ movie, onEdit, onDelete }) => {
           ) : (
             <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600"><Film size={40} /></div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117] via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0d1017] via-transparent to-transparent" />
           <div className="absolute top-4 left-4">
             <span className={`px-3 py-1 rounded-lg text-[10px] font-bold border ${STATUS_CLASSES[status]}`}>
               {STATUS_LABELS[status]}
@@ -34,11 +34,11 @@ const MovieCard = ({ movie, onEdit, onDelete }) => {
           </div>
           <div className="absolute top-4 right-4 flex gap-2">
             <button onClick={() => onEdit(movie)}
-              className="p-2 bg-black/60 backdrop-blur-md rounded-xl text-blue-400 hover:text-white hover:bg-blue-500 transition-all cursor-pointer" title="Sửa">
+              className="p-2 bg-black/60 backdrop-blur-md rounded-xl text-blue-400 hover:text-white hover:bg-blue-500 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)] transition-all cursor-pointer" title="Sửa">
               <Edit2 size={14} />
             </button>
             <button onClick={() => onDelete(movie.MaPhim)}
-              className="p-2 bg-black/60 backdrop-blur-md rounded-xl text-red-400 hover:text-white hover:bg-red-500 transition-all cursor-pointer" title="Xóa">
+              className="p-2 bg-black/60 backdrop-blur-md rounded-xl text-red-400 hover:text-white hover:bg-red-500 hover:shadow-[0_0_10px_rgba(239,68,68,0.3)] transition-all cursor-pointer" title="Xóa">
               <Trash2 size={14} />
             </button>
           </div>
@@ -56,7 +56,7 @@ const MovieCard = ({ movie, onEdit, onDelete }) => {
             <h3 className="text-xl font-bold text-white mb-2 line-clamp-1 group-hover:text-red-500 transition-colors">{movie.TenPhim}</h3>
             <p className="text-slate-500 text-sm line-clamp-1">{movie.TheLoai}</p>
           </div>
-          <div className="space-y-1 text-xs text-slate-400 bg-white/[0.01] p-3 rounded-xl border border-white/5">
+          <div className="space-y-1 text-xs text-slate-400 bg-white/[0.02] p-3 rounded-xl border border-white/[0.04]">
             {movie.DaoDien && (
               <div className="flex items-center gap-1.5"><User size={12} className="text-slate-600" />
                 <span className="text-slate-500">Đạo diễn:</span><span className="font-bold text-slate-300">{movie.DaoDien}</span>

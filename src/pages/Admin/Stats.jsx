@@ -5,6 +5,9 @@ import KPICard from '../../components/Admin/Common/KPICard';
 import StatsCharts from '../../components/Admin/Stats/StatsCharts';
 import adminService from '../../services/adminService';
 import { TrendingUp, Users, Ticket, Film, Download, Calendar, RefreshCw, FileText, Table } from 'lucide-react';
+import { showSuccess, showError } from '../../utils/toastHelper';
+
+import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
 
 const formatPrice = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v);
 
@@ -54,57 +57,58 @@ const Stats = () => {
       a.href = url; a.download = result.fileName;
       document.body.appendChild(a); a.click();
       document.body.removeChild(a); URL.revokeObjectURL(url);
-      alert(`Xuất báo cáo ${format} thành công!`);
+      showSuccess(`Xuất báo cáo ${format} thành công!`);
       setIsExportModalOpen(false);
-    } catch { alert('Lỗi xuất báo cáo!'); }
+    } catch { showError('Lỗi xuất báo cáo!'); }
     finally { setIsExporting(false); }
   };
 
   return (
     <AdminLayout>
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-white text-glow">Thống kê & Doanh thu</h1>
-          <p className="text-slate-500">Dashboard phân tích kết quả kinh doanh thời gian thực.</p>
-        </div>
-        <button onClick={() => setIsExportModalOpen(true)}
-          className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-red-500/20 cursor-pointer">
-          <Download size={20} /> Xuất báo cáo
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Thống kê & Doanh thu"
+        subtitle="Dashboard phân tích kết quả kinh doanh thời gian thực."
+        action={
+          <button 
+            onClick={() => setIsExportModalOpen(true)}
+            className="w-full md:w-auto bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 cursor-pointer active:scale-95 transition-all text-sm"
+          >
+            <Download size={20} /> Xuất báo cáo
+          </button>
+        }
+      />
 
       {/* Filters */}
-      <div className="bg-[#0f1117] border border-white/5 rounded-[2.5rem] p-6 mb-8">
-        <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
-          <Calendar size={14} /> Bộ lọc thống kê
+      <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-6 mb-8">
+        <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
+          <Calendar size={14} className="text-red-500" /> Bộ lọc thống kê
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
           {[{ label: 'Từ ngày', key: 'startDate', type: 'date' }, { label: 'Đến ngày', key: 'endDate', type: 'date' }].map(({ label, key, type }) => (
             <div key={key} className="space-y-1">
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</label>
               <input type={type} value={filters[key]} onChange={e => setFilter(key, e.target.value)}
-                className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-300 focus:outline-none focus:border-red-500 cursor-pointer" />
+                className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 cursor-pointer transition-all" />
             </div>
           ))}
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Chọn phim</label>
             <select value={filters.maPhim} onChange={e => setFilter('maPhim', e.target.value)}
-              className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-300 focus:outline-none focus:border-red-500 cursor-pointer">
-              <option value="" className="bg-[#0f1117]">Tất cả phim</option>
-              {movies.map(m => <option key={m.MaPhim} value={m.MaPhim} className="bg-[#0f1117]">{m.TenPhim}</option>)}
+              className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 cursor-pointer transition-all [&>option]:bg-[#0a0d14]">
+              <option value="">Tất cả phim</option>
+              {movies.map(m => <option key={m.MaPhim} value={m.MaPhim}>{m.TenPhim}</option>)}
             </select>
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Phòng chiếu</label>
             <select value={filters.maPhongChieu} onChange={e => setFilter('maPhongChieu', e.target.value)}
-              className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-300 focus:outline-none focus:border-red-500 cursor-pointer">
-              <option value="" className="bg-[#0f1117]">Tất cả phòng</option>
-              {rooms.map(r => <option key={r.MaPhongChieu} value={r.MaPhongChieu} className="bg-[#0f1117]">{r.TenPhong}</option>)}
+              className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 cursor-pointer transition-all [&>option]:bg-[#0a0d14]">
+              <option value="">Tất cả phòng</option>
+              {rooms.map(r => <option key={r.MaPhongChieu} value={r.MaPhongChieu}>{r.TenPhong}</option>)}
             </select>
           </div>
           <button onClick={resetFilters}
-            className="w-full bg-white/5 hover:bg-white/10 border border-white/5 text-slate-400 hover:text-white rounded-xl py-2.5 text-sm font-bold flex items-center justify-center gap-2 cursor-pointer h-[42px]">
+            className="w-full bg-white/5 hover:bg-white/10 border border-white/5 text-slate-400 hover:text-white rounded-xl py-2.5 text-sm font-bold flex items-center justify-center gap-2 cursor-pointer h-[42px] transition-all active:scale-95">
             <RefreshCw size={14} /> Đặt lại
           </button>
         </div>
@@ -112,7 +116,7 @@ const Stats = () => {
 
       {/* Content */}
       {loading || !stats ? (
-        <div className="flex flex-col items-center justify-center h-64 text-slate-500 bg-[#0f1117] border border-white/5 rounded-[2.5rem]">
+        <div className="flex flex-col items-center justify-center h-64 text-slate-500 bg-white/[0.02] border border-white/10 rounded-3xl">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500 mb-4" />
           Đang tính toán dữ liệu báo cáo...
         </div>
@@ -132,7 +136,7 @@ const Stats = () => {
       <Modal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} title="Chọn định dạng xuất báo cáo">
         <div className="space-y-6">
           <p className="text-sm text-slate-400">Hệ thống sẽ đóng gói dữ liệu doanh thu dựa trên bộ lọc đang chọn và tải tệp về thiết bị của bạn.</p>
-          <div className="bg-white/5 rounded-2xl p-5 space-y-3 font-mono text-xs text-slate-400">
+          <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 space-y-3 font-mono text-xs text-slate-400">
             {[
               { label: 'Từ ngày:', value: filters.startDate || 'Tất cả' },
               { label: 'Đến ngày:', value: filters.endDate || 'Tất cả' },
@@ -151,10 +155,10 @@ const Stats = () => {
             </div>
           ) : (
             <div className="flex gap-4">
-              <button onClick={() => handleExport('Excel')} className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-bold flex flex-col items-center gap-2 cursor-pointer">
+              <button onClick={() => handleExport('Excel')} className="flex-1 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl font-bold flex flex-col items-center gap-2 cursor-pointer transition-all shadow-lg shadow-emerald-500/10 active:scale-95">
                 <Table size={24} /><span className="text-xs uppercase tracking-widest">Xuất Excel</span>
               </button>
-              <button onClick={() => handleExport('PDF')} className="flex-1 py-4 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold flex flex-col items-center gap-2 cursor-pointer">
+              <button onClick={() => handleExport('PDF')} className="flex-1 py-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white rounded-2xl font-bold flex flex-col items-center gap-2 cursor-pointer transition-all shadow-lg shadow-red-500/10 active:scale-95">
                 <FileText size={24} /><span className="text-xs uppercase tracking-widest">Xuất PDF</span>
               </button>
             </div>

@@ -5,12 +5,17 @@ import AdminTable from '../../components/Admin/Common/AdminTable';
 import StatusBadge from '../../components/Admin/Common/StatusBadge';
 import adminService from '../../services/adminService';
 import { Search, UserX, UserCheck, History, X, CheckSquare, AlertTriangle } from 'lucide-react';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import { showSuccess, showError } from '../../utils/toastHelper';
+
+import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
+import { useClientPagination } from '../../hooks/useClientPagination';
+import AdminToolbar from '../../components/Admin/Common/AdminToolbar';
+import AdminPagination from '../../components/Admin/Common/AdminPagination';
 
 const Customers = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
   
   // Modals state
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -21,6 +26,8 @@ const Customers = () => {
   // Transactions state
   const [transactions, setTransactions] = useState([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [confirmState, setConfirmState] = useState({ isOpen: false, data: null });
+  const [isUnlocking, setIsUnlocking] = useState(false);
 
   const loadCustomers = async () => {
     try {
@@ -41,8 +48,6 @@ const Customers = () => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   };
 
-
-
   const handleToggleLockStatus = async () => {
     if (!selectedCust || !lockReason.trim()) return;
     try {
@@ -52,13 +57,13 @@ const Customers = () => {
       setIsLockModalOpen(false);
       setLockReason('');
       
-      alert(
-        `KHÓA TÀI KHOẢN THÀNH CÔNG!\n\n` +
-        `1. [CSDL - KHACHHANG]: Đã cập nhật KhaDung = 0 và lưu LyDoKhoa: "${result.reason}".\n` +
-        `2. [HỆ THỐNG EMAIL]: Đã gửi thư thông báo chi tiết lý do khóa đến khách hàng tại địa chỉ email: ${result.email}.`
+      showSuccess(
+        `KHÓA TÀI KHOẢN THÀNH CÔNG!\n` +
+        `1. Cập nhật KhaDung = 0 và LyDoKhoa: "${result.reason}".\n` +
+        `2. Đã gửi thư thông báo đến địa chỉ: ${result.email}.`
       );
     } catch (error) {
-      alert("Lỗi khi khóa tài khoản: " + error.message);
+      showError("Lỗi khi khóa tài khoản: " + error.message);
     }
   };
 
@@ -68,15 +73,22 @@ const Customers = () => {
       setLockReason('');
       setIsLockModalOpen(true);
     } else {
-      if (window.confirm(`Bạn có chắc chắn muốn mở khóa tài khoản cho ${cust.HoTen}?`)) {
-        try {
-          await adminService.unlockCustomerAccount(cust.MaKhachHang);
-          await loadCustomers();
-          alert(`Đã mở khóa tài khoản của ${cust.HoTen} thành công. Trạng thái đã chuyển sang Đang hoạt động (KhaDung = 1).`);
-        } catch (error) {
-          alert("Lỗi khi mở khóa tài khoản: " + error.message);
-        }
-      }
+      setConfirmState({ isOpen: true, data: cust });
+    }
+  };
+
+  const handleConfirmUnlock = async () => {
+    const cust = confirmState.data;
+    setIsUnlocking(true);
+    try {
+      await adminService.unlockCustomerAccount(cust.MaKhachHang);
+      await loadCustomers();
+      showSuccess(`Đã mở khóa tài khoản của ${cust.HoTen} thành công. Trạng thái đã chuyển sang Đang hoạt động.`);
+    } catch (error) {
+      showError("Lỗi khi mở khóa tài khoản: " + error.message);
+    } finally {
+      setIsUnlocking(false);
+      setConfirmState({ isOpen: false, data: null });
     }
   };
 
@@ -88,35 +100,43 @@ const Customers = () => {
       const trans = await adminService.getCustomerTransactions(cust.MaKhachHang);
       setTransactions(trans);
     } catch (error) {
-      alert("Lỗi tải lịch sử giao dịch: " + error.message);
+      showError("Lỗi tải lịch sử giao dịch: " + error.message);
     } finally {
       setLoadingTransactions(false);
     }
   };
 
-  // Filter customers
-  const filteredCustomers = customers.filter(c => {
-    const matchesSearch = 
-      c.HoTen.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.Email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.SoDienThoai.includes(searchQuery);
-    
-    const matchesStatus = statusFilter === 'All' || c.TrangThai === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+  const {
+    searchQuery,
+    setSearchQuery,
+    filters,
+    setFilterVal,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    paginatedItems
+  } = useClientPagination(
+    customers,
+    ['HoTen', 'Email', 'SoDienThoai'],
+    (c, f) => {
+      const matchStatus = !f.status || f.status === 'All' || c.TrangThai === f.status;
+      return matchStatus;
+    }
+  );
 
   const columns = [
     {
       header: 'Khách hàng',
       render: (c) => (
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white font-bold border border-white/10">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-600/20 to-rose-600/20 border border-red-500/30 flex items-center justify-center text-red-400 font-bold text-sm tracking-wide shrink-0">
             {c.HoTen.charAt(0)}
           </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-white text-sm">{c.HoTen}</span>
-            <span className="text-xs text-slate-500">{c.Email}</span>
+          <div className="flex flex-col min-w-0">
+            <span className="font-bold text-white text-sm truncate">{c.HoTen}</span>
+            <span className="text-xs text-slate-500 truncate">{c.Email}</span>
           </div>
         </div>
       )
@@ -137,82 +157,83 @@ const Customers = () => {
         <div className="flex justify-end gap-2">
           <button 
             onClick={() => openHistoryDrawer(c)}
-            className="p-2 hover:bg-white/5 text-slate-500 hover:text-white rounded-xl transition-all cursor-pointer"
+            className="p-2 bg-white/5 hover:bg-white/10 border border-white/5 text-slate-400 hover:text-white rounded-xl transition-all cursor-pointer"
             title="Lịch sử mua vé"
           >
-            <History size={18} />
+            <History size={16} />
           </button>
           <button 
             onClick={() => openLockModal(c)}
-            className={`p-2 rounded-xl transition-all cursor-pointer ${
+            className={`p-2 bg-white/5 border border-white/5 rounded-xl transition-all cursor-pointer ${
               c.TrangThai === 'Active' 
-                ? 'hover:bg-red-500/10 text-slate-500 hover:text-red-500' 
-                : 'hover:bg-emerald-500/10 text-slate-500 hover:text-emerald-500'
+                ? 'hover:bg-red-500/10 text-slate-400 hover:text-red-500 hover:border-red-500/20' 
+                : 'hover:bg-emerald-500/10 text-slate-400 hover:text-emerald-500 hover:border-emerald-500/20'
             }`} 
             title={c.TrangThai === 'Active' ? 'Khóa tài khoản' : 'Mở khóa'}
           >
-            {c.TrangThai === 'Active' ? <UserX size={18} /> : <UserCheck size={18} />}
+            {c.TrangThai === 'Active' ? <UserX size={16} /> : <UserCheck size={16} />}
           </button>
         </div>
       )
     }
   ];
 
-  if (loading) {
-    return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-64 text-slate-500">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500 mr-4"></div>
-          Đang tải danh sách khách hàng...
-        </div>
-      </AdminLayout>
-    );
-  }
-
   return (
     <AdminLayout>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white text-glow">Quản lý khách hàng</h1>
-        <p className="text-slate-500">Tra cứu hồ sơ khách hàng, xem lịch sử giao dịch và quản lý khóa/mở tài khoản.</p>
-      </div>
+      <AdminPageHeader
+        title="Quản lý khách hàng"
+        subtitle="Tra cứu hồ sơ khách hàng, xem lịch sử giao dịch và quản lý khóa/mở tài khoản."
+      />
 
-      {/* Search & Filter */}
-      <div className="flex gap-4 mb-8">
-        <div className="flex-grow flex items-center gap-3 bg-white/5 border border-white/5 rounded-2xl px-4 py-3">
-          <Search size={20} className="text-slate-500" />
-          <input 
-            type="text" 
-            placeholder="Tìm kiếm khách hàng theo tên, email, sđt..." 
-            className="bg-transparent border-none focus:outline-none text-sm text-white w-full"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <select 
-          className="bg-white/5 border border-white/5 rounded-2xl px-6 py-3 text-sm font-bold text-slate-300 focus:outline-none focus:border-red-500 transition-all cursor-pointer"
-          value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
-        >
-          <option value="All" className="bg-[#0f1117]">Tất cả trạng thái</option>
-          <option value="Active" className="bg-[#0f1117]">Đang hoạt động</option>
-          <option value="Banned" className="bg-[#0f1117]">Bị khóa</option>
-        </select>
-      </div>
+      {/* Filters and search using AdminToolbar */}
+      <AdminToolbar
+        searchPlaceholder="Tìm kiếm khách hàng theo tên, email, sđt..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        filterSlot={
+          <select 
+            className="bg-white/[0.04] border border-white/10 rounded-xl px-6 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+            value={filters.status || 'All'}
+            onChange={e => setFilterVal('status', e.target.value)}
+          >
+            <option value="All">Tất cả trạng thái</option>
+            <option value="Active">Đang hoạt động</option>
+            <option value="Banned">Bị khóa</option>
+          </select>
+        }
+      />
 
       {/* Table */}
-      <AdminTable columns={columns} data={filteredCustomers} rowKey="MaKhachHang" />
+      {loading ? (
+        <div className="bg-white/5 border border-white/5 rounded-3xl h-64 animate-pulse" />
+      ) : paginatedItems.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 text-slate-500 bg-white/[0.02] border border-white/10 rounded-3xl text-sm font-semibold">
+          Không tìm thấy dữ liệu phù hợp
+        </div>
+      ) : (
+        <>
+          <AdminTable columns={columns} data={paginatedItems} rowKey="MaKhachHang" />
+          <AdminPagination
+            page={page}
+            pageSize={pageSize}
+            total={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
+        </>
+      )}
 
       {/* Side Drawer: Transaction History */}
       {isHistoryOpen && (
         <div className="fixed inset-0 z-[150] flex justify-end">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsHistoryOpen(false)}></div>
-          <div className="relative w-full max-w-2xl bg-[#0f1117] h-screen shadow-2xl border-l border-white/10 p-8 animate-in slide-in-from-right duration-300 flex flex-col">
+          <div className="relative w-full max-w-2xl bg-[#0b0f19] h-screen shadow-2xl border-l border-white/10 p-8 animate-in slide-in-from-right duration-300 flex flex-col">
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h3 className="text-xl font-bold text-white">Lịch sử đặt vé</h3>
                 <p className="text-slate-500 text-xs mt-1">Khách hàng: {selectedCust?.HoTen} ({selectedCust?.Email})</p>
               </div>
-              <button onClick={() => setIsHistoryOpen(false)} className="p-2 hover:bg-white/5 rounded-xl cursor-pointer"><X size={20} /></button>
+              <button onClick={() => setIsHistoryOpen(false)} className="p-2 hover:bg-white/5 rounded-xl cursor-pointer text-slate-400 hover:text-white transition-all"><X size={20} /></button>
             </div>
 
             <div className="flex-grow overflow-y-auto space-y-4 pr-1 no-scrollbar">
@@ -271,7 +292,7 @@ const Customers = () => {
             <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Lý do khóa tài khoản (Bắt buộc)</label>
             <textarea 
               required
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all text-slate-300 text-sm min-h-[100px]"
+              className="w-full bg-white/[0.04] border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all text-slate-300 text-sm min-h-[100px]"
               placeholder="Nhập lý do chi tiết..."
               value={lockReason}
               onChange={e => setLockReason(e.target.value)}
@@ -282,7 +303,7 @@ const Customers = () => {
             <button 
               type="button" 
               onClick={() => setIsLockModalOpen(false)} 
-              className="flex-grow py-3 rounded-xl font-bold border border-white/10 hover:bg-white/5 transition-all text-xs uppercase tracking-widest cursor-pointer text-slate-400"
+              className="flex-grow py-3 rounded-xl font-bold border border-white/10 hover:bg-white/5 hover:text-white transition-all text-xs uppercase tracking-widest cursor-pointer text-slate-400"
             >
               Hủy
             </button>
@@ -290,13 +311,25 @@ const Customers = () => {
               type="button"
               disabled={!lockReason.trim()}
               onClick={handleToggleLockStatus}
-              className="flex-grow py-3 rounded-xl font-bold bg-red-500 hover:bg-red-600 disabled:bg-slate-800 disabled:text-slate-600 disabled:opacity-50 text-white transition-all shadow-lg shadow-red-500/20 text-xs uppercase tracking-widest cursor-pointer"
+              className="flex-grow py-3 rounded-xl font-bold bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-600 disabled:opacity-50 text-white transition-all shadow-lg shadow-red-500/20 text-xs uppercase tracking-widest cursor-pointer"
             >
               Xác nhận Khóa
             </button>
           </div>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        title="Mở khóa tài khoản"
+        message={confirmState.data ? `Bạn có chắc chắn muốn mở khóa tài khoản cho ${confirmState.data.HoTen}?` : ''}
+        confirmText="Mở khóa"
+        cancelText="Hủy"
+        variant="default"
+        isLoading={isUnlocking}
+        onConfirm={handleConfirmUnlock}
+        onCancel={() => setConfirmState({ isOpen: false, data: null })}
+      />
     </AdminLayout>
   );
 };

@@ -3,7 +3,13 @@ import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import adminService from '../../services/adminService';
 import PersonnelTable from '../../components/Admin/Personnel/PersonnelTable';
 import PersonnelModal from '../../components/Admin/Personnel/PersonnelModal';
-import { Search } from 'lucide-react';
+import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import { showSuccess, showError } from '../../utils/toastHelper';
+
+import { useClientPagination } from '../../hooks/useClientPagination';
+import AdminToolbar from '../../components/Admin/Common/AdminToolbar';
+import AdminPagination from '../../components/Admin/Common/AdminPagination';
 
 const defaultForm = {
   HoTen: '', SoDienThoai: '', Email: '', ChucVu: '', Role: 'Staff',
@@ -15,14 +21,15 @@ const Personnel = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState(defaultForm);
+  const [confirmState, setConfirmState] = useState({ isOpen: false, data: null });
+  const [isToggling, setIsToggling] = useState(false);
 
   const loadStaff = async () => {
     try {
       const data = await adminService.getStaff();
       setStaff(data);
-    } catch (err) { alert('Lỗi tải dữ liệu: ' + err.message); }
+    } catch (err) { showError('Lỗi tải dữ liệu: ' + err.message); }
     finally { setLoading(false); }
   };
 
@@ -43,69 +50,141 @@ const Personnel = () => {
     setIsModalOpen(true);
   };
 
-  const handleToggleStatus = async (person) => {
+  const handleToggleStatus = (person) => {
+    setConfirmState({ isOpen: true, data: person });
+  };
+
+  const handleConfirmToggle = async () => {
+    const person = confirmState.data;
     const newKhaDung = person.KhaDung === 1 ? 0 : 1;
     const actionName = newKhaDung === 0 ? 'Vô hiệu hóa' : 'Kích hoạt';
-    if (!window.confirm(`${actionName} nhân viên ${person.HoTen}?`)) return;
-    setLoading(true);
+    setIsToggling(true);
     try {
       await adminService.updateStaff(person.MaNhanVien, { KhaDung: newKhaDung });
-      await loadStaff(); alert(`${actionName} thành công!`);
-    } catch (e) { alert('Lỗi: ' + e.message); }
-    finally { setLoading(false); }
+      await loadStaff();
+      showSuccess(`${actionName} thành công!`);
+    } catch (e) {
+      showError('Lỗi: ' + e.message);
+    } finally {
+      setIsToggling(false);
+      setConfirmState({ isOpen: false, data: null });
+    }
   };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault(); setLoading(true);
     try {
-      if (editingStaff) { await adminService.updateStaff(editingStaff.MaNhanVien, formData); alert('Cập nhật hồ sơ thành công!'); }
-      else { await adminService.addStaff(formData); alert('Thêm nhân viên thành công!'); }
+      if (editingStaff) { await adminService.updateStaff(editingStaff.MaNhanVien, formData); showSuccess('Cập nhật hồ sơ thành công!'); }
+      else { await adminService.addStaff(formData); showSuccess('Thêm nhân viên thành công!'); }
       await loadStaff(); setIsModalOpen(false);
-    } catch (err) { alert('Lỗi: ' + err.message); }
+    } catch (err) { showError('Lỗi: ' + err.message); }
     finally { setLoading(false); }
   };
 
-  const filteredStaff = staff.filter(p => {
-    return p.HoTen.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.Email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.SoDienThoai.includes(searchQuery);
-  });
+  const {
+    searchQuery,
+    setSearchQuery,
+    filters,
+    setFilterVal,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalItems,
+    paginatedItems
+  } = useClientPagination(
+    staff,
+    ['HoTen', 'Email', 'SoDienThoai', 'ChucVu'],
+    (p, f) => {
+      const matchRole = !f.role || f.role === 'All' || p.Role === f.role;
+      const matchKhaDung = !f.activeStatus || f.activeStatus === 'All' || p.KhaDung === Number(f.activeStatus);
+      return matchRole && matchKhaDung;
+    }
+  );
 
   return (
     <AdminLayout>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-white text-glow">Quản lý Nhân viên</h1>
-          <p className="text-slate-500">Quản lý hồ sơ nhân viên rạp chiếu phim.</p>
-        </div>
-        <button onClick={openAdd} className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 flex items-center gap-2 cursor-pointer">
-          + Thêm nhân viên
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Quản lý Nhân viên"
+        subtitle="Quản lý hồ sơ nhân viên rạp chiếu phim."
+        action={
+          <button 
+            onClick={openAdd} 
+            className="w-full md:w-auto bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            + Thêm nhân viên
+          </button>
+        }
+      />
 
-      {/* Search */}
-      <div className="flex gap-4 mb-8">
-        <div className="flex-grow flex items-center gap-3 bg-white/5 border border-white/5 rounded-2xl px-4 py-3">
-          <Search size={20} className="text-slate-500" />
-          <input type="text" placeholder="Tìm theo tên, email hoặc số điện thoại..."
-            className="bg-transparent border-none focus:outline-none text-sm text-white w-full"
-            value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-        </div>
-      </div>
+      {/* Filters and search using AdminToolbar */}
+      <AdminToolbar
+        searchPlaceholder="Tìm theo tên, email, số điện thoại hoặc chức vụ..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        filterSlot={
+          <>
+            {/* Role filter */}
+            <select
+              value={filters.role || 'All'}
+              onChange={e => setFilterVal('role', e.target.value)}
+              className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+            >
+              <option value="All">Tất cả vai trò</option>
+              <option value="Staff">Nhân viên (Staff)</option>
+              <option value="Admin">Quản trị viên (Admin)</option>
+            </select>
+
+            {/* Active Status filter */}
+            <select
+              value={filters.activeStatus || 'All'}
+              onChange={e => setFilterVal('activeStatus', e.target.value)}
+              className="bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer [&>option]:bg-[#0a0d14]"
+            >
+              <option value="All">Tất cả trạng thái</option>
+              <option value={1}>Khả dụng</option>
+              <option value={0}>Đã khóa</option>
+            </select>
+          </>
+        }
+      />
 
       {/* Table */}
       {loading && staff.length === 0 ? (
         <div className="bg-white/5 border border-white/5 rounded-3xl h-64 animate-pulse" />
-      ) : (
-        <div className="overflow-x-auto no-scrollbar">
-          <PersonnelTable staff={filteredStaff} onEdit={openEdit} onToggleStatus={handleToggleStatus} />
+      ) : paginatedItems.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 text-slate-500 bg-white/[0.02] border border-white/10 rounded-3xl text-sm font-semibold">
+          Không tìm thấy dữ liệu phù hợp
         </div>
+      ) : (
+        <>
+          <PersonnelTable staff={paginatedItems} onEdit={openEdit} onToggleStatus={handleToggleStatus} />
+          <AdminPagination
+            page={page}
+            pageSize={pageSize}
+            total={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
+        </>
       )}
 
       <PersonnelModal
         isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}
         editingStaff={editingStaff} formData={formData}
         onChange={handleInputChange} onSubmit={handleFormSubmit}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        title={confirmState.data?.KhaDung === 1 ? "Vô hiệu hóa tài khoản" : "Kích hoạt tài khoản"}
+        message={confirmState.data ? `Bạn có chắc chắn muốn ${confirmState.data.KhaDung === 1 ? 'vô hiệu hóa' : 'kích hoạt'} tài khoản nhân viên ${confirmState.data.HoTen}?` : ''}
+        confirmText="Xác nhận"
+        cancelText="Quay lại"
+        variant={confirmState.data?.KhaDung === 1 ? "danger" : "default"}
+        isLoading={isToggling}
+        onConfirm={handleConfirmToggle}
+        onCancel={() => setConfirmState({ isOpen: false, data: null })}
       />
     </AdminLayout>
   );
