@@ -48,7 +48,7 @@ const MovieHero = ({
 
         {/* Description */}
         <p className="text-gray-400 text-base md:text-lg leading-relaxed max-w-3xl">
-          {movie.overview || 'Chưa có mô tả nội dung cho phim này.'}
+          {movie.NoiDung || 'Chưa có mô tả nội dung cho phim này.'}
         </p>
 
         {/* Director / Cast */}
@@ -85,9 +85,8 @@ const MovieHero = ({
           <button
             onClick={onStartBooking}
             disabled={!hasShowtimes}
-            className={`bg-[#ff436e] hover:bg-[#e0325a] text-white font-bold px-8 py-3 rounded-xl transition-all text-sm uppercase cursor-pointer ${
-              !hasShowtimes ? 'opacity-40 cursor-not-allowed shadow-none' : 'shadow-[0_0_25px_rgba(255,67,110,0.4)]'
-            }`}
+            className={`bg-[#ff436e] hover:bg-[#e0325a] text-white font-bold px-8 py-3 rounded-xl transition-all text-sm uppercase cursor-pointer ${!hasShowtimes ? 'opacity-40 cursor-not-allowed shadow-none' : 'shadow-[0_0_25px_rgba(255,67,110,0.4)]'
+              }`}
           >
             {hasShowtimes ? 'Mua Vé Ngay' : 'Chưa có suất chiếu'}
           </button>

@@ -1,4 +1,5 @@
 import { X, AlertTriangle, HelpCircle } from "lucide-react";
+import { createPortal } from "react-dom";
 
 const ConfirmDialog = ({
   isOpen,
@@ -24,9 +25,9 @@ const ConfirmDialog = ({
     confirmBtnColor = "bg-[#FFB000] hover:bg-[#FFB000]/80 text-slate-950 font-bold shadow-[0_0_15px_rgba(255,176,0,0.2)]";
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 p-4" role="dialog" aria-modal="true">
-      <div className="bg-[#131A2A] border border-white/[0.08] rounded-2xl p-8 max-w-sm w-full shadow-2xl relative animate-in zoom-in-95 duration-200">
+  const dialogContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 p-4" role="dialog" aria-modal="true">
+      <div className="bg-[#131A2A] border border-white/[0.08] rounded-2xl p-8 max-w-sm w-full shadow-2xl relative z-[10000] animate-in zoom-in-95 duration-200">
         <button
           onClick={onCancel}
           disabled={isLoading}
@@ -74,6 +75,8 @@ const ConfirmDialog = ({
       </div>
     </div>
   );
+
+  return createPortal(dialogContent, document.body);
 };
 
 export default ConfirmDialog;
