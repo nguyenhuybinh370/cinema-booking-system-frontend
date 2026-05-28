@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { ChevronLeft, ShieldCheck, Clock } from 'lucide-react';
 import { formatVND } from '../../utils/formatHelper';
 import toast from 'react-hot-toast';
-import { simulatedCheckout } from '../../api/bookingApi';
+import { simulatedCheckout, realCheckout } from '../../api/bookingApi';
 import { getBookingDetail } from '../../api/bookingHistoryApi';
+import { createPayOSPayment } from '../../api/paymentApi';
+import PayOSModal from '../../components/payment/PayOSModal';
 
 const Payment = ({ 
   movie, 
@@ -20,6 +22,8 @@ const Payment = ({
 }) => {
   const [paymentMethod, setPaymentMethod] = useState('PAYOS'); // Default to PayOS
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPayOSModal, setShowPayOSModal] = useState(false);
+  const [payOSData, setPayOSData] = useState(null);
 
   const formatTimeSeconds = (seconds) => {
     const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -38,11 +42,39 @@ const Payment = ({
     }
 
     setIsSubmitting(true);
+
+    if (paymentMethod === 'PAYOS') {
+      const toastId = toast.loading("Đang khởi tạo giao dịch thanh toán PayOS...");
+      try {
+        // 1. Create booking in CHO_THANH_TOAN status
+        const checkoutRes = await realCheckout({
+          MaSuatChieu: maSuatChieu,
+          DanhSachMaGheSuatChieu: heldSeatIds,
+          PhuongThucThanhToan: 'PAYOS'
+        });
+
+        // 2. Create PayOS payment link
+        const payosPaymentRes = await createPayOSPayment(checkoutRes.MaPhieuDat);
+        toast.dismiss(toastId);
+
+        // 3. Open QR modal with link details
+        setPayOSData(payosPaymentRes);
+        setShowPayOSModal(true);
+      } catch (err) {
+        console.error("PayOS checkout error:", err);
+        const errMsg = err.response?.data?.message || err.message || "Không thể tạo link thanh toán PayOS. Vui lòng thử lại.";
+        toast.error(errMsg);
+        toast.dismiss(toastId);
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
+    // Simulated Checkout for fallback methods (e.g. VNPAY)
     const toastId = toast.loading("Đang xử lý thanh toán giả lập...");
     try {
-      // Map to backend allowed enum PhuongThucThanhToan
-      // Temporary fallback until backend enum supports PAYOS. Never send MOMO.
-      const PhuongThucThanhToan = paymentMethod === 'PAYOS' ? 'VNPAY' : 'VNPAY';
+      const PhuongThucThanhToan = paymentMethod === 'VNPAY' ? 'VNPAY' : 'VNPAY';
 
       const checkoutPayload = {
         MaSuatChieu: maSuatChieu,
@@ -73,6 +105,34 @@ const Payment = ({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handlePayOSSuccess = async (statusRes) => {
+    setShowPayOSModal(false);
+    setIsSubmitting(true);
+    const toastId = toast.loading("Đang tải chi tiết vé đặt thành công...");
+    try {
+      const targetPhieuDat = statusRes.maPhieuDat || payOSData?.maPhieuDat;
+      const detailData = await getBookingDetail(targetPhieuDat);
+      toast.dismiss(toastId);
+      onPaymentSuccess(detailData, { MaPhieuDat: targetPhieuDat });
+    } catch (err) {
+      console.error("Lỗi khi tải chi tiết vé đặt sau PayOS:", err);
+      toast.error("Không thể tải chi tiết mã vé từ máy chủ. Đang chuyển sang màn hình xác nhận fallback...");
+      toast.dismiss(toastId);
+      onPaymentSuccess(null, { MaPhieuDat: statusRes.maPhieuDat || payOSData?.maPhieuDat });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePayOSCancel = () => {
+    setShowPayOSModal(false);
+  };
+
+  const handlePayOSTimeout = () => {
+    setShowPayOSModal(false);
+    toast.error("Giao dịch thanh toán PayOS đã hết hạn giữ ghế.");
   };
 
   return (
@@ -129,7 +189,7 @@ const Payment = ({
               OS
             </div>
             <div className="flex flex-col flex-1">
-              <span className="text-white font-bold text-sm md:text-base">PayOS (Simulated)</span>
+              <span className="text-white font-bold text-sm md:text-base">PayOS</span>
               <span className="text-xs text-gray-400 font-medium">Quét mã QR / chuyển khoản ngân hàng qua PayOS</span>
             </div>
           </label>
@@ -223,8 +283,27 @@ const Payment = ({
         </div>
 
       </div>
+
+      {/* PayOS QR Modal */}
+      {payOSData && (
+        <PayOSModal
+          isOpen={showPayOSModal}
+          onClose={handlePayOSCancel}
+          maGiaoDich={payOSData.maGiaoDich}
+          qrCode={payOSData.qrCode}
+          checkoutUrl={payOSData.checkoutUrl}
+          orderCode={payOSData.orderCode}
+          amount={payOSData.amount}
+          expiresAt={payOSData.expiresAt}
+          onSuccess={handlePayOSSuccess}
+          onCancel={handlePayOSCancel}
+          onTimeout={handlePayOSTimeout}
+        />
+      )}
     </div>
   );
 };
 
 export default Payment;
+
+

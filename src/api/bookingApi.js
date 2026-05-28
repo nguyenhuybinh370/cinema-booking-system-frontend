@@ -39,3 +39,15 @@ export const cancelHeldSeats = (maSuatChieu, seatIds) => {
 export const simulatedCheckout = (payload) => {
   return axiosClient.post('/dat-ve/thanh-toan-gia-lap', payload);
 };
+
+/**
+ * Thực hiện thanh toán đặt vé thực tế
+ * @param {object} payload
+ * @param {string} payload.MaSuatChieu
+ * @param {string[]} payload.DanhSachMaGheSuatChieu
+ * @param {string} payload.PhuongThucThanhToan - 'VNPAY' | 'TIEN_MAT' | 'PAYOS'
+ */
+export const realCheckout = (payload) => {
+  return axiosClient.post('/dat-ve/thanh-toan', payload);
+};
+
