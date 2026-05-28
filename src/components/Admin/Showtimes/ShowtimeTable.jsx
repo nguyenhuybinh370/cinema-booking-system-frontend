@@ -4,7 +4,7 @@ const formatPrice = (price) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
 const ShowtimeTable = ({ showtimes, onEdit, onDelete, onViewSeatMap }) => (
-  <div className="bg-[#131A2A]/40 backdrop-blur-md border border-white/[0.06] rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 hover:border-white/10">
+  <div className="bg-[#131A2A]/40 backdrop-blur-md border border-white/[0.06] rounded-3xl overflow-x-auto custom-scrollbar shadow-2xl transition-all duration-300 hover:border-white/10">
     <table className="w-full text-left border-collapse">
       <thead>
         <tr className="bg-white/[0.02] border-b border-white/[0.06] select-none whitespace-nowrap">
