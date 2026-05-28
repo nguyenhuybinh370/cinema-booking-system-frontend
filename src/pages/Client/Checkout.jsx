@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '../../layouts/MainLayout';
-import { CreditCard, Wallet, Smartphone, ShieldCheck, ChevronLeft } from 'lucide-react';
+import { CreditCard, Wallet, Landmark, ShieldCheck, ChevronLeft } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const [paymentMethod, setPaymentMethod] = useState('vnpay');
+  const [paymentMethod, setPaymentMethod] = useState('PAYOS');
 
   const paymentMethods = [
-    { id: 'vnpay', name: 'VNPay', icon: Wallet, color: 'text-blue-500' },
-    { id: 'momo', name: 'MoMo', icon: Smartphone, color: 'text-pink-500' },
-    { id: 'credit', name: 'Thẻ Quốc Tế', icon: CreditCard, color: 'text-emerald-500' },
+    { id: 'VNPAY', name: 'VNPay', icon: Wallet, color: 'text-blue-500' },
+    { id: 'PAYOS', name: 'PayOS', icon: Landmark, color: 'text-blue-400' },
+    { id: 'CARD', name: 'Thẻ Quốc Tế', icon: CreditCard, color: 'text-emerald-500' },
   ];
 
   return (
@@ -110,7 +111,7 @@ const Checkout = () => {
                   </div>
 
                   <button 
-                    onClick={() => alert("Chuyển hướng đến cổng thanh toán...")}
+                    onClick={() => toast.success("Chuyển hướng đến cổng thanh toán...")}
                     className="w-full py-5 bg-[var(--btn-neon)] text-navy-deep rounded-2xl font-black uppercase tracking-widest text-sm hover:shadow-[0_0_30px_rgba(0,255,153,0.3)] transition-all"
                   >
                     Xác nhận & Thanh toán

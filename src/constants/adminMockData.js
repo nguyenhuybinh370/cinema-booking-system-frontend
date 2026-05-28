@@ -176,7 +176,7 @@ export const TICKET_DETAILS = [
 ];
 
 export const TRANSACTIONS = [
-  { MaGiaoDich: 'TX10091', MaPhieuDatVe: 'PDV06', MaThamChieuDoiTac: 'VNP_20260521_9910', SoTien: 170000, PhuongThucThanhToan: 'VNPay', TrangThai: 'Success', NgayGiaoDich: '2026-05-21 09:30:00', GhiChu: 'Thanh toán trực tuyến thành công', KhaDung: 1, NgayTao: '2026-05-21 09:30:00', NgayCapNhat: null },
+  { MaGiaoDich: 'TX10091', MaPhieuDatVe: 'PDV06', MaThamChieuDoiTac: 'PAYOS_20260521_9910', SoTien: 170000, PhuongThucThanhToan: 'PAYOS', TrangThai: 'Success', NgayGiaoDich: '2026-05-21 09:30:00', GhiChu: 'Thanh toán trực tuyến thành công', KhaDung: 1, NgayTao: '2026-05-21 09:30:00', NgayCapNhat: null },
   { MaGiaoDich: 'TX10090', MaPhieuDatVe: 'PDV03', MaThamChieuDoiTac: 'CARD_7721839210', SoTien: 170000, PhuongThucThanhToan: 'Card', TrangThai: 'Success', NgayGiaoDich: '2026-05-20 20:15:00', GhiChu: 'Thanh toán quốc tế VISA', KhaDung: 1, NgayTao: '2026-05-20 20:15:00', NgayCapNhat: null },
   { MaGiaoDich: 'TX10089', MaPhieuDatVe: 'PDV05', MaThamChieuDoiTac: 'VNP_20260519_8812', SoTien: 170000, PhuongThucThanhToan: 'VNPay', TrangThai: 'Success', NgayGiaoDich: '2026-05-19 17:30:00', GhiChu: 'Thanh toán qua ví VNPay', KhaDung: 1, NgayTao: '2026-05-19 17:30:00', NgayCapNhat: null },
   { MaGiaoDich: 'TX10088', MaPhieuDatVe: 'PDV01', MaThamChieuDoiTac: 'VNP_20260518_7723', SoTien: 170000, PhuongThucThanhToan: 'VNPay', TrangThai: 'Success', NgayGiaoDich: '2026-05-18 19:30:00', GhiChu: 'Thanh toán vé xem phim Lật Mặt 7', KhaDung: 1, NgayTao: '2026-05-18 19:30:00', NgayCapNhat: null },

@@ -16,6 +16,8 @@ const Modal = ({ isOpen, onClose, title, children }) => {
           <button 
             onClick={onClose}
             className="p-2 hover:bg-white/5 border border-transparent hover:border-white/5 rounded-xl text-slate-400 hover:text-white transition-all active:scale-95 cursor-pointer"
+            aria-label="Đóng"
+            title="Đóng"
           >
             <X size={20} />
           </button>
