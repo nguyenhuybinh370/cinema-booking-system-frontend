@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '../../layouts/MainLayout';
 import { CreditCard, Wallet, Landmark, ShieldCheck, ChevronLeft } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -110,7 +111,7 @@ const Checkout = () => {
                   </div>
 
                   <button 
-                    onClick={() => alert("Chuyển hướng đến cổng thanh toán...")}
+                    onClick={() => toast.success("Chuyển hướng đến cổng thanh toán...")}
                     className="w-full py-5 bg-[var(--btn-neon)] text-navy-deep rounded-2xl font-black uppercase tracking-widest text-sm hover:shadow-[0_0_30px_rgba(0,255,153,0.3)] transition-all"
                   >
                     Xác nhận & Thanh toán

@@ -400,6 +400,7 @@ const Transactions = () => {
             onClick={() => handleOpenDetail(r)}
             className="p-2 hover:bg-white/5 border border-transparent hover:border-white/5 text-slate-400 hover:text-white rounded-xl transition-all cursor-pointer"
             title="Chi tiết"
+            aria-label="Xem chi tiết yêu cầu hoàn tiền"
           >
             <Eye size={16} />
           </button>
