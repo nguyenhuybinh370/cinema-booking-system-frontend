@@ -18,7 +18,7 @@ const Payment = ({
   maSuatChieu,
   heldSeatIds
 }) => {
-  const [paymentMethod, setPaymentMethod] = useState('vnpay'); // Default to vnpay as Momo is disabled
+  const [paymentMethod, setPaymentMethod] = useState('PAYOS'); // Default to PayOS
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formatTimeSeconds = (seconds) => {
@@ -40,8 +40,9 @@ const Payment = ({
     setIsSubmitting(true);
     const toastId = toast.loading("Đang xử lý thanh toán giả lập...");
     try {
-      // Map to backend allowed enum PhuongThucThanhToan: 'VNPAY' | 'TIEN_MAT'
-      const PhuongThucThanhToan = 'VNPAY';
+      // Map to backend allowed enum PhuongThucThanhToan
+      // Temporary fallback until backend enum supports PAYOS. Never send MOMO.
+      const PhuongThucThanhToan = paymentMethod === 'PAYOS' ? 'VNPAY' : 'VNPAY';
 
       const checkoutPayload = {
         MaSuatChieu: maSuatChieu,
@@ -108,31 +109,11 @@ const Payment = ({
         {/* CỘT TRÁI: PHƯƠNG THỨC THANH TOÁN */}
         <div className="flex flex-col gap-4 w-full">
           
-          {/* Phương thức 1: MoMo (Vô hiệu hóa) */}
-          <div 
-            className="flex items-center gap-4 p-5 rounded-xl border bg-white/5 border-white/5 opacity-50 cursor-not-allowed relative overflow-hidden"
-            title="Phương thức Momo chưa hỗ trợ thanh toán giả lập"
-          >
-            <input 
-              type="radio" 
-              name="payment" 
-              disabled
-              checked={false} 
-              className="w-4 h-4 cursor-not-allowed"
-              onChange={() => {}}
-            />
-            <div className="w-8 h-8 bg-gray-600 rounded-lg flex items-center justify-center text-white text-xs font-black select-none">
-              mo
-            </div>
-            <span className="text-gray-400 font-bold text-sm md:text-base flex-1">Momo</span>
-            <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-bold px-2 py-0.5 rounded">Sắp hỗ trợ</span>
-          </div>
-
-          {/* Phương thức 2: VNPAY */}
+          {/* Phương thức 1: PayOS */}
           <label 
-            onClick={() => setPaymentMethod('vnpay')}
+            onClick={() => setPaymentMethod('PAYOS')}
             className={`flex items-center gap-4 p-5 rounded-xl border transition-all cursor-pointer ${
-              paymentMethod === 'vnpay' 
+              paymentMethod === 'PAYOS' 
                 ? 'bg-white/5 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.15)]' 
                 : 'bg-white/5 border-white/10 hover:border-white/20'
             }`}
@@ -140,7 +121,32 @@ const Payment = ({
             <input 
               type="radio" 
               name="payment" 
-              checked={paymentMethod === 'vnpay'} 
+              checked={paymentMethod === 'PAYOS'} 
+              onChange={() => {}} 
+              className="accent-blue-500 w-4 h-4 cursor-pointer"
+            />
+            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white text-[10px] font-black tracking-tighter select-none">
+              OS
+            </div>
+            <div className="flex flex-col flex-1">
+              <span className="text-white font-bold text-sm md:text-base">PayOS (Simulated)</span>
+              <span className="text-xs text-gray-400 font-medium">Quét mã QR / chuyển khoản ngân hàng qua PayOS</span>
+            </div>
+          </label>
+
+          {/* Phương thức 2: VNPAY */}
+          <label 
+            onClick={() => setPaymentMethod('VNPAY')}
+            className={`flex items-center gap-4 p-5 rounded-xl border transition-all cursor-pointer ${
+              paymentMethod === 'VNPAY' 
+                ? 'bg-white/5 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.15)]' 
+                : 'bg-white/5 border-white/10 hover:border-white/20'
+            }`}
+          >
+            <input 
+              type="radio" 
+              name="payment" 
+              checked={paymentMethod === 'VNPAY'} 
               onChange={() => {}} 
               className="accent-blue-500 w-4 h-4 cursor-pointer"
             />

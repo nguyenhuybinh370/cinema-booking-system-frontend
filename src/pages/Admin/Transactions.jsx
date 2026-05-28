@@ -12,6 +12,7 @@ import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { useClientPagination } from '../../hooks/useClientPagination';
 import AdminToolbar from '../../components/Admin/Common/AdminToolbar';
 import AdminPagination from '../../components/Admin/Common/AdminPagination';
+import { normalizePaymentMethod, getPaymentMethodLabel } from '../../utils/paymentMethodHelper';
 
 const Transactions = () => {
   const [activeTab, setActiveTab] = useState('transactions'); // 'transactions' | 'refunds'
@@ -90,7 +91,9 @@ const Transactions = () => {
     ['MaGiaoDich', 'MaPhieuDatVe', 'MaThamChieuDoiTac', 'KhachHang', 'Phim'],
     (t, f) => {
       const matchStatus = !f.status || f.status === 'All' || t.TrangThai === f.status;
-      const matchMethod = !f.method || f.method === 'All' || t.PhuongThucThanhToan === f.method;
+      const transactionMethod = normalizePaymentMethod(t.PhuongThucThanhToan || t.PhuongThuc);
+      const filterMethod = normalizePaymentMethod(f.method);
+      const matchMethod = !f.method || f.method === 'All' || transactionMethod === filterMethod;
       return matchStatus && matchMethod;
     }
   );
@@ -127,15 +130,22 @@ const Transactions = () => {
     },
     {
       header: 'Phương thức',
-      render: (t) => (
-        <div className="flex items-center gap-1.5 text-xs text-slate-400">
-          {t.PhuongThucThanhToan === 'VNPay' && <Landmark size={14} className="text-blue-400" />}
-          {t.PhuongThucThanhToan === 'MoMo' && <Landmark size={14} className="text-pink-400" />}
-          {t.PhuongThucThanhToan === 'Card' && <CreditCard size={14} className="text-amber-400" />}
-          {t.PhuongThucThanhToan === 'Cash' && <DollarSign size={14} className="text-emerald-400" />}
-          <span>{t.PhuongThucThanhToan}</span>
-        </div>
-      )
+      render: (t) => {
+        const rawMethod = t.PhuongThucThanhToan || t.PhuongThuc;
+        const normalized = normalizePaymentMethod(rawMethod);
+        const label = getPaymentMethodLabel(rawMethod);
+        return (
+          <div className="flex items-center gap-1.5 text-xs text-slate-400">
+            {normalized === 'VNPAY' && <Landmark size={14} className="text-blue-400" />}
+            {normalized === 'PAYOS' && <Landmark size={14} className="text-cyan-400" />}
+            {normalized === 'MOMO' && <Landmark size={14} className="text-pink-400" />}
+            {normalized === 'CARD' && <CreditCard size={14} className="text-amber-400" />}
+            {normalized === 'TIEN_MAT' && <DollarSign size={14} className="text-emerald-400" />}
+            {normalized === 'CHUYEN_KHOAN' && <CreditCard size={14} className="text-indigo-400" />}
+            <span>{label}</span>
+          </div>
+        );
+      }
     },
     {
       header: 'Trạng thái',
@@ -469,10 +479,12 @@ const Transactions = () => {
                   onChange={e => setFilterVal('method', e.target.value)}
                 >
                   <option value="All">Phương thức thanh toán</option>
-                  <option value="VNPay">VNPay</option>
-                  <option value="MoMo">MoMo</option>
-                  <option value="Card">Thẻ Quốc tế</option>
-                  <option value="Cash">Tiền mặt</option>
+                  <option value="PAYOS">PayOS</option>
+                  <option value="VNPAY">VNPay</option>
+                  <option value="CARD">Thẻ Quốc tế</option>
+                  <option value="TIEN_MAT">Tiền mặt</option>
+                  <option value="CHUYEN_KHOAN">Chuyển khoản</option>
+                  <option value="MOMO">MoMo (cũ)</option>
                 </select>
               </>
             }
@@ -706,7 +718,7 @@ const Transactions = () => {
                 </div>
                 <div>
                   <span className="text-slate-400 block mb-1">Phương thức:</span>
-                  <span className="text-white font-bold font-mono uppercase">{activeRefund.GiaoDich?.PhuongThuc || 'N/A'}</span>
+                  <span className="text-white font-bold">{getPaymentMethodLabel(activeRefund.GiaoDich?.PhuongThuc || 'N/A')}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 block mb-1">Mã giao dịch ngoài:</span>

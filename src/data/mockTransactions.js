@@ -6,7 +6,7 @@ export const TRANSACTIONS = [
     type: "Bán vé",
     amount: 255000,
     status: "Thành công",
-    method: "MoMo QR",
+    method: "PayOS",
   },
   {
     id: "PDV-9E0F1G2H",
