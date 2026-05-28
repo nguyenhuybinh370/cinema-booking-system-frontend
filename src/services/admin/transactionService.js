@@ -86,6 +86,22 @@ const transactionService = {
     });
 
     return { success: true };
+  },
+
+  getRefundRequests: async (params) => {
+    return axiosClient.get('/admin/hoan-tien', { params });
+  },
+
+  getRefundRequestDetail: async (maHoanTien) => {
+    return axiosClient.get(`/admin/hoan-tien/${maHoanTien}`);
+  },
+
+  approveRefundRequest: async (maHoanTien, payload) => {
+    return axiosClient.patch(`/admin/hoan-tien/${maHoanTien}/duyet`, payload);
+  },
+
+  rejectRefundRequest: async (maHoanTien, payload) => {
+    return axiosClient.patch(`/admin/hoan-tien/${maHoanTien}/tu-choi`, payload);
   }
 };
 
