@@ -15,3 +15,19 @@ export const createPayOSPayment = (maPhieuDat) => {
 export const getPayOSPaymentStatus = (maGiaoDich) => {
   return axiosClient.get(`/payment/payos/${maGiaoDich}/status`);
 };
+
+/**
+ * Tạo link thanh toán VNPay
+ * @param {string} maPhieuDat 
+ */
+export const createVNPayPayment = (maPhieuDat) => {
+  return axiosClient.post('/payment/vnpay/create', { MaPhieuDat: maPhieuDat });
+};
+
+/**
+ * Lấy trạng thái giao dịch thanh toán VNPay
+ * @param {string} maGiaoDich 
+ */
+export const getVNPayPaymentStatus = (maGiaoDich) => {
+  return axiosClient.get(`/payment/vnpay/${maGiaoDich}/status`);
+};
