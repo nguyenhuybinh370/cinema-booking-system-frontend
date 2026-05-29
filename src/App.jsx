@@ -107,7 +107,7 @@ function App() {
 
         {/* === ADMIN ROUTES (Role: ADMIN) === */}
         <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
-          <Route path="/admin" element={<Navigate to="/admin/rooms" replace />} />
+          <Route path="/admin" element={<Navigate to="/admin/stats" replace />} />
           <Route path="/admin/rooms" element={<Rooms />} />
           <Route path="/admin/rooms/:roomId/seats" element={<SeatMaps />} />
           <Route path="/admin/movies" element={<Movies />} />
