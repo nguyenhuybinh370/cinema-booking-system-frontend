@@ -6,12 +6,13 @@ const mapCustomer = (u) => ({
   HoTen: u.HoTen,
   Email: u.Email,
   SoDienThoai: u.SoDienThoai,
-  DiemTichLuy: 0, // Customer loyalty points default placeholder
+  GioiTinh: u.GioiTinh ? 'Nam' : 'Nữ',
+  NgaySinh: u.NgaySinh ? new Date(u.NgaySinh).toLocaleDateString('vi-VN') : '--',
   KhaDung: u.KhaDung ? 1 : 0,
   LyDoKhoa: u.KhaDung ? null : 'Bị khóa bởi Admin',
   TrangThai: u.KhaDung ? 'Active' : 'Banned',
-  NgayTao: u.NgayTao ? new Date(u.NgayTao).toISOString().replace('T', ' ').substring(0, 19) : null,
-  NgayCapNhat: u.NgayCapNhat ? new Date(u.NgayCapNhat).toISOString().replace('T', ' ').substring(0, 19) : null,
+  NgayTao: u.NgayTao ? new Date(u.NgayTao).toLocaleDateString('vi-VN') : null,
+  NgayCapNhat: u.NgayCapNhat ? new Date(u.NgayCapNhat).toLocaleDateString('vi-VN') : null,
 });
 
 const customerService = {

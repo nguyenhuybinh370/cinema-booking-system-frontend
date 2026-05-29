@@ -9,9 +9,14 @@ const statsService = {
       ...(maPhim && { maPhim }),
     };
 
+    const fillParams = {
+      ...(startDate && { tuNgay: startDate }),
+      ...(endDate && { denNgay: endDate }),
+    };
+
     const [revData, fillData, resReceipts] = await Promise.all([
       axiosClient.get('/admin/thong-ke/doanh-thu', { params }),
-      axiosClient.get('/admin/thong-ke/ti-le-ghe', { params: { tuNgay: startDate, denNgay: endDate } }),
+      axiosClient.get('/admin/thong-ke/ti-le-ghe', { params: fillParams }),
       axiosClient.get('/admin/giao-dich/phieu-dat?limit=1000')
     ]);
 
