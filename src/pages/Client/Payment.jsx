@@ -4,7 +4,7 @@ import { formatVND } from '../../utils/formatHelper';
 import toast from 'react-hot-toast';
 import { simulatedCheckout, realCheckout } from '../../api/bookingApi';
 import { getBookingDetail } from '../../api/bookingHistoryApi';
-import { createPayOSPayment } from '../../api/paymentApi';
+import { createPayOSPayment, createVNPayPayment } from '../../api/paymentApi';
 import PayOSModal from '../../components/payment/PayOSModal';
 
 const Payment = ({ 
@@ -71,7 +71,38 @@ const Payment = ({
       return;
     }
 
-    // Simulated Checkout for fallback methods (e.g. VNPAY)
+    if (paymentMethod === 'VNPAY') {
+      const toastId = toast.loading("Đang khởi tạo giao dịch thanh toán VNPay...");
+      try {
+        // 1. Create booking in CHO_THANH_TOAN status
+        const checkoutRes = await realCheckout({
+          MaSuatChieu: maSuatChieu,
+          DanhSachMaGheSuatChieu: heldSeatIds,
+          PhuongThucThanhToan: 'VNPAY'
+        });
+
+        // 2. Create VNPay payment URL
+        const vnpayPaymentRes = await createVNPayPayment(checkoutRes.MaPhieuDat);
+        toast.dismiss(toastId);
+
+        // 3. Redirect to VNPay payment URL
+        if (vnpayPaymentRes && vnpayPaymentRes.paymentUrl) {
+          window.location.href = vnpayPaymentRes.paymentUrl;
+        } else {
+          throw new Error("Không nhận được URL thanh toán từ cổng VNPay.");
+        }
+      } catch (err) {
+        console.error("VNPay checkout error:", err);
+        const errMsg = err.response?.data?.message || err.message || "Không thể tạo link thanh toán VNPay. Vui lòng thử lại.";
+        toast.error(errMsg);
+        toast.dismiss(toastId);
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
+    // Simulated Checkout for fallback methods (e.g. cash or others)
     const toastId = toast.loading("Đang xử lý thanh toán giả lập...");
     try {
       const PhuongThucThanhToan = paymentMethod === 'VNPAY' ? 'VNPAY' : 'VNPAY';
@@ -213,7 +244,10 @@ const Payment = ({
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-[10px] font-black tracking-tighter select-none">
               VN
             </div>
-            <span className="text-white font-bold text-sm md:text-base">VNPAY (Simulated)</span>
+            <div className="flex flex-col flex-1">
+              <span className="text-white font-bold text-sm md:text-base">VNPay</span>
+              <span className="text-xs text-gray-400 font-medium">Thanh toán qua cổng thanh toán VNPay</span>
+            </div>
           </label>
 
           {/* NÚT THANH TOÁN CHỦ ĐẠO */}

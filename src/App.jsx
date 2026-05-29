@@ -15,6 +15,7 @@ import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import ForgotPassword from './pages/Auth/ForgotPassword';
 import ClientProfile from './pages/Client/Profile';
+import VNPayReturn from './pages/Client/VNPayReturn';
 
 // Admin Pages
 import Rooms from './pages/Admin/Rooms';
@@ -90,6 +91,7 @@ function App() {
         {/* === CUSTOMER PROTECTED ROUTES === */}
         <Route element={<ProtectedRoute allowedRoles={["CUSTOMER"]} />}>
           <Route path="/profile" element={<ClientProfile />} />
+          <Route path="/payment/vnpay-return" element={<VNPayReturn />} />
         </Route>
 
         {/* === STAFF ROUTES (Role: STAFF) === */}
