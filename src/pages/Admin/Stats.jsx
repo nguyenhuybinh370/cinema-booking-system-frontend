@@ -13,17 +13,15 @@ const formatPrice = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', c
 
 const Stats = () => {
   const [movies, setMovies] = useState([]);
-  const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
-  const [filters, setFilters] = useState({ startDate: '', endDate: '', maPhim: '', maPhongChieu: '' });
+  const [filters, setFilters] = useState({ startDate: '', endDate: '', maPhim: '' });
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
-    Promise.all([adminService.getMovies(), adminService.getRooms()]).then(([m, r]) => {
+    adminService.getMovies().then(m => {
       setMovies(m.filter(x => x.KhaDung !== 0));
-      setRooms(r.filter(x => x.KhaDung !== 0));
     }).catch(console.error);
   }, []);
 
@@ -33,7 +31,7 @@ const Stats = () => {
   }, [filters]);
 
   const setFilter = (key, value) => setFilters(prev => ({ ...prev, [key]: value }));
-  const resetFilters = () => setFilters({ startDate: '', endDate: '', maPhim: '', maPhongChieu: '' });
+  const resetFilters = () => setFilters({ startDate: '', endDate: '', maPhim: '' });
 
   const handleExport = async (format) => {
     setIsExporting(true);
@@ -83,7 +81,7 @@ const Stats = () => {
         <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
           <Calendar size={14} className="text-red-500" /> Bộ lọc thống kê
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
           {[{ label: 'Từ ngày', key: 'startDate', type: 'date' }, { label: 'Đến ngày', key: 'endDate', type: 'date' }].map(({ label, key, type }) => (
             <div key={key} className="space-y-1">
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</label>
@@ -97,14 +95,6 @@ const Stats = () => {
               className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 cursor-pointer transition-all [&>option]:bg-[#0a0d14]">
               <option value="">Tất cả phim</option>
               {movies.map(m => <option key={m.MaPhim} value={m.MaPhim}>{m.TenPhim}</option>)}
-            </select>
-          </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Phòng chiếu</label>
-            <select value={filters.maPhongChieu} onChange={e => setFilter('maPhongChieu', e.target.value)}
-              className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 cursor-pointer transition-all [&>option]:bg-[#0a0d14]">
-              <option value="">Tất cả phòng</option>
-              {rooms.map(r => <option key={r.MaPhongChieu} value={r.MaPhongChieu}>{r.TenPhong}</option>)}
             </select>
           </div>
           <button onClick={resetFilters}
@@ -141,7 +131,6 @@ const Stats = () => {
               { label: 'Từ ngày:', value: filters.startDate || 'Tất cả' },
               { label: 'Đến ngày:', value: filters.endDate || 'Tất cả' },
               { label: 'Phim:', value: filters.maPhim ? movies.find(m => m.MaPhim === filters.maPhim)?.TenPhim : 'Tất cả phim' },
-              { label: 'Phòng:', value: filters.maPhongChieu ? rooms.find(r => r.MaPhongChieu === filters.maPhongChieu)?.TenPhong : 'Tất cả phòng' },
             ].map(({ label, value }) => (
               <div key={label} className="flex justify-between">
                 <span>{label}</span><span className="text-white font-bold truncate max-w-[200px] text-right">{value}</span>

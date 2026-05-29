@@ -144,11 +144,11 @@ const Shifts = () => {
         title="Quản lý Ca làm việc"
         subtitle="Quản lý thời gian, số người của các ca và danh sách phân ca của nhân viên."
         action={
-          <button 
-            onClick={activeTab === 'shifts' ? openAddShift : openAddReg}
+          <button
+            onClick={openAddShift}
             className="w-full md:w-auto bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2 cursor-pointer text-sm"
           >
-            <Plus size={18} /> {activeTab === 'shifts' ? 'Thêm ca làm việc' : 'Phân ca / Đăng ký ca'}
+            <Plus size={18} /> {'Thêm ca làm việc'}
           </button>
         }
       />
@@ -236,11 +236,11 @@ const Shifts = () => {
           </div>
         ) : (
           <>
-            <ShiftTable 
-              shifts={shiftPagination.paginatedItems} 
-              onEdit={openEditShift} 
-              onDelete={handleDeleteShift} 
-              onToggleStatus={handleToggleShift} 
+            <ShiftTable
+              shifts={shiftPagination.paginatedItems}
+              onEdit={openEditShift}
+              onDelete={handleDeleteShift}
+              onToggleStatus={handleToggleShift}
             />
             <AdminPagination
               page={shiftPagination.page}
@@ -258,10 +258,10 @@ const Shifts = () => {
           </div>
         ) : (
           <>
-            <ShiftDetailTable 
-              registrations={regPagination.paginatedItems} 
-              onToggleStatus={handleToggleReg} 
-              onDelete={handleDeleteReg} 
+            <ShiftDetailTable
+              registrations={regPagination.paginatedItems}
+              onToggleStatus={handleToggleReg}
+              onDelete={handleDeleteReg}
             />
             <AdminPagination
               page={regPagination.page}
@@ -291,12 +291,12 @@ const Shifts = () => {
         isOpen={confirmState.isOpen}
         title={
           confirmState.type === 'deleteShift' ? 'Xóa ca làm việc' :
-          confirmState.type === 'toggleReg' ? (confirmState.data?.KhaDung === 1 ? 'Hủy đăng ký ca' : 'Đăng ký lại ca') : 'Xóa đăng ký ca'
+            confirmState.type === 'toggleReg' ? (confirmState.data?.KhaDung === 1 ? 'Hủy đăng ký ca' : 'Đăng ký lại ca') : 'Xóa đăng ký ca'
         }
         message={
           confirmState.type === 'deleteShift' ? `Bạn có chắc chắn muốn xóa ca "${confirmState.data?.TenCa}"?` :
-          confirmState.type === 'toggleReg' ? `Bạn có chắc chắn muốn ${confirmState.data?.KhaDung === 1 ? 'hủy đăng ký' : 'đăng ký lại'} ca này?` :
-          'Bạn có chắc chắn muốn xóa bản ghi đăng ký ca này?'
+            confirmState.type === 'toggleReg' ? `Bạn có chắc chắn muốn ${confirmState.data?.KhaDung === 1 ? 'hủy đăng ký' : 'đăng ký lại'} ca này?` :
+              'Bạn có chắc chắn muốn xóa bản ghi đăng ký ca này?'
         }
         confirmText="Xác nhận"
         cancelText="Hủy"

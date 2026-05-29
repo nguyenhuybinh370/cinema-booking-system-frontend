@@ -142,10 +142,9 @@ const Customers = () => {
       )
     },
     { header: 'Số điện thoại', accessor: 'SoDienThoai', className: 'text-sm text-slate-400 font-mono' },
-    { 
-      header: 'Điểm tích lũy', 
-      render: (c) => <span className="font-bold text-white text-sm">{c.DiemTichLuy} <span className="text-[10px] text-red-500 font-normal">pts</span></span>
-    },
+    { header: 'Giới tính', accessor: 'GioiTinh', className: 'text-sm text-slate-400 font-semibold' },
+    { header: 'Ngày sinh', accessor: 'NgaySinh', className: 'text-sm text-slate-400 font-mono' },
+    { header: 'Ngày đăng ký', accessor: 'NgayTao', className: 'text-sm text-slate-400 font-mono' },
     {
       header: 'Trạng thái',
       render: (c) => <StatusBadge status={c.TrangThai} />
@@ -231,7 +230,9 @@ const Customers = () => {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h3 className="text-xl font-bold text-white">Lịch sử đặt vé</h3>
-                <p className="text-slate-500 text-xs mt-1">Khách hàng: {selectedCust?.HoTen} ({selectedCust?.Email})</p>
+                <p className="text-slate-500 text-xs mt-1">
+                  Khách hàng: <strong>{selectedCust?.HoTen}</strong> ({selectedCust?.Email}) | SĐT: {selectedCust?.SoDienThoai} | Giới tính: {selectedCust?.GioiTinh} | Ngày sinh: {selectedCust?.NgaySinh}
+                </p>
               </div>
               <button onClick={() => setIsHistoryOpen(false)} className="p-2 hover:bg-white/5 rounded-xl cursor-pointer text-slate-400 hover:text-white transition-all"><X size={20} /></button>
             </div>

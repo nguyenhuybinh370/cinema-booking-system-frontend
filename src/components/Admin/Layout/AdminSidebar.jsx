@@ -55,6 +55,7 @@ const AdminSidebar = () => {
   };
 
   const menuItems = [
+    { name: 'Thống kê', icon: BarChart3, path: '/admin/stats' },
     { name: 'Phòng chiếu', icon: LayoutDashboard, path: '/admin/rooms' },
     { name: 'Sơ đồ mẫu', icon: Grid3X3, path: '/admin/seat-templates' },
     { name: 'Phim', icon: Film, path: '/admin/movies' },
@@ -64,7 +65,6 @@ const AdminSidebar = () => {
     { name: 'Suất chiếu', icon: CalendarDays, path: '/admin/showtimes' },
     { name: 'Khách hàng', icon: UserCheck, path: '/admin/customers' },
     { name: 'Giao dịch', icon: Receipt, path: '/admin/transactions' },
-    { name: 'Thống kê', icon: BarChart3, path: '/admin/stats' },
   ];
 
   return (
