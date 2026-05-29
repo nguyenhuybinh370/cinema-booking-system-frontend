@@ -55,7 +55,7 @@ const AdminSidebar = () => {
   };
 
   const menuItems = [
-    { name: 'Thống kê', icon: BarChart3, path: '/admin/stats' },
+    { name: 'Dashboard', icon: BarChart3, path: '/admin/stats' },
     { name: 'Phòng chiếu', icon: LayoutDashboard, path: '/admin/rooms' },
     { name: 'Sơ đồ mẫu', icon: Grid3X3, path: '/admin/seat-templates' },
     { name: 'Phim', icon: Film, path: '/admin/movies' },

@@ -124,7 +124,7 @@ const statsService = {
     return {
       success: true,
       format,
-      fileName: `BaoCaoDoanhThu_${new Date().toISOString().substring(0, 10)}_${Math.floor(Math.random() * 1000)}.${format === 'Excel' ? 'xlsx' : 'pdf'}`,
+      fileName: `BaoCaoDoanhThu_${new Date().toISOString().substring(0, 10)}_${Math.floor(Math.random() * 1000)}.${format === 'Excel' ? 'xls' : 'pdf'}`,
     };
   }
 };
