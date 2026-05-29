@@ -3,10 +3,7 @@ import axiosClient from "../../../api/axiosClient";
 import SaleResultModal from "./SaleResultModal";
 import { showError, getErrorMessage } from "../../../utils/toastHelper";
 
-const PAYMENT_METHODS = [
-  { id: "TIEN_MAT", name: "Tiền mặt", icon: "💵" },
-  { id: "CHUYEN_KHOAN", name: "Chuyển khoản", icon: "💳" },
-];
+
 
 // ── Thermal receipt printer ──────────────────────────────────────────────────
 const printThermalReceipt = ({ bookingData, checkoutResult, totalPrice }) => {
@@ -61,7 +58,6 @@ const printThermalReceipt = ({ bookingData, checkoutResult, totalPrice }) => {
 const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
   const [paymentMethod, setPaymentMethod] = useState("TIEN_MAT");
   const [amountGiven, setAmountGiven] = useState("");
-  const [externalRefId, setExternalRefId] = useState("");
   const [note, setNote] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [checkoutResult, setCheckoutResult] = useState(null);
@@ -97,7 +93,6 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
         MaSuatChieu: bookingData.showtime.id,
         DanhSachMaGheSuatChieu: bookingData.seats.map((s) => s.MaGheSuatChieu),
         PhuongThuc: paymentMethod,
-        MaGiaoDichNgoai: externalRefId.trim() || undefined,
         GhiChu: note.trim() || undefined,
       };
       const result = await axiosClient.post("/staff/ban-ve/thanh-toan", payload);
@@ -183,78 +178,43 @@ const Step3_Checkout = ({ bookingData, onPrev, onReset }) => {
             💳 Thanh Toán
           </h2>
 
-          {/* Payment method selector */}
-          <div className="grid grid-cols-2 gap-4">
-            {PAYMENT_METHODS.map((method) => {
-              const isSelected = paymentMethod === method.id;
-              return (
-                <button
-                  key={method.id}
-                  type="button"
-                  onClick={() => setPaymentMethod(method.id)}
-                  className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 cursor-pointer ${
-                    isSelected
-                      ? "border-[#FFB000] bg-gradient-to-br from-[#FFB000]/15 to-[#FFB000]/5 text-[#FFB000] shadow-[0_0_15px_rgba(255,176,0,0.15)] scale-105"
-                      : "border-white/5 text-slate-500 bg-slate-950/20 hover:border-slate-700 hover:bg-slate-950/40 hover:text-slate-300"
-                  }`}
-                >
-                  <span className="text-2xl mb-2">{method.icon}</span>
-                  <span className="text-xs font-bold uppercase tracking-wider">{method.name}</span>
-                </button>
-              );
-            })}
+          {/* Payment method fixed info */}
+          <div className="bg-slate-950/40 p-4 rounded-xl border border-white/5 flex justify-between items-center">
+            <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Phương thức thanh toán</span>
+            <span className="text-sm font-bold text-[#FFB000]">💵 Tiền mặt</span>
           </div>
 
-          {/* Payment method fields */}
-          {paymentMethod === "TIEN_MAT" ? (
-            <div className="space-y-4 bg-slate-950/40 p-5 rounded-2xl border border-white/5">
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Tiền khách đưa</label>
-                  <button
-                    onClick={handleExactAmount}
-                    className="text-xs text-[#FFB000] hover:text-white font-bold bg-[#FFB000]/15 border border-[#FFB000]/20 px-2 py-0.5 rounded cursor-pointer transition-colors"
-                  >
-                    Vừa đủ
-                  </button>
-                </div>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={amountGiven}
-                    onChange={handleAmountChange}
-                    placeholder="Nhập số tiền..."
-                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-[#FFB000] rounded-xl px-4 py-3 text-2xl font-black text-[#FFB000] focus:outline-none text-right pr-12 font-mono"
-                  />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold font-mono">đ</span>
-                </div>
+          {/* Cash input fields */}
+          <div className="space-y-4 bg-slate-950/40 p-5 rounded-2xl border border-white/5">
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Tiền khách đưa</label>
+                <button
+                  type="button"
+                  onClick={handleExactAmount}
+                  className="text-xs text-[#FFB000] hover:text-white font-bold bg-[#FFB000]/15 border border-[#FFB000]/20 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                >
+                  Vừa đủ
+                </button>
               </div>
-              <div className="flex justify-between items-center pt-4 border-t border-white/5">
-                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Tiền thối lại</span>
-                <span className={`text-2xl font-black font-mono ${changeAmount >= 0 ? "text-green-400" : "text-red-400"}`}>
-                  {changeAmount >= 0 ? `${changeAmount.toLocaleString("vi-VN")} đ` : "---"}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4 bg-slate-950/40 p-5 rounded-2xl border border-white/5">
-              <div>
-                <label className="block text-[10px] text-slate-500 uppercase tracking-widest font-black mb-2 pl-1">
-                  Mã giao dịch đối tác (Mã chuyển khoản ngân hàng)
-                </label>
+              <div className="relative">
                 <input
                   type="text"
-                  value={externalRefId}
-                  onChange={(e) => setExternalRefId(e.target.value)}
-                  placeholder="Nhập mã giao dịch đối tác..."
-                  className="w-full bg-slate-950/80 border border-slate-800 focus:border-[#FFB000] rounded-xl px-4 py-3 text-white focus:outline-none font-mono text-sm"
+                  value={amountGiven}
+                  onChange={handleAmountChange}
+                  placeholder="Nhập số tiền..."
+                  className="w-full bg-slate-950/80 border border-slate-800 focus:border-[#FFB000] rounded-xl px-4 py-3 text-2xl font-black text-[#FFB000] focus:outline-none text-right pr-12 font-mono"
                 />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold font-mono">đ</span>
               </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed pl-1">
-                ⚠️ Nhân viên lưu ý kiểm tra lịch sử biến động số dư tài khoản của rạp trước khi hoàn tất giao dịch chuyển khoản.
-              </p>
             </div>
-          )}
+            <div className="flex justify-between items-center pt-4 border-t border-white/5">
+              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Tiền thối lại</span>
+              <span className={`text-2xl font-black font-mono ${changeAmount >= 0 ? "text-green-400" : "text-red-400"}`}>
+                {changeAmount >= 0 ? `${changeAmount.toLocaleString("vi-VN")} đ` : "---"}
+              </span>
+            </div>
+          </div>
 
           <div>
             <label className="block text-[10px] text-slate-500 uppercase tracking-widest font-black mb-2 pl-1">
