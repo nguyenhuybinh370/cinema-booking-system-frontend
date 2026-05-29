@@ -143,6 +143,14 @@ const Shifts = () => {
       <AdminPageHeader
         title="Quản lý Ca làm việc"
         subtitle="Quản lý thời gian, số người của các ca và danh sách phân ca của nhân viên."
+        action={
+          <button
+            onClick={openAddShift}
+            className="w-full md:w-auto bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2 cursor-pointer text-sm"
+          >
+            <Plus size={18} /> {'Thêm ca làm việc'}
+          </button>
+        }
       />
 
       {/* Tabs */}
