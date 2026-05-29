@@ -152,11 +152,7 @@ const MovieDetails = () => {
   };
 
   const handleHome = () => {
-    setBookingStage('detail');
-    setConfirmedSeats([]);
-    setConfirmedTotalPrice(0);
-    setBookingResult(null);
-    holdTimer.isPaymentSuccessRef.current = false;
+    navigate('/');
   };
 
   // ── Loading / Not found ───────────────────────────────────────────────────

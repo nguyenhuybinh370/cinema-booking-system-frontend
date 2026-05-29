@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { Copy, Check, ExternalLink, X, Clock, AlertCircle, Loader2 } from 'lucide-react';
@@ -41,6 +41,15 @@ const PayOSModal = ({
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState(600); // Default 10 minutes (600s)
   const [modalState, setModalState] = useState('loading'); // 'loading' | 'pending' | 'success' | 'failed'
+  
+  const isComponentMounted = useRef(true);
+
+  useEffect(() => {
+    isComponentMounted.current = true;
+    return () => {
+      isComponentMounted.current = false;
+    };
+  }, []);
 
   // Update modal state once credentials load
   useEffect(() => {
@@ -108,13 +117,12 @@ const PayOSModal = ({
   useEffect(() => {
     if (!isOpen || !maGiaoDich || modalState === 'success' || modalState === 'failed') return;
 
-    let isMounted = true;
     let pollInterval;
 
     const checkStatus = async () => {
       try {
         const response = await getPayOSPaymentStatus(maGiaoDich);
-        if (!isMounted) return;
+        if (!isComponentMounted.current) return;
 
         const status = response?.trangThaiGiaoDich || response?.status || response?.data?.trangThaiGiaoDich || response?.data?.status;
 
@@ -125,7 +133,7 @@ const PayOSModal = ({
 
           // 1.5 seconds visual delay before triggering parent redirection
           setTimeout(() => {
-            if (isMounted) {
+            if (isComponentMounted.current) {
               onSuccess(response);
             }
           }, 1500);
@@ -135,7 +143,7 @@ const PayOSModal = ({
           toast.error("Giao dịch thanh toán đã bị hủy hoặc thất bại.");
 
           setTimeout(() => {
-            if (isMounted) {
+            if (isComponentMounted.current) {
               onCancel();
             }
           }, 1500);
@@ -149,7 +157,6 @@ const PayOSModal = ({
     pollInterval = setInterval(checkStatus, 3000);
 
     return () => {
-      isMounted = false;
       clearInterval(pollInterval);
     };
   }, [isOpen, maGiaoDich, modalState]);

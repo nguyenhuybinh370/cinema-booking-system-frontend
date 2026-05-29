@@ -12,6 +12,8 @@ export const getBookingStatusLabel = (status) => {
       return { text: 'Đã thanh toán', css: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' };
     case 'DA_HUY':
       return { text: 'Đã hủy', css: 'bg-gray-500/10 text-gray-400 border border-gray-500/20' };
+    case 'HET_HAN':
+      return { text: 'Hết hạn thanh toán', css: 'bg-rose-500/10 text-rose-400 border border-rose-500/20' };
     default:
       return { text: status, css: 'bg-white/5 text-gray-400 border border-white/5' };
   }
