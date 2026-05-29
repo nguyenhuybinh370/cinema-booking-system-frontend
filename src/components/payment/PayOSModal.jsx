@@ -6,6 +6,15 @@ import toast from 'react-hot-toast';
 import { getPayOSPaymentStatus } from '../../api/paymentApi';
 import { formatVND } from '../../utils/formatHelper';
 
+// Helper to determine payment success/failure status
+const isPaymentSuccess = (status) => {
+  return ['PAID', 'THANH_CONG', 'SUCCESS', 'DA_THANH_TOAN'].includes(status);
+};
+
+const isPaymentFailed = (status) => {
+  return ['FAILED', 'CANCELLED', 'THAT_BAI', 'DA_HUY'].includes(status);
+};
+
 const isImageUrl = (url) => {
   if (typeof url !== 'string') return false;
   return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:image/');
@@ -31,8 +40,16 @@ const PayOSModal = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState(600); // Default 10 minutes (600s)
+  const [modalState, setModalState] = useState('loading'); // 'loading' | 'pending' | 'success' | 'failed'
 
-  // Copy order code to clipboard helper
+  // Update modal state once credentials load
+  useEffect(() => {
+    if (isOpen && (qrCode || checkoutUrl)) {
+      setModalState('pending');
+    }
+  }, [isOpen, qrCode, checkoutUrl]);
+
+  // Copy order code helper
   const handleCopyCode = () => {
     if (!orderCode) return;
     navigator.clipboard.writeText(orderCode.toString());
@@ -43,10 +60,9 @@ const PayOSModal = ({
 
   // Countdown timer logic
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || modalState === 'success') return;
 
     if (expiresAt) {
-      // PayOS expiresAt is a timestamp (or date string)
       const targetTime = typeof expiresAt === 'number' 
         ? expiresAt 
         : new Date(expiresAt).getTime();
@@ -57,7 +73,7 @@ const PayOSModal = ({
         setTimeLeft(diffSeconds);
 
         if (diffSeconds <= 0) {
-          onTimeout();
+          handleTimeout();
         }
       };
 
@@ -65,13 +81,12 @@ const PayOSModal = ({
       const timerInterval = setInterval(updateTimer, 1000);
       return () => clearInterval(timerInterval);
     } else {
-      // Fallback 10 minutes countdown
       setTimeLeft(600);
       const timerInterval = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
             clearInterval(timerInterval);
-            onTimeout();
+            handleTimeout();
             return 0;
           }
           return prev - 1;
@@ -79,43 +94,65 @@ const PayOSModal = ({
       }, 1000);
       return () => clearInterval(timerInterval);
     }
-  }, [isOpen, expiresAt]);
+  }, [isOpen, expiresAt, modalState]);
+
+  const handleTimeout = () => {
+    setModalState('failed');
+    toast.error("Giao dịch thanh toán đã hết hạn.");
+    setTimeout(() => {
+      onTimeout();
+    }, 1500);
+  };
 
   // Polling logic
   useEffect(() => {
-    if (!isOpen || !maGiaoDich) return;
+    if (!isOpen || !maGiaoDich || modalState === 'success' || modalState === 'failed') return;
 
     let isMounted = true;
+    let pollInterval;
 
     const checkStatus = async () => {
       try {
         const response = await getPayOSPaymentStatus(maGiaoDich);
         if (!isMounted) return;
 
-        // Backend response format: status: "PENDING" | "PAID" | "FAILED" | "CANCELLED"
-        const status = response.status || response.data?.status;
+        const status = response?.trangThaiGiaoDich || response?.status || response?.data?.trangThaiGiaoDich || response?.data?.status;
 
-        if (status === 'PAID') {
+        if (isPaymentSuccess(status)) {
+          clearInterval(pollInterval);
+          setModalState('success');
           toast.success("Thanh toán thành công!");
-          onSuccess(response);
-        } else if (status === 'FAILED' || status === 'CANCELLED') {
+
+          // 1.5 seconds visual delay before triggering parent redirection
+          setTimeout(() => {
+            if (isMounted) {
+              onSuccess(response);
+            }
+          }, 1500);
+        } else if (isPaymentFailed(status)) {
+          clearInterval(pollInterval);
+          setModalState('failed');
           toast.error("Giao dịch thanh toán đã bị hủy hoặc thất bại.");
-          onCancel();
+
+          setTimeout(() => {
+            if (isMounted) {
+              onCancel();
+            }
+          }, 1500);
         }
       } catch (err) {
         console.error("Lỗi khi kiểm tra trạng thái PayOS:", err);
       }
     };
 
-    // Poll immediately, then every 3 seconds
     checkStatus();
-    const pollInterval = setInterval(checkStatus, 3000);
+    pollInterval = setInterval(checkStatus, 3000);
 
     return () => {
       isMounted = false;
       clearInterval(pollInterval);
     };
-  }, [isOpen, maGiaoDich]);
+  }, [isOpen, maGiaoDich, modalState]);
 
   if (!isOpen) return null;
 
@@ -123,7 +160,6 @@ const PayOSModal = ({
   const seconds = (timeLeft % 60).toString().padStart(2, '0');
 
   const renderQRCodeContent = () => {
-    // Case A: valid image URL
     if (qrCode && isImageUrl(qrCode)) {
       return (
         <img 
@@ -134,7 +170,6 @@ const PayOSModal = ({
       );
     }
 
-    // Case B: raw base64 without prefix
     if (qrCode && isBase64Image(qrCode)) {
       return (
         <img 
@@ -145,7 +180,6 @@ const PayOSModal = ({
       );
     }
 
-    // Case C: VietQR string (usually what PayOS returns)
     if (qrCode && typeof qrCode === 'string' && qrCode.length > 0) {
       return (
         <QRCodeSVG 
@@ -159,7 +193,6 @@ const PayOSModal = ({
       );
     }
 
-    // Fallback: Generate QR from checkoutUrl
     if (checkoutUrl) {
       return (
         <QRCodeSVG 
@@ -173,7 +206,6 @@ const PayOSModal = ({
       );
     }
 
-    // Case D: Failure / No QR data
     return (
       <div className="flex flex-col items-center justify-center text-center p-4 gap-2 text-red-400">
         <AlertCircle size={32} />
@@ -184,34 +216,48 @@ const PayOSModal = ({
     );
   };
 
-  return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"
-        onClick={onCancel}
-      />
-      
-      {/* Container Modal Glassmorphism */}
-      <div className="relative z-[10000] w-full max-w-lg bg-zinc-900/90 border border-white/10 rounded-2xl p-6 md:p-8 flex flex-col gap-6 shadow-2xl overflow-y-auto max-h-[90vh] text-left text-white backdrop-blur-md animate-in zoom-in-95 duration-300">
-        
-        {/* Nút Đóng Modal */}
-        <button 
-          onClick={onCancel}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors cursor-pointer"
-        >
-          <X size={20} />
-        </button>
-
-        {/* Tiêu đề & Đồng hồ đếm ngược */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-blue-400">
-            <span className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-ping"></span>
-            <span className="text-xs uppercase tracking-widest font-black">Cổng Thanh Toán PayOS</span>
-          </div>
-          <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight text-white mt-1">Quét Mã QR Thanh Toán</h2>
+  const renderModalContent = () => {
+    if (modalState === 'loading') {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
+          <Loader2 className="animate-spin text-blue-500" size={48} />
+          <h3 className="text-lg font-bold text-white">Đang khởi tạo link thanh toán...</h3>
+          <p className="text-xs text-gray-400">Vui lòng chờ trong giây lát</p>
         </div>
+      );
+    }
 
+    if (modalState === 'success') {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 gap-4 text-center animate-in zoom-in duration-300">
+          <div className="w-16 h-16 bg-green-500/20 border border-green-500/30 text-green-400 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.2)]">
+            <Check size={36} className="stroke-[3]" />
+          </div>
+          <h3 className="text-xl font-black uppercase text-green-400 tracking-wide mt-2">Thanh toán thành công</h3>
+          <p className="text-sm font-semibold text-gray-300">Vé của bạn đang được tạo...</p>
+          <p className="text-xs text-gray-400 flex items-center gap-1.5 mt-2 justify-center font-bold">
+            <Loader2 className="animate-spin text-blue-500" size={14} />
+            Đang chuyển sang vé điện tử...
+          </p>
+        </div>
+      );
+    }
+
+    if (modalState === 'failed') {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 gap-4 text-center animate-in zoom-in duration-300">
+          <div className="w-16 h-16 bg-red-500/20 border border-red-500/30 text-red-400 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+            <X size={36} className="stroke-[3]" />
+          </div>
+          <h3 className="text-xl font-black uppercase text-red-400 tracking-wide mt-2">Giao dịch thất bại</h3>
+          <p className="text-sm font-semibold text-gray-300">Giao dịch đã bị hủy hoặc hết thời hạn giữ vé.</p>
+        </div>
+      );
+    }
+
+    // Default 'pending' UI
+    return (
+      <>
         {/* Timer Box */}
         <div className="flex items-center justify-between px-4 py-3 bg-blue-950/20 border border-blue-500/20 rounded-xl text-blue-300 font-bold text-sm">
           <div className="flex items-center gap-2">
@@ -296,6 +342,43 @@ const PayOSModal = ({
             Hủy thanh toán
           </button>
         </div>
+      </>
+    );
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"
+        onClick={modalState === 'pending' || modalState === 'failed' ? onCancel : undefined}
+      />
+      
+      {/* Container Modal Glassmorphism */}
+      <div className="relative z-[10000] w-full max-w-lg bg-zinc-900/90 border border-white/10 rounded-2xl p-6 md:p-8 flex flex-col gap-6 shadow-2xl overflow-y-auto max-h-[90vh] text-left text-white backdrop-blur-md animate-in zoom-in-95 duration-300">
+        
+        {/* Nút Đóng Modal */}
+        {(modalState === 'pending' || modalState === 'failed') && (
+          <button 
+            onClick={onCancel}
+            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors cursor-pointer"
+          >
+            <X size={20} />
+          </button>
+        )}
+
+        {/* Tiêu đề & Nội dung đục */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2 text-blue-400">
+            <span className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-ping"></span>
+            <span className="text-xs uppercase tracking-widest font-black">Cổng Thanh Toán PayOS</span>
+          </div>
+          <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight text-white mt-1">
+            {modalState === 'success' ? 'Thanh Toán Thành Công' : modalState === 'failed' ? 'Giao Dịch Thất Bại' : 'Quét Mã QR Thanh Toán'}
+          </h2>
+        </div>
+
+        {renderModalContent()}
 
       </div>
     </div>,
