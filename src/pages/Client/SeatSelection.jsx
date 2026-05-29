@@ -34,13 +34,13 @@ const CoupleSeatIcon = ({ className, strokeClassName }) => (
 
 // --- STATIC HOLD INDICATOR FOR SELECTION PAGE ---
 const SeatHoldIndicator = () => (
-  <div className="flex items-center gap-2 px-4 py-3 rounded-xl border mb-4 font-black transition-all bg-white/5 border-white/5 text-gray-500 opacity-60">
-    <Clock size={16} />
-    <span className="text-xs uppercase tracking-wider flex-1 font-bold">
-      Thời gian giữ ghế:
+  <div className="flex items-center gap-2 px-4 py-3 rounded-xl border mb-4 font-black transition-all bg-white/5 border-white/5 text-slate-400">
+    <Clock size={16} className="text-[#ff436e]" />
+    <span className="text-[11px] uppercase tracking-wider flex-1 font-bold">
+      Hạn thanh toán:
     </span>
-    <span className="text-base font-mono font-black tracking-widest">
-      10:00
+    <span className="text-xs font-bold text-white bg-[#ff436e]/10 px-2.5 py-1 rounded-lg">
+      10 phút
     </span>
   </div>
 );
