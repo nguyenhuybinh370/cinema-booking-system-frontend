@@ -64,7 +64,10 @@ const CheckIn = () => {
       setStatus("SUCCESS");
       setMessage("VÉ HỢP LỆ - CHECK-IN THÀNH CÔNG");
 
-      const info = checkIn.TicketInfo || validation.ticketInfo;
+      const info = {
+        ...(validation.ticketInfo || {}),
+        ...(checkIn.TicketInfo || {}),
+      };
       const gioChieuDate = new Date(info.GioChieu);
       const timeString = `${gioChieuDate.getHours().toString().padStart(2, "0")}:${gioChieuDate.getMinutes().toString().padStart(2, "0")}`;
 
