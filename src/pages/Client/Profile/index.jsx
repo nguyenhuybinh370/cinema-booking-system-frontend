@@ -179,13 +179,15 @@ const Profile = () => {
     setIsCancelModalOpen(true);
   };
 
-  const handleCancelBookingSubmit = async (e) => {
+  const handleCancelBookingSubmit = async (e, bankInfo) => {
     e.preventDefault();
     if (!selectedBookingId) return;
     setIsSubmittingCancel(true);
     const toastId = toast.loading('Đang xử lý hủy vé...');
     try {
-      const payload = {};
+      const payload = {
+        ...bankInfo,
+      };
       if (cancelReason.trim()) {
         payload.LyDoHoan = cancelReason.trim();
       }
@@ -212,17 +214,17 @@ const Profile = () => {
     setIsRefundRequestOpen(true);
   };
 
-  const handleRefundSubmit = async (e) => {
+  const handleRefundSubmit = async (e, bankInfo) => {
     e.preventDefault();
     if (!selectedBookingId) return;
-    if (!refundReason.trim()) {
-      toast.error('Vui lòng nhập lý do hoàn tiền.');
-      return;
-    }
     setIsSubmittingRefund(true);
     const toastId = toast.loading('Đang gửi yêu cầu hoàn tiền...');
     try {
-      await requestRefund({ MaPhieuDat: selectedBookingId, LyDo: refundReason.trim() });
+      await requestRefund({
+        MaPhieuDat: selectedBookingId,
+        LyDo: refundReason.trim(),
+        ...bankInfo,
+      });
       toast.success('Gửi yêu cầu hoàn tiền thành công!');
       setIsRefundRequestOpen(false);
       await fetchBookingsAndRefunds(false);
