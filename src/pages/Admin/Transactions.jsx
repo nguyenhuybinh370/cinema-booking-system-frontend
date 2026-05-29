@@ -766,6 +766,68 @@ const Transactions = () => {
               })()}
             </div>
 
+            {/* Customer Bank Info & VietQR */}
+            {activeRefund.SoTaiKhoan && activeRefund.TenNganHang && (
+              <div className="bg-slate-950/80 border border-amber-500/20 rounded-2xl p-5 space-y-4">
+                <h4 className="text-xs font-black text-amber-500 uppercase tracking-widest border-b border-white/5 pb-2">
+                  Thông tin hoàn tiền & mã VietQR
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                  <div className="space-y-2 text-xs">
+                    <div>
+                      <span className="text-slate-400 block mb-0.5">Ngân hàng nhận:</span>
+                      <span className="text-white font-bold">{activeRefund.TenNganHang}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block mb-0.5">Số tài khoản:</span>
+                      <span className="text-white font-bold font-mono text-sm select-all flex items-center gap-1">
+                        {activeRefund.SoTaiKhoan}
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(activeRefund.SoTaiKhoan);
+                            showSuccess('Đã sao chép số tài khoản!');
+                          }}
+                          className="text-[10px] text-blue-400 hover:underline cursor-pointer"
+                        >
+                          (Sao chép)
+                        </button>
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block mb-0.5">Chủ tài khoản:</span>
+                      <span className="text-white font-bold uppercase">{activeRefund.TenChuTaiKhoan}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block mb-0.5">Số tiền hoàn:</span>
+                      <span className="text-emerald-400 font-extrabold text-sm">{formatPrice(activeRefund.SoTienHoan)}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center justify-center p-3 bg-white rounded-xl border border-white/10 shrink-0 self-center">
+                    <img
+                      src={`https://img.vietqr.io/image/${(() => {
+                        const lower = activeRefund.TenNganHang.toLowerCase();
+                        if (lower.includes('mbbank') || lower.includes('quân đội') || lower === 'mb') return 'mbbank';
+                        if (lower.includes('vietcombank') || lower.includes('ngoại thương') || lower === 'vcb') return 'vietcombank';
+                        if (lower.includes('techcombank') || lower.includes('kỹ thương') || lower === 'tcb') return 'techcombank';
+                        if (lower.includes('bidv') || lower.includes('đầu tư') || lower === 'bidv') return 'bidv';
+                        if (lower.includes('vietinbank') || lower.includes('công thương') || lower === 'ctg') return 'vietinbank';
+                        if (lower.includes('agribank') || lower.includes('nông nghiệp') || lower === 'agr') return 'agribank';
+                        if (lower.includes('acb') || lower.includes('á châu') || lower === 'acb') return 'acb';
+                        if (lower.includes('tpbank') || lower.includes('tiên phong') || lower === 'tpb') return 'tpbank';
+                        if (lower.includes('vpbank') || lower.includes('thịnh vượng') || lower === 'vpb') return 'vpbank';
+                        if (lower.includes('sacombank') || lower.includes('sài gòn thương tín') || lower === 'stb') return 'sacombank';
+                        return lower.replace(/[^a-z0-9]/g, '');
+                      })()}-${activeRefund.SoTaiKhoan}-compact.png?amount=${activeRefund.SoTienHoan}&addInfo=${encodeURIComponent(`Hoan tien ve ${activeRefund.GiaoDich?.PhieuDatVe?.MaPhieuDat?.substring(0, 8) || ''}`)}&accountName=${encodeURIComponent(activeRefund.TenChuTaiKhoan)}`}
+                      alt="VietQR Code"
+                      className="w-40 h-40 object-contain"
+                      loading="lazy"
+                    />
+                    <span className="text-[10px] text-slate-800 font-bold mt-1">Quét QR để chuyển khoản nhanh</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Refund detail info */}
             <div className="border border-white/5 rounded-2xl p-5 bg-[#0a0d14]/95 space-y-3 font-mono text-xs text-slate-400">
               <div className="flex justify-between">
