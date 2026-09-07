@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 
@@ -20,22 +19,24 @@ const AdminPageHeader = ({
   };
 
   return (
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <header className="admin-page-header">
       <div className="flex items-center gap-4">
         {(backPath || onBack) && (
-          <button 
+          <button
+            type="button"
             onClick={handleBack}
-            className="p-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl text-slate-400 hover:text-white transition-all active:scale-95 shrink-0"
+            className="admin-icon-button shrink-0"
+            aria-label="Quay lại"
           >
             <ChevronLeft size={20} />
           </button>
         )}
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+          <h1 className="admin-page-title">
             {title}
           </h1>
           {subtitle && (
-            <p className="text-slate-500 font-semibold text-sm mt-1">{subtitle}</p>
+            <p className="admin-page-subtitle">{subtitle}</p>
           )}
         </div>
       </div>
@@ -45,7 +46,7 @@ const AdminPageHeader = ({
           {action}
         </div>
       )}
-    </div>
+    </header>
   );
 };
 
