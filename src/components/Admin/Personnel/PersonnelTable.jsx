@@ -1,7 +1,7 @@
 import AdminTable from '../Common/AdminTable';
-import { ShieldCheck, Edit2, UserX, UserCheck } from 'lucide-react';
+import { Edit2, UserX, UserCheck } from 'lucide-react';
 
-const PersonnelTable = ({ staff, onEdit, onToggleStatus, onOpenPermissions }) => {
+const PersonnelTable = ({ staff, onEdit, onToggleStatus }) => {
   const columns = [
     { header: 'Mã NV', accessor: 'MaNhanVien', className: 'text-xs font-mono font-bold text-red-500' },
     { header: 'Mã Tài Khoản', accessor: 'MaTaiKhoan', className: 'text-xs font-mono font-bold text-slate-500' },

@@ -6,6 +6,7 @@ import AdminButton from '../../components/Admin/Common/AdminButton';
 import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
 import FormField from '../../components/Admin/Common/FormField';
 import StickyFormActions from '../../components/Admin/Common/StickyFormActions';
+import ImageUploader from '../../components/Admin/Common/ImageUploader';
 import { adminEditorConfigs } from '../../constants/adminEditorConfigs';
 import { showSuccess } from '../../utils/toastHelper';
 import { slugify } from '../../utils/slugify';
@@ -126,7 +127,9 @@ const EntityEditor = ({ kind }) => {
                   {section.fields.map((field) => (
                     <FormField key={field.name} label={field.label} required={field.required} helperText={field.helperText} error={errors[field.name]} className={field.span === 2 ? 'sm:col-span-2' : ''}>
                       {field.prefix && <span className="admin-input-prefix">{field.prefix}</span>}
-                      {field.type === 'richtext' ? (
+                      {field.type === 'image' ? (
+                        <ImageUploader value={values[field.name]} aspectRatio={field.aspectRatio} onChange={(value) => handleChange(field, value)} />
+                      ) : field.type === 'richtext' ? (
                         <div className="admin-rich-editor">
                           <div className="admin-rich-toolbar" aria-label="Công cụ định dạng"><button type="button">H2</button><button type="button"><strong>B</strong></button><button type="button"><em>I</em></button><button type="button">• Danh sách</button><button type="button">Liên kết</button></div>
                           <textarea value={values[field.name]} onChange={(event) => handleChange(field, event.target.value)} />

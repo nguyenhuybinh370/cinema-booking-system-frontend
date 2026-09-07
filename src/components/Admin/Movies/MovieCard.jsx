@@ -87,5 +87,4 @@ const MovieCard = ({ movie, onEdit, onDelete }) => {
   );
 };
 
-export { getMovieStatus };
 export default MovieCard;

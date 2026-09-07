@@ -1,15 +1,13 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import adminService from '../../services/adminService';
-import { Lock, Unlock, ChevronLeft, Save } from 'lucide-react';
+import { Lock, Unlock, Save } from 'lucide-react';
 import { showSuccess, showError } from '../../utils/toastHelper';
 import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
 
 const SeatMaps = () => {
   const { roomId } = useParams();
-  const navigate = useNavigate();
-  
   const [room, setRoom] = useState(null);
   const [template, setTemplate] = useState(null);
   const [seatTypes, setSeatTypes] = useState([]);

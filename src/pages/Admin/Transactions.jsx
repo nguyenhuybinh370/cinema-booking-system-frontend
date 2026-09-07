@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import Modal from '../../components/Admin/Common/Modal';
 import AdminTable from '../../components/Admin/Common/AdminTable';
 import StatusBadge from '../../components/Admin/Common/StatusBadge';
 import adminService from '../../services/adminService';
-import { Landmark, CreditCard, DollarSign, RotateCcw, AlertTriangle, Eye, Check, X, FileText } from 'lucide-react';
+import { Landmark, CreditCard, DollarSign, RotateCcw, AlertTriangle, Eye, Check, X } from 'lucide-react';
 import { showSuccess, showError } from '../../utils/toastHelper';
 import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
@@ -44,7 +44,8 @@ const Transactions = () => {
   };
 
   useEffect(() => {
-    loadTransactions();
+    const timeoutId = window.setTimeout(loadTransactions, 0);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   const formatPrice = (price) => {
@@ -231,7 +232,7 @@ const Transactions = () => {
     return () => clearTimeout(handler);
   }, [keywordInput]);
 
-  const loadRefundRequests = async () => {
+  const loadRefundRequests = useCallback(async () => {
     setRefundLoading(true);
     try {
       const res = await adminService.getRefundRequests({
@@ -252,13 +253,13 @@ const Transactions = () => {
     } finally {
       setRefundLoading(false);
     }
-  };
+  }, [refundPagination.page, refundPagination.limit, refundFilters.trangThai, refundFilters.keyword]);
 
   useEffect(() => {
-    if (activeTab === 'refunds') {
-      loadRefundRequests();
-    }
-  }, [activeTab, refundPagination.page, refundPagination.limit, refundFilters.trangThai, refundFilters.keyword]);
+    if (activeTab !== 'refunds') return undefined;
+    const timeoutId = window.setTimeout(loadRefundRequests, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [activeTab, loadRefundRequests]);
 
   const handleOpenDetail = async (refund) => {
     setActiveRefund(refund);

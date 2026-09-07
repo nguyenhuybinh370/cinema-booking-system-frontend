@@ -1,7 +1,5 @@
-import { useState, useMemo } from 'react';
 import { Edit2, Trash2, Plus } from 'lucide-react';
 import { useClientPagination } from '../../../hooks/useClientPagination';
-import AdminToolbar from '../Common/AdminToolbar';
 import AdminPagination from '../Common/AdminPagination';
 
 const formatPrice = (price) =>

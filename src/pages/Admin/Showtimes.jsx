@@ -55,7 +55,10 @@ const Showtimes = () => {
     }
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    const timeoutId = window.setTimeout(loadData, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   const calculateEndTime = (movieId, startTimeStr) => {
     const movie = movies.find(m => m.MaPhim === movieId);

@@ -33,7 +33,10 @@ const Personnel = () => {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { loadStaff(); }, []);
+  useEffect(() => {
+    const timeoutId = window.setTimeout(loadStaff, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

@@ -39,8 +39,10 @@ const Pricing = () => {
 
   useEffect(() => {
     let ignore = false;
-    loadData().then(() => { if (!ignore) setLoading(false); });
-    return () => { ignore = true; };
+    const timeoutId = window.setTimeout(() => {
+      loadData().then(() => { if (!ignore) setLoading(false); });
+    }, 0);
+    return () => { ignore = true; window.clearTimeout(timeoutId); };
   }, []);
 
   const getSurcharge = (list, key, id) => list.find(x => x[key] === id)?.GiaPhuThu || 0;

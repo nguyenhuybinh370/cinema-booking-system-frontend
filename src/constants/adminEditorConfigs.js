@@ -23,8 +23,8 @@ export const adminEditorConfigs = {
         title: 'Media',
         description: 'Dùng URL tạm thời; uploader sẽ nối dịch vụ lưu trữ sau.',
         fields: [
-          { name: 'posterUrl', label: 'Poster URL', helperText: 'Tỷ lệ đề xuất 2:3' },
-          { name: 'backdropUrl', label: 'Ảnh nền URL', helperText: 'Tỷ lệ đề xuất 16:9' },
+          { name: 'posterUrl', label: 'Poster', type: 'image', aspectRatio: '2:3' },
+          { name: 'backdropUrl', label: 'Ảnh nền', type: 'image', aspectRatio: '16:9' },
           { name: 'trailerUrl', label: 'Trailer URL', span: 2 },
         ],
       },
@@ -58,7 +58,7 @@ export const adminEditorConfigs = {
           { name: 'slug', label: 'Slug', required: true, prefix: '/dien-vien/' },
           { name: 'birthday', label: 'Ngày sinh', type: 'date' },
           { name: 'country', label: 'Quốc gia' },
-          { name: 'avatarUrl', label: 'Ảnh đại diện URL', helperText: 'Tỷ lệ đề xuất 1:1 hoặc 4:5' },
+          { name: 'avatarUrl', label: 'Ảnh đại diện', type: 'image', aspectRatio: '1:1' },
           { name: 'bio', label: 'Giới thiệu', type: 'textarea', span: 2 },
           { name: 'status', label: 'Trạng thái', type: 'select', options: ['Bản nháp', 'Đang hoạt động', 'Đã lưu trữ'] },
         ],
@@ -86,7 +86,7 @@ export const adminEditorConfigs = {
           { name: 'slug', label: 'Slug', required: true, prefix: '/blog/' },
           { name: 'author', label: 'Tác giả', required: true },
           { name: 'excerpt', label: 'Tóm tắt', type: 'textarea', span: 2 },
-          { name: 'coverUrl', label: 'Ảnh bìa URL', helperText: 'Tỷ lệ đề xuất 16:9', span: 2 },
+          { name: 'coverUrl', label: 'Ảnh bìa', type: 'image', aspectRatio: '16:9', span: 2 },
           { name: 'body', label: 'Nội dung', type: 'richtext', required: true, span: 2 },
         ],
       },
@@ -129,8 +129,8 @@ export const adminEditorConfigs = {
       {
         title: 'Hình ảnh',
         fields: [
-          { name: 'desktopImage', label: 'Ảnh desktop URL', required: true, helperText: 'Tỷ lệ đề xuất 21:9' },
-          { name: 'mobileImage', label: 'Ảnh mobile URL', helperText: 'Tỷ lệ đề xuất 4:5' },
+          { name: 'desktopImage', label: 'Ảnh desktop', type: 'image', aspectRatio: '21:9', required: true },
+          { name: 'mobileImage', label: 'Ảnh mobile', type: 'image', aspectRatio: '4:5' },
         ],
       },
       {

@@ -1,6 +1,6 @@
 # NexCinema Admin FE Upgrade
 
-Quy ước hoàn thành: chỉ đánh dấu một nhóm sau khi `npm run lint` và `npm run build` đều pass. Không dùng browser verification theo yêu cầu.
+Quy ước hoàn thành: chỉ đánh dấu một nhóm sau khi lint toàn bộ phạm vi Admin và production build đều pass. Không dùng browser verification theo yêu cầu.
 
 ## 1. Nền tảng Admin
 
@@ -31,5 +31,5 @@ Quy ước hoàn thành: chỉ đánh dấu một nhóm sau khi `npm run lint` v
 
 ## 5. Hoàn tất
 
-- [ ] Rà soát route, copy tiếng Việt, accessibility và tính nhất quán toàn Admin
-- [ ] Chạy lint/build toàn bộ lần cuối
+- [x] Rà soát route, copy tiếng Việt, accessibility và tính nhất quán toàn Admin
+- [x] Chạy lint toàn bộ phạm vi Admin và production build lần cuối

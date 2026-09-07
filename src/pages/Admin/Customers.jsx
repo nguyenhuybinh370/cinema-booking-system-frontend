@@ -4,7 +4,7 @@ import Modal from '../../components/Admin/Common/Modal';
 import AdminTable from '../../components/Admin/Common/AdminTable';
 import StatusBadge from '../../components/Admin/Common/StatusBadge';
 import adminService from '../../services/adminService';
-import { Search, UserX, UserCheck, History, X, CheckSquare, AlertTriangle } from 'lucide-react';
+import { UserX, UserCheck, History, X, CheckSquare, AlertTriangle } from 'lucide-react';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { showSuccess, showError } from '../../utils/toastHelper';
 
@@ -41,7 +41,8 @@ const Customers = () => {
   };
 
   useEffect(() => {
-    loadCustomers();
+    const timeoutId = window.setTimeout(loadCustomers, 0);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   const formatPrice = (price) => {

@@ -1,5 +1,5 @@
 import Modal from '../Common/Modal';
-import { AlertCircle, Film, User, Users } from 'lucide-react';
+import { AlertCircle, Film } from 'lucide-react';
 
 const MovieModal = ({ isOpen, onClose, editingMovie, formData, errors, onChange, onSubmit }) => (
   <Modal isOpen={isOpen} onClose={onClose} title={editingMovie ? 'Cập nhật phim' : 'Thêm phim mới'}>
