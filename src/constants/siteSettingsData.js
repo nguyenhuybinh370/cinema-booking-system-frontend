@@ -1,0 +1,46 @@
+export const initialSiteSettings = {
+  header: {
+    logoUrl: '',
+    hotline: '1900 1234',
+    ctaLabel: 'Đặt vé',
+    ctaUrl: '/movies/now-showing',
+    navigation: [
+      { id: 'nav-1', label: 'Trang chủ', url: '/', visible: true, newTab: false },
+      { id: 'nav-2', label: 'Phim', url: '/movies/now-showing', visible: true, newTab: false },
+      { id: 'nav-3', label: 'Lịch chiếu', url: '/showtimes', visible: true, newTab: false },
+      { id: 'nav-4', label: 'Blog', url: '/blog', visible: true, newTab: false },
+    ],
+  },
+  footer: {
+    logoUrl: '',
+    description: 'NexCinema mang đến trải nghiệm điện ảnh hiện đại, tiện lợi và gần gũi.',
+    hotline: '1900 1234',
+    email: 'hello@nexcinema.vn',
+    aboutLinks: 'Về NexCinema|/about\nTuyển dụng|/careers\nLiên hệ|/contact',
+    policyLinks: 'Điều khoản sử dụng|/terms\nChính sách bảo mật|/privacy\nChính sách hoàn vé|/refund-policy',
+    facebook: 'https://facebook.com/nexcinema',
+    youtube: 'https://youtube.com/@nexcinema',
+    copyright: '© 2026 NexCinema. Mọi quyền được bảo lưu.',
+  },
+  cinema: {
+    name: 'NexCinema Thủ Đức',
+    address: 'Khu phố 6, P. Linh Trung, TP. Thủ Đức, TP.HCM',
+    hotline: '1900 1234',
+    email: 'hello@nexcinema.vn',
+    openingHours: '08:00 – 23:30, tất cả các ngày',
+    description: 'Cụm rạp hiện đại với phòng chiếu tiêu chuẩn và IMAX, phục vụ đa dạng nhu cầu thưởng thức điện ảnh.',
+    galleryUrl: '',
+  },
+  location: {
+    displayAddress: 'Khu phố 6, P. Linh Trung, TP. Thủ Đức, TP.HCM',
+    latitude: '10.8700',
+    longitude: '106.8031',
+    googleMapsUrl: 'https://maps.google.com/?q=10.8700,106.8031',
+  },
+  settings: {
+    siteName: 'NexCinema',
+    supportEmail: 'support@nexcinema.vn',
+    defaultLanguage: 'Tiếng Việt',
+    timezone: 'Asia/Ho_Chi_Minh',
+  },
+};

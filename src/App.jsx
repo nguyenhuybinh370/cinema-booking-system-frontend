@@ -32,6 +32,7 @@ import Transactions from './pages/Admin/Transactions';
 import CatalogPage from './pages/Admin/CatalogPage';
 import EntityEditor from './pages/Admin/EntityEditor';
 import ContentListPage from './pages/Admin/ContentListPage';
+import SiteSettingsPage from './pages/Admin/SiteSettingsPage';
 
 // Staff Pages
 import SellTicketWizard from './pages/Staff/SellTicket/SellTicketWizard';
@@ -129,6 +130,11 @@ function App() {
           <Route path="/admin/site/banners" element={<ContentListPage kind="banner" />} />
           <Route path="/admin/site/banners/new" element={<EntityEditor kind="banner" />} />
           <Route path="/admin/site/banners/:id" element={<EntityEditor kind="banner" />} />
+          <Route path="/admin/site/header" element={<SiteSettingsPage kind="header" />} />
+          <Route path="/admin/site/footer" element={<SiteSettingsPage kind="footer" />} />
+          <Route path="/admin/site/cinema-info" element={<SiteSettingsPage kind="cinema" />} />
+          <Route path="/admin/site/location" element={<SiteSettingsPage kind="location" />} />
+          <Route path="/admin/settings" element={<SiteSettingsPage kind="settings" />} />
           <Route path="/admin/seat-templates" element={<SeatMapTemplates />} />
           <Route path="/admin/pricing" element={<Pricing />} />
           <Route path="/admin/personnel" element={<Personnel />} />

@@ -23,11 +23,11 @@ Quy ước hoàn thành: chỉ đánh dấu một nhóm sau khi `npm run lint` v
 
 ## 4. Nội dung website
 
-- [ ] Bổ sung quản lý Header/navigation và preview
-- [ ] Bổ sung quản lý Footer và preview
-- [ ] Bổ sung Thông tin rạp
-- [ ] Bổ sung Vị trí & Google Maps với validation và preview an toàn
-- [ ] Dùng sticky action bar, inline validation, phản hồi lưu và cảnh báo thay đổi chưa lưu cho form dài
+- [x] Bổ sung quản lý Header/navigation và preview
+- [x] Bổ sung quản lý Footer và preview
+- [x] Bổ sung Thông tin rạp
+- [x] Bổ sung Vị trí & Google Maps với validation và preview an toàn
+- [x] Dùng sticky action bar, inline validation, phản hồi lưu và cảnh báo thay đổi chưa lưu cho form dài
 
 ## 5. Hoàn tất
 
