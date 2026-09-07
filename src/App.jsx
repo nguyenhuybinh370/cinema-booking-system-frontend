@@ -31,6 +31,7 @@ import Customers from './pages/Admin/Customers';
 import Transactions from './pages/Admin/Transactions';
 import CatalogPage from './pages/Admin/CatalogPage';
 import EntityEditor from './pages/Admin/EntityEditor';
+import ContentListPage from './pages/Admin/ContentListPage';
 
 // Staff Pages
 import SellTicketWizard from './pages/Staff/SellTicket/SellTicketWizard';
@@ -122,6 +123,12 @@ function App() {
           <Route path="/admin/actors/:id" element={<EntityEditor kind="actor" />} />
           <Route path="/admin/genres" element={<CatalogPage resource="genres" />} />
           <Route path="/admin/tags" element={<CatalogPage resource="tags" />} />
+          <Route path="/admin/blog" element={<ContentListPage kind="blog" />} />
+          <Route path="/admin/blog/new" element={<EntityEditor kind="blog" />} />
+          <Route path="/admin/blog/:id" element={<EntityEditor kind="blog" />} />
+          <Route path="/admin/site/banners" element={<ContentListPage kind="banner" />} />
+          <Route path="/admin/site/banners/new" element={<EntityEditor kind="banner" />} />
+          <Route path="/admin/site/banners/:id" element={<EntityEditor kind="banner" />} />
           <Route path="/admin/seat-templates" element={<SeatMapTemplates />} />
           <Route path="/admin/pricing" element={<Pricing />} />
           <Route path="/admin/personnel" element={<Personnel />} />

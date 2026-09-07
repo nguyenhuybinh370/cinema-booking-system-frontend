@@ -10,6 +10,48 @@ import { adminEditorConfigs } from '../../constants/adminEditorConfigs';
 import { showSuccess } from '../../utils/toastHelper';
 import { slugify } from '../../utils/slugify';
 
+const EditorAside = ({ kind, values }) => {
+  if (kind === 'banner') {
+    return (
+      <aside className="admin-editor-aside">
+        <h2>Xem trước banner</h2>
+        <p>Bản xem trước tập trung giúp kiểm tra nhanh nội dung trước khi lưu.</p>
+        <div className="admin-banner-preview" style={values.desktopImage ? { backgroundImage: `linear-gradient(90deg, rgb(0 0 0 / 70%), rgb(0 0 0 / 10%)), url(${values.desktopImage})` } : undefined}>
+          <strong>{values.heading || 'Tiêu đề banner'}</strong>
+          <span>{values.description || 'Mô tả ngắn của chiến dịch.'}</span>
+          {values.ctaLabel && <em>{values.ctaLabel}</em>}
+        </div>
+      </aside>
+    );
+  }
+
+  if (kind === 'blog') {
+    return (
+      <aside className="admin-editor-aside">
+        <h2>Kiểm tra trước khi đăng</h2>
+        <p>Đảm bảo bài viết đầy đủ và dễ tìm kiếm.</p>
+        <div className="admin-publish-checklist">
+          <span data-ready={Boolean(values.title)}>Tiêu đề</span>
+          <span data-ready={Boolean(values.excerpt)}>Tóm tắt</span>
+          <span data-ready={Boolean(values.coverUrl)}>Ảnh bìa</span>
+          <span data-ready={Boolean(values.body)}>Nội dung</span>
+        </div>
+      </aside>
+    );
+  }
+
+  return (
+    <aside className="admin-editor-aside">
+      <h2>{kind === 'movie' ? 'Diễn viên liên kết' : 'Các phim đã tham gia'}</h2>
+      <p>{kind === 'movie' ? 'Quản lý vai diễn mà không lặp lại hồ sơ diễn viên.' : 'Quan hệ này được quản lý tập trung từ nội dung phim.'}</p>
+      <div className="admin-related-list">
+        {(kind === 'movie' ? ['Robert Downey Jr. · Tony Stark', 'Scarlett Johansson · Natasha Romanoff'] : ['Avengers: Endgame', 'Iron Man 3']).map((label) => <span key={label}>{label}</span>)}
+      </div>
+      <AdminButton variant="outline" className="w-full">{kind === 'movie' ? 'Thêm diễn viên' : 'Xem danh sách phim'}</AdminButton>
+    </aside>
+  );
+};
+
 const EntityEditor = ({ kind }) => {
   const config = adminEditorConfigs[kind];
   const { id } = useParams();
@@ -84,7 +126,12 @@ const EntityEditor = ({ kind }) => {
                   {section.fields.map((field) => (
                     <FormField key={field.name} label={field.label} required={field.required} helperText={field.helperText} error={errors[field.name]} className={field.span === 2 ? 'sm:col-span-2' : ''}>
                       {field.prefix && <span className="admin-input-prefix">{field.prefix}</span>}
-                      {field.type === 'textarea' ? (
+                      {field.type === 'richtext' ? (
+                        <div className="admin-rich-editor">
+                          <div className="admin-rich-toolbar" aria-label="Công cụ định dạng"><button type="button">H2</button><button type="button"><strong>B</strong></button><button type="button"><em>I</em></button><button type="button">• Danh sách</button><button type="button">Liên kết</button></div>
+                          <textarea value={values[field.name]} onChange={(event) => handleChange(field, event.target.value)} />
+                        </div>
+                      ) : field.type === 'textarea' ? (
                         <textarea value={values[field.name]} onChange={(event) => handleChange(field, event.target.value)} />
                       ) : field.type === 'select' ? (
                         <select value={values[field.name]} onChange={(event) => handleChange(field, event.target.value)}>{field.options.map((option) => <option key={option}>{option}</option>)}</select>
@@ -98,14 +145,7 @@ const EntityEditor = ({ kind }) => {
             ))}
           </div>
 
-          <aside className="admin-editor-aside">
-            <h2>{kind === 'movie' ? 'Diễn viên liên kết' : 'Các phim đã tham gia'}</h2>
-            <p>{kind === 'movie' ? 'Quản lý vai diễn mà không lặp lại hồ sơ diễn viên.' : 'Quan hệ này được quản lý tập trung từ nội dung phim.'}</p>
-            <div className="admin-related-list">
-              {(kind === 'movie' ? ['Robert Downey Jr. · Tony Stark', 'Scarlett Johansson · Natasha Romanoff'] : ['Avengers: Endgame', 'Iron Man 3']).map((label) => <span key={label}>{label}</span>)}
-            </div>
-            <AdminButton variant="outline" className="w-full">{kind === 'movie' ? 'Thêm diễn viên' : 'Xem danh sách phim'}</AdminButton>
-          </aside>
+          <EditorAside kind={kind} values={values} />
         </div>
 
         <StickyFormActions statusText={isDirty ? 'Có thay đổi chưa được lưu' : 'Không có thay đổi mới'}>
