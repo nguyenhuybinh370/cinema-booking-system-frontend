@@ -29,6 +29,8 @@ import SeatMapTemplates from './pages/Admin/SeatMapTemplates';
 import Shifts from './pages/Admin/Shifts';
 import Customers from './pages/Admin/Customers';
 import Transactions from './pages/Admin/Transactions';
+import CatalogPage from './pages/Admin/CatalogPage';
+import EntityEditor from './pages/Admin/EntityEditor';
 
 // Staff Pages
 import SellTicketWizard from './pages/Staff/SellTicket/SellTicketWizard';
@@ -113,6 +115,13 @@ function App() {
           <Route path="/admin/rooms" element={<Rooms />} />
           <Route path="/admin/rooms/:roomId/seats" element={<SeatMaps />} />
           <Route path="/admin/movies" element={<Movies />} />
+          <Route path="/admin/movies/new" element={<EntityEditor kind="movie" />} />
+          <Route path="/admin/movies/:id" element={<EntityEditor kind="movie" />} />
+          <Route path="/admin/actors" element={<CatalogPage resource="actors" />} />
+          <Route path="/admin/actors/new" element={<EntityEditor kind="actor" />} />
+          <Route path="/admin/actors/:id" element={<EntityEditor kind="actor" />} />
+          <Route path="/admin/genres" element={<CatalogPage resource="genres" />} />
+          <Route path="/admin/tags" element={<CatalogPage resource="tags" />} />
           <Route path="/admin/seat-templates" element={<SeatMapTemplates />} />
           <Route path="/admin/pricing" element={<Pricing />} />
           <Route path="/admin/personnel" element={<Personnel />} />

@@ -11,9 +11,9 @@ Quy ước hoàn thành: chỉ đánh dấu một nhóm sau khi `npm run lint` v
 ## 2. Tổng quan và quản lý rạp
 
 - [ ] Nâng cấp trang Tổng quan với số liệu có ý nghĩa và danh sách “Cần xử lý”
-- [ ] Giữ đầy đủ lối vào Phòng chiếu, Sơ đồ mẫu, Phim, Bảng giá, Nhân viên, Ca làm việc, Suất chiếu, Khách hàng và Giao dịch
-- [ ] Nâng cấp danh sách phim và bổ sung luồng tạo/chỉnh sửa phim
-- [ ] Bổ sung quản lý Diễn viên, Thể loại và Tags
+- [x] Giữ đầy đủ lối vào Phòng chiếu, Sơ đồ mẫu, Phim, Bảng giá, Nhân viên, Ca làm việc, Suất chiếu, Khách hàng và Giao dịch
+- [x] Nâng cấp danh sách phim và bổ sung luồng tạo/chỉnh sửa phim
+- [x] Bổ sung quản lý Diễn viên, Thể loại và Tags
 
 ## 3. CMS nội dung
 

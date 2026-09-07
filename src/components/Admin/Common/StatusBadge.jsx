@@ -3,8 +3,11 @@ const StatusBadge = ({ status }) => {
     switch (status) {
       // General Status
       case 'Active':
+      case 'Đang hoạt động':
+      case 'Đã xuất bản':
       case 1:
       case 'Showing':
+      case 'Đang chiếu':
       case 'Success':
       case 'DA_HOAN':
         return {
@@ -13,8 +16,11 @@ const StatusBadge = ({ status }) => {
         };
       
       case 'Inactive':
+      case 'Đang ẩn':
+      case 'Đã lưu trữ':
       case 0:
       case 'Ended':
+      case 'Ngừng chiếu':
       case 'Maintenance':
       case 'Failed':
       case 'TU_CHOI':
@@ -24,6 +30,7 @@ const StatusBadge = ({ status }) => {
         };
       
       case 'Coming Soon':
+      case 'Sắp chiếu':
       case 'Refunded':
       case 'DA_HOAN_TIEN':
         return {
@@ -32,6 +39,8 @@ const StatusBadge = ({ status }) => {
         };
 
       case 'Pending':
+      case 'Bản nháp':
+      case 'Đã lên lịch':
       case 'CHO_XU_LY':
         return {
           wrapper: 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.05)]',
