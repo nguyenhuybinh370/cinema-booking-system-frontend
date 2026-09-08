@@ -3,8 +3,6 @@ import { Edit2, UserX, UserCheck } from 'lucide-react';
 
 const PersonnelTable = ({ staff, onEdit, onToggleStatus }) => {
   const columns = [
-    { header: 'Mã NV', accessor: 'MaNhanVien', className: 'text-xs font-mono font-bold text-red-500' },
-    { header: 'Mã Tài Khoản', accessor: 'MaTaiKhoan', className: 'text-xs font-mono font-bold text-slate-500' },
     {
       header: 'Nhân viên',
       render: (person) => (

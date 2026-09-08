@@ -3,7 +3,6 @@ import { X, Trash2, RotateCcw } from 'lucide-react';
 
 const ShiftDetailTable = ({ registrations, onToggleStatus, onDelete }) => {
   const columns = [
-    { header: 'Mã Đăng Ký', accessor: 'MaChiTietCa', className: 'text-xs font-mono font-bold text-red-500' },
     {
       header: 'Nhân viên',
       render: (reg) => (

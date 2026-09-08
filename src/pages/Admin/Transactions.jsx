@@ -101,14 +101,6 @@ const Transactions = () => {
 
   const columns = [
     {
-      header: 'Mã Giao dịch',
-      render: (t) => <span className="font-bold text-white text-sm font-mono">{t.MaGiaoDich}</span>
-    },
-    {
-      header: 'Mã Phiếu Đặt Vé',
-      render: (t) => <span className="font-bold text-red-500 text-sm font-mono">{t.MaPhieuDatVe}</span>
-    },
-    {
       header: 'Tham Chiếu Đối Tác',
       render: (t) => <span className="text-slate-400 text-xs font-mono">{t.MaThamChieuDoiTac}</span>
     },
@@ -324,24 +316,6 @@ const Transactions = () => {
   };
 
   const refundColumns = [
-    {
-      header: 'Mã hoàn tiền',
-      render: (r) => (
-        <span 
-          onClick={() => handleOpenDetail(r)}
-          className="font-bold text-slate-300 hover:text-red-400 text-xs font-mono cursor-pointer transition-colors"
-        >
-          {r.MaHoanTien.substring(0, 8)}...
-        </span>
-      )
-    },
-    {
-      header: 'Mã phiếu đặt',
-      render: (r) => {
-        const maPhieu = r.GiaoDich?.PhieuDatVe?.MaPhieuDat || 'N/A';
-        return <span className="font-bold text-red-500 text-xs font-mono">{maPhieu.substring(0, 8)}...</span>;
-      }
-    },
     {
       header: 'Khách hàng',
       render: (r) => {

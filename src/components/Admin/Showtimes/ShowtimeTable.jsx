@@ -4,11 +4,11 @@ const formatPrice = (price) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
 const ShowtimeTable = ({ showtimes, onEdit, onDelete, onViewSeatMap }) => (
-  <div className="bg-[#131A2A]/40 backdrop-blur-md border border-white/[0.06] rounded-3xl overflow-x-auto custom-scrollbar shadow-2xl transition-all duration-300 hover:border-white/10">
+  <div className="admin-legacy-table bg-[#131A2A]/40 backdrop-blur-md border border-white/[0.06] rounded-3xl overflow-x-auto custom-scrollbar shadow-2xl transition-all duration-300 hover:border-white/10">
     <table className="w-full text-left border-collapse">
       <thead>
         <tr className="bg-white/[0.02] border-b border-white/[0.06] select-none whitespace-nowrap">
-          {['Mã suất', 'Phim', 'Phòng', 'Thời gian', 'Vé cơ bản', 'Loại ngày', 'Ghế đặt', 'Trạng thái', ''].map(h => (
+          {['Phim', 'Phòng', 'Thời gian', 'Vé cơ bản', 'Loại ngày', 'Ghế đặt', 'Trạng thái', 'Hành động'].map(h => (
             <th key={h} className="px-6 py-4.5 text-[10px] font-black uppercase tracking-widest text-slate-400">{h}</th>
           ))}
         </tr>
@@ -16,9 +16,6 @@ const ShowtimeTable = ({ showtimes, onEdit, onDelete, onViewSeatMap }) => (
       <tbody className="divide-y divide-white/[0.04]">
         {showtimes.map(st => (
           <tr key={st.MaSuatChieu} className="group hover:bg-white/[0.03] transition-all duration-200 whitespace-nowrap">
-            <td className="px-6 py-4">
-              <span className="font-mono text-xs font-bold text-red-500">{st.MaSuatChieu}</span>
-            </td>
             <td className="px-6 py-4">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-12 rounded bg-slate-800 shrink-0 overflow-hidden border border-white/5">

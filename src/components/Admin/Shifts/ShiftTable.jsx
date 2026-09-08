@@ -3,7 +3,6 @@ import { Clock, Edit2, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 
 const ShiftTable = ({ shifts, onEdit, onDelete, onToggleStatus }) => {
   const columns = [
-    { header: 'Mã Ca', accessor: 'MaCaLamViec', className: 'text-xs font-mono font-bold text-red-500' },
     {
       header: 'Tên Ca làm việc',
       render: (shift) => (

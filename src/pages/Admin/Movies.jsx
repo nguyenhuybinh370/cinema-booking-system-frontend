@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
 import AdminButton from '../../components/Admin/Common/AdminButton';
 import AdminConfirmDialog from '../../components/Admin/Common/AdminConfirmDialog';
@@ -78,7 +78,7 @@ const Movies = () => {
     { header: 'Thời lượng', render: (movie) => `${movie.ThoiLuong || 0} phút` },
     { header: 'Khởi chiếu', render: (movie) => movie.NgayKhoiChieu ? new Date(movie.NgayKhoiChieu).toLocaleDateString('vi-VN') : '—' },
     { header: 'Độ tuổi', accessor: 'GioiHanTuoi' },
-    { header: '', className: 'w-[110px] text-right', render: (movie) => <div className="flex justify-end gap-1"><button type="button" className="admin-table-action" onClick={() => navigate(`/admin/movies/${movie.MaPhim}`)} aria-label={`Chỉnh sửa ${movie.TenPhim}`}><Pencil size={16} /></button><button type="button" className="admin-table-action admin-table-action--danger" onClick={() => setPendingDelete(movie)} aria-label={`Xóa ${movie.TenPhim}`}><Trash2 size={16} /></button><button type="button" className="admin-table-action" aria-label={`Thêm thao tác cho ${movie.TenPhim}`}><MoreHorizontal size={16} /></button></div> },
+    { header: 'Hành động', className: 'w-[132px] text-right', render: (movie) => <div className="flex justify-end gap-1"><button type="button" className="admin-table-action" onClick={() => navigate(`/admin/movies/${movie.MaPhim}`)} aria-label={`Chỉnh sửa ${movie.TenPhim}`}><Pencil size={16} /></button><button type="button" className="admin-table-action admin-table-action--danger" onClick={() => setPendingDelete(movie)} aria-label={`Xóa ${movie.TenPhim}`}><Trash2 size={16} /></button></div> },
   ];
 
   return (

@@ -172,10 +172,6 @@ const Rooms = () => {
 
   const columns = [
     {
-      header: 'Mã phòng chiếu',
-      render: (room) => <span className="font-mono text-xs text-red-500 font-bold">{room.MaPhongChieu}</span>
-    },
-    {
       header: 'Tên phòng chiếu',
       render: (room) => (
         <Link 
@@ -188,20 +184,8 @@ const Rooms = () => {
     },
     { header: 'Số ghế', render: (room) => <span className="text-slate-200 font-bold font-mono">{room.SoGhe} ghế</span> },
     {
-      header: 'Mã loại phòng',
-      render: (room) => {
-        const type = roomTypes.find(t => t.MaLoaiPhong === room.MaLoaiPhong);
-        return (
-          <div className="flex flex-col">
-            <span className="font-mono text-xs text-slate-400">{room.MaLoaiPhong}</span>
-            <span className="text-[10px] text-slate-500 font-bold">{type?.TenLoaiPhong || 'Chưa rõ'}</span>
-          </div>
-        );
-      }
-    },
-    { 
-      header: 'Mã sơ đồ ghế', 
-      render: (room) => <span className="text-slate-400 text-xs font-mono">{room.MaSoDoGhe}</span>
+      header: 'Loại phòng',
+      render: (room) => roomTypes.find((type) => type.MaLoaiPhong === room.MaLoaiPhong)?.TenLoaiPhong || 'Chưa rõ',
     },
     {
       header: 'Khả dụng',

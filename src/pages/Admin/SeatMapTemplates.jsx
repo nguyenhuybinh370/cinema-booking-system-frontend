@@ -133,7 +133,6 @@ const SeatMapTemplates = () => {
   );
 
   const columns = [
-    { header: 'Mã sơ đồ', accessor: 'MaSoDoGhe', className: 'font-mono font-bold text-white' },
     { header: 'Tên sơ đồ', accessor: 'TenSoDo', className: 'text-slate-400' },
     { header: 'Số hàng', accessor: 'TongHang', className: 'text-slate-400' },
     { header: 'Số cột', accessor: 'TongCot', className: 'text-slate-400' },
