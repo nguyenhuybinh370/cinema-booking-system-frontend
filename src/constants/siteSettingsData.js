@@ -1,23 +1,19 @@
 export const initialSiteSettings = {
-  header: {
-    logoUrl: '',
-    hotline: '1900 1234',
-    ctaLabel: 'Đặt vé',
-    ctaUrl: '/movies/now-showing',
-    navigation: [
-      { id: 'nav-1', label: 'Trang chủ', url: '/', visible: true, newTab: false },
-      { id: 'nav-2', label: 'Phim', url: '/movies/now-showing', visible: true, newTab: false },
-      { id: 'nav-3', label: 'Lịch chiếu', url: '/showtimes', visible: true, newTab: false },
-      { id: 'nav-4', label: 'Blog', url: '/blog', visible: true, newTab: false },
-    ],
-  },
   footer: {
     logoUrl: '',
     description: 'NexCinema mang đến trải nghiệm điện ảnh hiện đại, tiện lợi và gần gũi.',
     hotline: '1900 1234',
     email: 'hello@nexcinema.vn',
-    aboutLinks: 'Về NexCinema|/about\nTuyển dụng|/careers\nLiên hệ|/contact',
-    policyLinks: 'Điều khoản sử dụng|/terms\nChính sách bảo mật|/privacy\nChính sách hoàn vé|/refund-policy',
+    aboutLinks: [
+      { id: 'about-1', label: 'Về NexCinema', url: '/about' },
+      { id: 'about-2', label: 'Tuyển dụng', url: '/careers' },
+      { id: 'about-3', label: 'Liên hệ', url: '/contact' },
+    ],
+    policyLinks: [
+      { id: 'policy-1', label: 'Điều khoản sử dụng', url: '/terms' },
+      { id: 'policy-2', label: 'Chính sách bảo mật', url: '/privacy' },
+      { id: 'policy-3', label: 'Chính sách hoàn vé', url: '/refund-policy' },
+    ],
     facebook: 'https://facebook.com/nexcinema',
     youtube: 'https://youtube.com/@nexcinema',
     copyright: '© 2026 NexCinema. Mọi quyền được bảo lưu.',
@@ -27,15 +23,13 @@ export const initialSiteSettings = {
     address: 'Khu phố 6, P. Linh Trung, TP. Thủ Đức, TP.HCM',
     hotline: '1900 1234',
     email: 'hello@nexcinema.vn',
-    openingHours: '08:00 – 23:30, tất cả các ngày',
+    openingTime: '08:00',
+    closingTime: '23:30',
     description: 'Cụm rạp hiện đại với phòng chiếu tiêu chuẩn và IMAX, phục vụ đa dạng nhu cầu thưởng thức điện ảnh.',
     galleryUrl: '',
   },
   location: {
-    displayAddress: 'Khu phố 6, P. Linh Trung, TP. Thủ Đức, TP.HCM',
-    latitude: '10.8700',
-    longitude: '106.8031',
-    googleMapsUrl: 'https://maps.google.com/?q=10.8700,106.8031',
+    embedUrl: 'https://www.google.com/maps?q=NexCinema%20Th%E1%BB%A7%20%C4%90%E1%BB%A9c&output=embed',
   },
   settings: {
     siteName: 'NexCinema',

@@ -32,17 +32,16 @@ export const adminEditorConfigs = {
         title: 'Phân loại & xuất bản',
         fields: [
           { name: 'genre', label: 'Thể loại', type: 'select', options: ['Hành động', 'Tâm lý', 'Hoạt hình', 'Khoa học viễn tưởng'] },
-          { name: 'tags', label: 'Tags', helperText: 'Phân cách nhiều tag bằng dấu phẩy.' },
           { name: 'status', label: 'Trạng thái', type: 'select', options: ['Bản nháp', 'Đã xuất bản', 'Đang ẩn'] },
         ],
       },
     ],
     initialValues: {
       title: '', englishTitle: '', slug: '', summary: '', duration: '', ageRating: 'P', releaseDate: '', endDate: '',
-      country: '', language: '', posterUrl: '', backdropUrl: '', trailerUrl: '', genre: 'Hành động', tags: '', status: 'Bản nháp',
+      country: '', language: '', posterUrl: '', backdropUrl: '', trailerUrl: '', genre: 'Hành động', status: 'Bản nháp',
     },
     editValues: {
-      title: 'Avengers: Endgame', englishTitle: 'Avengers: Endgame', slug: 'avengers-endgame', summary: 'Các Avengers còn lại tập hợp lần cuối để đảo ngược hậu quả của cú búng tay.', duration: '181', ageRating: 'T13', releaseDate: '2019-04-26', endDate: '', country: 'Hoa Kỳ', language: 'Tiếng Anh · Phụ đề Việt', posterUrl: '', backdropUrl: '', trailerUrl: 'https://www.youtube.com/watch?v=TcMBFSGVi1c', genre: 'Hành động', tags: 'Marvel, IMAX', status: 'Đã xuất bản',
+      title: 'Avengers: Endgame', englishTitle: 'Avengers: Endgame', slug: 'avengers-endgame', summary: 'Các Avengers còn lại tập hợp lần cuối để đảo ngược hậu quả của cú búng tay.', duration: '181', ageRating: 'T13', releaseDate: '2019-04-26', endDate: '', country: 'Hoa Kỳ', language: 'Tiếng Anh · Phụ đề Việt', posterUrl: '', backdropUrl: '', trailerUrl: 'https://www.youtube.com/watch?v=TcMBFSGVi1c', genre: 'Hành động', status: 'Đã xuất bản',
     },
   },
   actor: {
@@ -93,7 +92,6 @@ export const adminEditorConfigs = {
       {
         title: 'Phân loại & xuất bản',
         fields: [
-          { name: 'tags', label: 'Tags', helperText: 'Phân cách nhiều tag bằng dấu phẩy.' },
           { name: 'status', label: 'Trạng thái', type: 'select', options: ['Bản nháp', 'Đã lên lịch', 'Đã xuất bản', 'Đang ẩn'] },
           { name: 'publishedAt', label: 'Thời gian xuất bản', type: 'datetime-local' },
         ],
@@ -108,8 +106,8 @@ export const adminEditorConfigs = {
         ],
       },
     ],
-    initialValues: { title: '', slug: '', author: '', excerpt: '', coverUrl: '', body: '', tags: '', status: 'Bản nháp', publishedAt: '', seoTitle: '', metaDescription: '', ogImage: '' },
-    editValues: { title: 'Trải nghiệm phòng chiếu IMAX tại NexCinema', slug: 'trai-nghiem-phong-chieu-imax', author: 'Quang Huy', excerpt: 'Khám phá chất lượng hình ảnh và âm thanh khác biệt tại phòng chiếu IMAX.', coverUrl: '', body: 'Màn hình lớn, âm thanh chính xác và không gian được tối ưu giúp mỗi cảnh phim trở nên sống động hơn.', tags: 'IMAX, Trải nghiệm', status: 'Bản nháp', publishedAt: '', seoTitle: '', metaDescription: '', ogImage: '' },
+    initialValues: { title: '', slug: '', author: '', excerpt: '', coverUrl: '', body: '', status: 'Bản nháp', publishedAt: '', seoTitle: '', metaDescription: '', ogImage: '' },
+    editValues: { title: 'Trải nghiệm phòng chiếu IMAX tại NexCinema', slug: 'trai-nghiem-phong-chieu-imax', author: 'Quang Huy', excerpt: 'Khám phá chất lượng hình ảnh và âm thanh khác biệt tại phòng chiếu IMAX.', coverUrl: '', body: 'Màn hình lớn, âm thanh chính xác và không gian được tối ưu giúp mỗi cảnh phim trở nên sống động hơn.', status: 'Bản nháp', publishedAt: '', seoTitle: '', metaDescription: '', ogImage: '' },
   },
   banner: {
     entityLabel: 'banner',

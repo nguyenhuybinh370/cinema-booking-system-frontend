@@ -5,7 +5,7 @@ import AdminConfirmDialog from '../Common/AdminConfirmDialog';
 import {
   BarChart3, CalendarDays, ChevronRight, CircleUserRound, Clock3, FileText,
   Film, GalleryHorizontalEnd, Grid3X3, Images, LayoutDashboard, LogOut,
-  MapPin, MenuSquare, PanelsTopLeft, ReceiptText, Settings, Tags, Theater,
+  MapPin, PanelsTopLeft, ReceiptText, Settings, Theater,
   UserRoundCog, UsersRound, WalletCards, X,
 } from 'lucide-react';
 
@@ -23,7 +23,6 @@ const navigationGroups = [
       { name: 'Sơ đồ mẫu', icon: Grid3X3, path: '/admin/seat-templates' },
       { name: 'Diễn viên', icon: UsersRound, path: '/admin/actors' },
       { name: 'Thể loại', icon: GalleryHorizontalEnd, path: '/admin/genres' },
-      { name: 'Tags', icon: Tags, path: '/admin/tags' },
       { name: 'Bảng giá', icon: WalletCards, path: '/admin/pricing' },
     ],
   },
@@ -37,7 +36,6 @@ const navigationGroups = [
   {
     label: 'Website',
     items: [
-      { name: 'Header', icon: MenuSquare, path: '/admin/site/header' },
       { name: 'Footer', icon: PanelsTopLeft, path: '/admin/site/footer' },
       { name: 'Thông tin rạp', icon: LayoutDashboard, path: '/admin/site/cinema-info' },
       { name: 'Vị trí & Google Maps', icon: MapPin, path: '/admin/site/location' },

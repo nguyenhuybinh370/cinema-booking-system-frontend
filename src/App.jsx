@@ -123,14 +123,12 @@ function App() {
           <Route path="/admin/actors/new" element={<EntityEditor kind="actor" />} />
           <Route path="/admin/actors/:id" element={<EntityEditor kind="actor" />} />
           <Route path="/admin/genres" element={<CatalogPage resource="genres" />} />
-          <Route path="/admin/tags" element={<CatalogPage resource="tags" />} />
           <Route path="/admin/blog" element={<ContentListPage kind="blog" />} />
           <Route path="/admin/blog/new" element={<EntityEditor kind="blog" />} />
           <Route path="/admin/blog/:id" element={<EntityEditor kind="blog" />} />
           <Route path="/admin/site/banners" element={<ContentListPage kind="banner" />} />
           <Route path="/admin/site/banners/new" element={<EntityEditor kind="banner" />} />
           <Route path="/admin/site/banners/:id" element={<EntityEditor kind="banner" />} />
-          <Route path="/admin/site/header" element={<SiteSettingsPage kind="header" />} />
           <Route path="/admin/site/footer" element={<SiteSettingsPage kind="footer" />} />
           <Route path="/admin/site/cinema-info" element={<SiteSettingsPage kind="cinema" />} />
           <Route path="/admin/site/location" element={<SiteSettingsPage kind="location" />} />

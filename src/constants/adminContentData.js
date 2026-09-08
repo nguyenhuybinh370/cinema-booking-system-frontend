@@ -12,17 +12,10 @@ export const genres = [
   { id: 'genre-4', name: 'Khoa học viễn tưởng', slug: 'khoa-hoc-vien-tuong', usageCount: 7, status: 'Đang hoạt động', updatedAt: '22/08/2026' },
 ];
 
-export const tags = [
-  { id: 'tag-1', name: 'Marvel', slug: 'marvel', usageCount: 12, contentType: 'Phim & Blog', updatedAt: '05/09/2026' },
-  { id: 'tag-2', name: 'Phim Việt', slug: 'phim-viet', usageCount: 8, contentType: 'Phim', updatedAt: '01/09/2026' },
-  { id: 'tag-3', name: 'Ưu đãi cuối tuần', slug: 'uu-dai-cuoi-tuan', usageCount: 4, contentType: 'Blog', updatedAt: '28/08/2026' },
-  { id: 'tag-4', name: 'IMAX', slug: 'imax', usageCount: 6, contentType: 'Phim & Blog', updatedAt: '25/08/2026' },
-];
-
 export const blogPosts = [
-  { id: 'blog-1', title: '5 bộ phim đáng xem nhất tháng 9', author: 'Minh Anh', tags: ['Phim mới'], status: 'Đã xuất bản', publishedAt: '05/09/2026', updatedAt: '05/09/2026' },
-  { id: 'blog-2', title: 'Trải nghiệm phòng chiếu IMAX tại NexCinema', author: 'Quang Huy', tags: ['IMAX'], status: 'Bản nháp', publishedAt: '—', updatedAt: '03/09/2026' },
-  { id: 'blog-3', title: 'Ưu đãi thành viên cuối tuần', author: 'Thu Hà', tags: ['Ưu đãi cuối tuần'], status: 'Đã lên lịch', publishedAt: '12/09/2026', updatedAt: '01/09/2026' },
+  { id: 'blog-1', title: '5 bộ phim đáng xem nhất tháng 9', author: 'Minh Anh', status: 'Đã xuất bản', publishedAt: '05/09/2026', updatedAt: '05/09/2026' },
+  { id: 'blog-2', title: 'Trải nghiệm phòng chiếu IMAX tại NexCinema', author: 'Quang Huy', status: 'Bản nháp', publishedAt: '—', updatedAt: '03/09/2026' },
+  { id: 'blog-3', title: 'Ưu đãi thành viên cuối tuần', author: 'Thu Hà', status: 'Đã lên lịch', publishedAt: '12/09/2026', updatedAt: '01/09/2026' },
 ];
 
 export const banners = [
@@ -35,7 +28,7 @@ export const dashboardTasks = [
   { id: 'task-1', title: 'Bổ sung poster cho “Mưa đỏ”', meta: 'Phim · Thiếu nội dung', tone: 'danger', href: '/admin/movies/movie-3' },
   { id: 'task-2', title: 'Kiểm tra banner sắp hết hạn', meta: 'Banner · Còn 2 ngày', tone: 'warning', href: '/admin/site/banners' },
   { id: 'task-3', title: 'Hoàn thiện bài viết IMAX', meta: 'Blog · Bản nháp', tone: 'neutral', href: '/admin/blog/blog-2' },
-  { id: 'task-4', title: 'Cập nhật tọa độ rạp', meta: 'Website · Chưa xác minh', tone: 'warning', href: '/admin/site/location' },
+  { id: 'task-4', title: 'Kiểm tra link nhúng bản đồ', meta: 'Website · Chưa xác minh', tone: 'warning', href: '/admin/site/location' },
 ];
 
 export const todayShowtimes = [

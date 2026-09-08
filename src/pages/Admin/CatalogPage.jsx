@@ -9,7 +9,7 @@ import AdminPagination from '../../components/Admin/Common/AdminPagination';
 import AdminTable from '../../components/Admin/Common/AdminTable';
 import AdminToolbar from '../../components/Admin/Common/AdminToolbar';
 import StatusBadge from '../../components/Admin/Common/StatusBadge';
-import { actors, genres, tags } from '../../constants/adminContentData';
+import { actors, genres } from '../../constants/adminContentData';
 import { showSuccess } from '../../utils/toastHelper';
 
 const configs = {
@@ -25,12 +25,6 @@ const configs = {
     subtitle: 'Chuẩn hóa phân loại phim hiển thị trên website.',
     createLabel: 'Thêm thể loại',
     rows: genres,
-  },
-  tags: {
-    title: 'Tags',
-    subtitle: 'Dùng chung tags cho phim và nội dung blog.',
-    createLabel: 'Thêm tag',
-    rows: tags,
   },
 };
 
@@ -85,10 +79,10 @@ const CatalogPage = ({ resource }) => {
     { header: 'Cập nhật', accessor: 'updatedAt' },
     actionColumn,
   ] : [
-    { header: resource === 'tags' ? 'Tên tag' : 'Tên thể loại', render: (row) => <strong className="text-sm font-semibold">{row.name}</strong> },
+    { header: 'Tên thể loại', render: (row) => <strong className="text-sm font-semibold">{row.name}</strong> },
     { header: 'Slug', render: (row) => <code className="admin-code">/{row.slug}</code> },
     { header: 'Đang sử dụng', render: (row) => `${row.usageCount} nội dung` },
-    ...(resource === 'tags' ? [{ header: 'Loại nội dung', accessor: 'contentType' }] : [{ header: 'Trạng thái', render: (row) => <StatusBadge status={row.status} /> }]),
+    { header: 'Trạng thái', render: (row) => <StatusBadge status={row.status} /> },
     { header: 'Cập nhật', accessor: 'updatedAt' },
     actionColumn,
   ];

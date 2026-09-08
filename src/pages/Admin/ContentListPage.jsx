@@ -28,7 +28,7 @@ const ContentListPage = ({ kind }) => {
   const [pendingDelete, setPendingDelete] = useState(null);
 
   const filteredRows = useMemo(() => rows.filter((row) => {
-    const text = [row.title, row.name, row.author, row.placement, ...(row.tags || [])].filter(Boolean).join(' ').toLowerCase();
+    const text = [row.title, row.name, row.author, row.placement].filter(Boolean).join(' ').toLowerCase();
     return text.includes(query.toLowerCase()) && (status === 'Tất cả' || row.status === status);
   }), [query, rows, status]);
   const paginatedRows = filteredRows.slice((page - 1) * pageSize, page * pageSize);
@@ -54,7 +54,6 @@ const ContentListPage = ({ kind }) => {
 
   const columns = kind === 'blog' ? [
     { header: 'Bài viết', render: (row) => <div className="admin-content-title"><strong>{row.title}</strong><small>{row.author}</small></div> },
-    { header: 'Tags', render: (row) => row.tags.join(', ') },
     { header: 'Trạng thái', render: (row) => <StatusBadge status={row.status} /> },
     { header: 'Xuất bản', accessor: 'publishedAt' },
     { header: 'Cập nhật', accessor: 'updatedAt' },
