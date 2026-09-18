@@ -19,6 +19,7 @@ const mapMovie = (m) => ({
 });
 
 const movieService = {
+  getMovie: async (id) => mapMovie(await axiosClient.get(`/phim/${id}`)),
   getMovies: async () => {
     const res = await axiosClient.get('/phim?includeInactive=true&limit=100');
     const items = Array.isArray(res) ? res : (res && Array.isArray(res.data) ? res.data : []);

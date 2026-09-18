@@ -3,10 +3,9 @@ import { NavLink } from 'react-router-dom';
 import axiosClient from '../../../api/axiosClient';
 import AdminConfirmDialog from '../Common/AdminConfirmDialog';
 import {
-  BarChart3, CalendarDays, ChevronRight, CircleUserRound, Clock3, FileText,
-  Film, GalleryHorizontalEnd, Grid3X3, Images, LayoutDashboard, LogOut,
-  MapPin, PanelsTopLeft, ReceiptText, Settings, Theater,
-  UserRoundCog, UsersRound, WalletCards, X,
+  BarChart3, CalendarDays, ChevronRight, CircleUserRound, Clock3,
+  Film, Grid3X3, LogOut, ReceiptText, Theater,
+  UserRoundCog, WalletCards, X,
 } from 'lucide-react';
 
 const navigationGroups = [
@@ -21,24 +20,7 @@ const navigationGroups = [
       { name: 'Suất chiếu', icon: CalendarDays, path: '/admin/showtimes' },
       { name: 'Phòng chiếu', icon: Theater, path: '/admin/rooms' },
       { name: 'Sơ đồ mẫu', icon: Grid3X3, path: '/admin/seat-templates' },
-      { name: 'Diễn viên', icon: UsersRound, path: '/admin/actors' },
-      { name: 'Thể loại', icon: GalleryHorizontalEnd, path: '/admin/genres' },
       { name: 'Bảng giá', icon: WalletCards, path: '/admin/pricing' },
-    ],
-  },
-  {
-    label: 'Nội dung',
-    items: [
-      { name: 'Blog', icon: FileText, path: '/admin/blog' },
-      { name: 'Banner', icon: Images, path: '/admin/site/banners' },
-    ],
-  },
-  {
-    label: 'Website',
-    items: [
-      { name: 'Footer', icon: PanelsTopLeft, path: '/admin/site/footer' },
-      { name: 'Thông tin rạp', icon: LayoutDashboard, path: '/admin/site/cinema-info' },
-      { name: 'Vị trí & Google Maps', icon: MapPin, path: '/admin/site/location' },
     ],
   },
   {
@@ -48,7 +30,6 @@ const navigationGroups = [
       { name: 'Ca làm việc', icon: Clock3, path: '/admin/shifts' },
       { name: 'Khách hàng', icon: CircleUserRound, path: '/admin/customers' },
       { name: 'Giao dịch', icon: ReceiptText, path: '/admin/transactions' },
-      { name: 'Cài đặt', icon: Settings, path: '/admin/settings' },
     ],
   },
 ];

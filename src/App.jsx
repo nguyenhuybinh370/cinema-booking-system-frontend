@@ -21,6 +21,7 @@ import SystemErrorPage from './pages/SystemErrorPage';
 // Admin Pages
 import Rooms from './pages/Admin/Rooms';
 import Movies from './pages/Admin/Movies';
+import MovieEditor from './pages/Admin/MovieEditor';
 import SeatMaps from './pages/Admin/SeatMaps';
 import Pricing from './pages/Admin/Pricing';
 import Personnel from './pages/Admin/Personnel';
@@ -30,10 +31,6 @@ import SeatMapTemplates from './pages/Admin/SeatMapTemplates';
 import Shifts from './pages/Admin/Shifts';
 import Customers from './pages/Admin/Customers';
 import Transactions from './pages/Admin/Transactions';
-import CatalogPage from './pages/Admin/CatalogPage';
-import EntityEditor from './pages/Admin/EntityEditor';
-import ContentListPage from './pages/Admin/ContentListPage';
-import SiteSettingsPage from './pages/Admin/SiteSettingsPage';
 
 // Staff Pages
 import SellTicketWizard from './pages/Staff/SellTicket/SellTicketWizard';
@@ -119,22 +116,8 @@ function App() {
           <Route path="/admin/rooms" element={<Rooms />} />
           <Route path="/admin/rooms/:roomId/seats" element={<SeatMaps />} />
           <Route path="/admin/movies" element={<Movies />} />
-          <Route path="/admin/movies/new" element={<EntityEditor kind="movie" />} />
-          <Route path="/admin/movies/:id" element={<EntityEditor kind="movie" />} />
-          <Route path="/admin/actors" element={<CatalogPage resource="actors" />} />
-          <Route path="/admin/actors/new" element={<EntityEditor kind="actor" />} />
-          <Route path="/admin/actors/:id" element={<EntityEditor kind="actor" />} />
-          <Route path="/admin/genres" element={<CatalogPage resource="genres" />} />
-          <Route path="/admin/blog" element={<ContentListPage kind="blog" />} />
-          <Route path="/admin/blog/new" element={<EntityEditor kind="blog" />} />
-          <Route path="/admin/blog/:id" element={<EntityEditor kind="blog" />} />
-          <Route path="/admin/site/banners" element={<ContentListPage kind="banner" />} />
-          <Route path="/admin/site/banners/new" element={<EntityEditor kind="banner" />} />
-          <Route path="/admin/site/banners/:id" element={<EntityEditor kind="banner" />} />
-          <Route path="/admin/site/footer" element={<SiteSettingsPage kind="footer" />} />
-          <Route path="/admin/site/cinema-info" element={<SiteSettingsPage kind="cinema" />} />
-          <Route path="/admin/site/location" element={<SiteSettingsPage kind="location" />} />
-          <Route path="/admin/settings" element={<SiteSettingsPage kind="settings" />} />
+          <Route path="/admin/movies/new" element={<MovieEditor />} />
+          <Route path="/admin/movies/:id" element={<MovieEditor />} />
           <Route path="/admin/seat-templates" element={<SeatMapTemplates />} />
           <Route path="/admin/pricing" element={<Pricing />} />
           <Route path="/admin/personnel" element={<Personnel />} />
