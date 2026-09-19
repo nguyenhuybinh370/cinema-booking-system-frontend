@@ -1,18 +1,18 @@
 
 const KPICard = ({ title, value, icon: Icon, trend, color }) => (
-  <div className="bg-[#0f1117] border border-white/5 rounded-3xl p-6 shadow-xl group hover:border-white/10 transition-all">
-    <div className="flex justify-between items-start mb-4">
-      <div className={`p-3 rounded-2xl ${color} bg-opacity-10`}>
-        <Icon className={color.replace('bg-', 'text-')} size={24} />
+  <div className="admin-metric-card">
+    <div className="mb-4 flex items-start justify-between">
+      <div className={`admin-metric-icon ${color} bg-opacity-10`}>
+        <Icon className={color.replace('bg-', 'text-')} size={20} strokeWidth={1.8} />
       </div>
       {trend && (
-        <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg">
+        <span className="admin-trend">
           +{trend}%
         </span>
       )}
     </div>
-    <h3 className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">{title}</h3>
-    <p className="text-2xl font-black text-white">{value}</p>
+    <h3 className="mb-1 text-sm font-medium text-[var(--admin-text-secondary)]">{title}</h3>
+    <p className="text-2xl font-bold tracking-[-0.02em] text-[var(--admin-text)]">{value}</p>
   </div>
 );
 

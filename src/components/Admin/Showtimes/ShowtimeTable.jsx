@@ -4,11 +4,11 @@ const formatPrice = (price) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
 const ShowtimeTable = ({ showtimes, onEdit, onDelete, onViewSeatMap }) => (
-  <div className="bg-[#131A2A]/40 backdrop-blur-md border border-white/[0.06] rounded-3xl overflow-x-auto custom-scrollbar shadow-2xl transition-all duration-300 hover:border-white/10">
+  <div className="admin-legacy-table bg-[#131A2A]/40 backdrop-blur-md border border-white/[0.06] rounded-3xl overflow-x-auto custom-scrollbar shadow-2xl transition-all duration-300 hover:border-white/10">
     <table className="w-full text-left border-collapse">
       <thead>
         <tr className="bg-white/[0.02] border-b border-white/[0.06] select-none whitespace-nowrap">
-          {['Mã suất', 'Phim', 'Phòng', 'Thời gian', 'Vé cơ bản', 'Loại ngày', 'Ghế đặt', 'Trạng thái', ''].map(h => (
+          {['Phim', 'Phòng', 'Thời gian', 'Vé cơ bản', 'Loại ngày', 'Ghế đặt', 'Trạng thái', 'Hành động'].map(h => (
             <th key={h} className="px-6 py-4.5 text-[10px] font-black uppercase tracking-widest text-slate-400">{h}</th>
           ))}
         </tr>
@@ -16,9 +16,6 @@ const ShowtimeTable = ({ showtimes, onEdit, onDelete, onViewSeatMap }) => (
       <tbody className="divide-y divide-white/[0.04]">
         {showtimes.map(st => (
           <tr key={st.MaSuatChieu} className="group hover:bg-white/[0.03] transition-all duration-200 whitespace-nowrap">
-            <td className="px-6 py-4">
-              <span className="font-mono text-xs font-bold text-red-500">{st.MaSuatChieu}</span>
-            </td>
             <td className="px-6 py-4">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-12 rounded bg-slate-800 shrink-0 overflow-hidden border border-white/5">
@@ -73,13 +70,13 @@ const ShowtimeTable = ({ showtimes, onEdit, onDelete, onViewSeatMap }) => (
             </td>
             <td className="px-6 py-4 text-right">
               <div className="flex justify-end gap-1.5">
-                <button onClick={() => onViewSeatMap(st)} className="p-2 hover:bg-white/5 border border-transparent hover:border-white/5 text-slate-400 hover:text-white rounded-xl transition-all cursor-pointer" title="Xem sơ đồ ghế">
+                <button onClick={() => onViewSeatMap(st)} className="admin-table-action" title="Xem sơ đồ ghế" aria-label={`Xem sơ đồ ghế ${st.TenPhim}`}>
                   <LayoutGrid size={16} />
                 </button>
-                <button onClick={() => onEdit(st)} className="p-2 hover:bg-white/5 border border-transparent hover:border-white/5 text-blue-500 hover:text-blue-400 rounded-xl transition-all cursor-pointer" title="Sửa">
+                <button onClick={() => onEdit(st)} className="admin-table-action" title="Sửa" aria-label={`Sửa suất chiếu ${st.TenPhim}`}>
                   <Edit2 size={16} />
                 </button>
-                <button onClick={() => onDelete(st)} className="p-2 hover:bg-white/5 border border-transparent hover:border-white/5 text-red-500 hover:text-red-400 rounded-xl transition-all cursor-pointer" title="Xóa">
+                <button onClick={() => onDelete(st)} className="admin-table-action admin-table-action--danger" title="Xóa" aria-label={`Xóa suất chiếu ${st.TenPhim}`}>
                   <Trash2 size={16} />
                 </button>
               </div>

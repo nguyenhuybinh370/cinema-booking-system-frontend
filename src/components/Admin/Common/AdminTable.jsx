@@ -1,25 +1,34 @@
 
-const AdminTable = ({ columns, data = [], rowKey, onRowClick }) => {
+import { useState } from 'react';
+import { Eye } from 'lucide-react';
+import AdminDetailDialog from './AdminDetailDialog';
+
+const AdminTable = ({ columns, data = [], rowKey, onRowClick, showDetailAction = true }) => {
+  const [detailRow, setDetailRow] = useState(null);
+  const getDetailTitle = (row) => row?.TenPhim || row?.TenPhong || row?.HoTen || row?.title || row?.name || 'Chi tiết dữ liệu';
+  const detailTitle = getDetailTitle(detailRow);
+
   return (
-    <div className="bg-[#131A2A]/40 backdrop-blur-md border border-white/[0.06] rounded-3xl overflow-x-auto custom-scrollbar shadow-2xl transition-all duration-300 hover:border-white/10">
+    <>
+    <div className="admin-table-shell">
       <table className="w-full text-left border-collapse min-w-max">
         <thead>
-          <tr className="bg-white/[0.02] border-b border-white/[0.06] whitespace-nowrap">
+          <tr className="whitespace-nowrap">
             {columns.map((col, idx) => (
               <th 
                 key={idx} 
-                className={`px-6 py-4.5 text-[10px] font-black uppercase tracking-widest text-slate-400 select-none ${col.className || ''}`}
+                className={`select-none px-5 py-3.5 text-xs font-semibold text-[var(--admin-text-secondary)] ${idx === columns.length - 1 ? 'admin-table-sticky-action' : ''} ${col.className || ''}`}
               >
                 {col.header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-white/[0.04]">
+        <tbody>
           {data.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="px-6 py-12 text-center text-slate-500 font-medium">
-                Không tìm thấy dữ liệu phù hợp.
+              <td colSpan={columns.length} className="px-6 py-14 text-center text-sm text-[var(--admin-text-secondary)]">
+                Chưa có dữ liệu phù hợp với bộ lọc hiện tại.
               </td>
             </tr>
           ) : (
@@ -27,11 +36,11 @@ const AdminTable = ({ columns, data = [], rowKey, onRowClick }) => {
               <tr 
                 key={row[rowKey]} 
                 onClick={() => onRowClick && onRowClick(row)}
-                className={`group hover:bg-white/[0.03] transition-all duration-200 whitespace-nowrap ${onRowClick ? 'cursor-pointer' : ''}`}
+                className={`group whitespace-nowrap ${onRowClick ? 'cursor-pointer' : ''}`}
               >
                 {columns.map((col, idx) => (
-                  <td key={idx} className={`px-6 py-4 text-slate-300 align-middle ${col.className || ''}`}>
-                    {col.render ? col.render(row) : <span className="text-sm font-semibold">{row[col.accessor]}</span>}
+                  <td key={idx} className={`px-5 py-4 align-middle text-[var(--admin-text)] ${idx === columns.length - 1 ? 'admin-table-sticky-action' : ''} ${col.className || ''}`}>
+                    {idx === columns.length - 1 ? <div className="admin-table-actions">{showDetailAction && <button type="button" className="admin-table-action" aria-label={`Xem chi tiết ${getDetailTitle(row)}`} onClick={(event) => { event.stopPropagation(); setDetailRow(row); }}><Eye size={16} /></button>}{col.render ? col.render(row) : <span className="text-sm">{row[col.accessor]}</span>}</div> : col.render ? col.render(row) : <span className="text-sm">{row[col.accessor]}</span>}
                   </td>
                 ))}
               </tr>
@@ -40,6 +49,8 @@ const AdminTable = ({ columns, data = [], rowKey, onRowClick }) => {
         </tbody>
       </table>
     </div>
+    <AdminDetailDialog item={detailRow} title={detailTitle} onClose={() => setDetailRow(null)} />
+    </>
   );
 };
 

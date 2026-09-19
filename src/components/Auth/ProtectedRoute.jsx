@@ -11,8 +11,7 @@ const ProtectedRoute = ({ allowedRoles }) => {
   }
 
   if (allowedRoles && !allowedRoles.includes(userRole)) {
-    // Nếu role không phù hợp (vừa đăng nhập nhưng là Khách hàng đòi vào trang Admin)
-    return <Navigate to="/" replace />; 
+    return <Navigate to="/403" replace />;
   }
 
   return <Outlet />;

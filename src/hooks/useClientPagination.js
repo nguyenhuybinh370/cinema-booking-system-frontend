@@ -1,17 +1,12 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { normalizeText } from '../utils/normalize';
 
 export const useClientPagination = (initialItems = [], searchFields = [], filtersFn = null) => {
-  const [items, setItems] = useState(initialItems);
+  const items = initialItems;
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({});
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-
-  // Sync items state when initialItems prop changes
-  useEffect(() => {
-    setItems(initialItems);
-  }, [initialItems]);
 
   // Reset page to 1 when search or filters change
   const setFilterVal = (key, value) => {

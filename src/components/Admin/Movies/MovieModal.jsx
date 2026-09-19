@@ -1,7 +1,7 @@
 import Modal from '../Common/Modal';
-import { AlertCircle, Film, User, Users } from 'lucide-react';
+import { AlertCircle, Film } from 'lucide-react';
 
-const MovieModal = ({ isOpen, onClose, editingMovie, formData, errors, onChange, onSubmit }) => (
+const MovieModal = ({ isOpen, onClose, editingMovie, formData, errors, onChange, onSubmit, isSubmitting = false }) => (
   <Modal isOpen={isOpen} onClose={onClose} title={editingMovie ? 'Cập nhật phim' : 'Thêm phim mới'}>
     <form onSubmit={onSubmit} className="space-y-6 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
       {errors?.submit && (
@@ -10,7 +10,7 @@ const MovieModal = ({ isOpen, onClose, editingMovie, formData, errors, onChange,
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <fieldset disabled={isSubmitting} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Poster + KhaDung */}
         <div className="lg:col-span-4 space-y-6">
           <div className="space-y-2">
@@ -117,7 +117,7 @@ const MovieModal = ({ isOpen, onClose, editingMovie, formData, errors, onChange,
               value={formData.NoiDung} onChange={onChange} />
           </div>
         </div>
-      </div>
+      </fieldset>
 
       {editingMovie && (
         <div className="grid grid-cols-2 gap-6 text-[10px] text-slate-500 font-mono bg-white/[0.01] p-3 rounded-lg border border-white/5">
@@ -128,8 +128,8 @@ const MovieModal = ({ isOpen, onClose, editingMovie, formData, errors, onChange,
 
       <div className="flex gap-4 pt-4 border-t border-white/5">
         <button type="button" onClick={onClose} className="flex-grow py-3 px-6 rounded-xl font-bold text-slate-400 hover:bg-white/5 border border-white/5 hover:border-white/10 active:scale-95 uppercase tracking-widest text-xs cursor-pointer">Hủy</button>
-        <button type="submit" className="flex-grow py-3 px-6 rounded-xl font-bold bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 transition-all shadow-lg shadow-red-500/20 active:scale-95 uppercase tracking-widest text-xs cursor-pointer text-white">
-          {editingMovie ? 'Cập nhật' : 'Lưu phim'}
+        <button type="submit" disabled={isSubmitting} className="flex-grow py-3 px-6 rounded-xl font-bold bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 transition-all shadow-lg shadow-red-500/20 active:scale-95 uppercase tracking-widest text-xs cursor-pointer text-white disabled:opacity-50">
+          {isSubmitting ? 'Đang lưu...' : editingMovie ? 'Cập nhật' : 'Lưu phim'}
         </button>
       </div>
     </form>

@@ -1,161 +1,50 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { CalendarClock, RefreshCw, ReceiptText, Theater, WalletCards } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import AdminLayout from '../../components/Admin/Layout/AdminLayout';
-import Modal from '../../components/Admin/Common/Modal';
-import KPICard from '../../components/Admin/Common/KPICard';
-import StatsCharts from '../../components/Admin/Stats/StatsCharts';
-import adminService from '../../services/adminService';
-import { TrendingUp, Users, Ticket, Film, Download, Calendar, RefreshCw, FileText, Table } from 'lucide-react';
-import { showSuccess, showError } from '../../utils/toastHelper';
-
+import AdminButton from '../../components/Admin/Common/AdminButton';
 import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
+import KPICard from '../../components/Admin/Common/KPICard';
+import { AdminEmptyState, AdminErrorState, AdminLoadingSkeleton } from '../../components/Admin/Common/AdminState';
+import { getDashboard } from '../../services/admin/dashboardService';
 
-const formatPrice = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v);
-
-const Stats = () => {
-  const [movies, setMovies] = useState([]);
+export default function Stats() {
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState(null);
-  const [filters, setFilters] = useState({ startDate: '', endDate: '', maPhim: '' });
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-
+  const [error, setError] = useState(false);
+  const [version, setVersion] = useState(0);
+  const reload = () => { setLoading(true); setError(false); setVersion(value => value + 1); };
   useEffect(() => {
-    adminService.getMovies().then(m => {
-      setMovies(m.filter(x => x.KhaDung !== 0));
-    }).catch(console.error);
-  }, []);
+    let ignore = false;
+    getDashboard().then(result => { if (!ignore) setData(result); })
+      .catch(() => { if (!ignore) setError(true); })
+      .finally(() => { if (!ignore) setLoading(false); });
+    return () => { ignore = true; };
+  }, [version]);
 
-  useEffect(() => {
-    setLoading(true);
-    adminService.getRevenueStats(filters).then(setStats).catch(console.error).finally(() => setLoading(false));
-  }, [filters]);
-
-  const setFilter = (key, value) => setFilters(prev => ({ ...prev, [key]: value }));
-  const resetFilters = () => setFilters({ startDate: '', endDate: '', maPhim: '' });
-
-  const handleExport = async (format) => {
-    setIsExporting(true);
-    try {
-      const result = await adminService.exportRevenueReport(format, filters);
-      const content = [
-        '==================================================',
-        'BÁO CÁO DOANH THU & HIỆU SUẤT RẠP CHIẾU PHIM',
-        '==================================================',
-        `Định dạng: ${format} | Ngày xuất: ${new Date().toLocaleString('vi-VN')}`,
-        '--------------------------------------------------',
-        `Tổng doanh thu: ${formatPrice(stats.totalRevenue)}`,
-        `Vé bán ra: ${stats.ticketsSold} | Lấp đầy: ${stats.occupancyRate} | Phim hot: ${stats.hotMovie}`,
-        '--------------------------------------------------',
-        ...stats.performanceDetails.map(p => `${p.name}: ${p.shows} suất, ${p.tickets} vé, ${p.fill}`),
-        '==================================================',
-      ].join('\n');
-      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = result.fileName;
-      document.body.appendChild(a); a.click();
-      document.body.removeChild(a); URL.revokeObjectURL(url);
-      showSuccess(`Xuất báo cáo ${format} thành công!`);
-      setIsExportModalOpen(false);
-    } catch { showError('Lỗi xuất báo cáo!'); }
-    finally { setIsExporting(false); }
-  };
-
-  return (
-    <AdminLayout>
-      <AdminPageHeader
-        title="Thống kê & Doanh thu"
-        subtitle="Dashboard phân tích kết quả kinh doanh thời gian thực."
-        action={
-          <button 
-            onClick={() => setIsExportModalOpen(true)}
-            className="w-full md:w-auto bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 cursor-pointer active:scale-95 transition-all text-sm"
-          >
-            <Download size={20} /> Xuất báo cáo
-          </button>
-        }
-      />
-
-      {/* Filters */}
-      <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-6 mb-8">
-        <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
-          <Calendar size={14} className="text-red-500" /> Bộ lọc thống kê
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-          {[{ label: 'Từ ngày', key: 'startDate', type: 'date' }, { label: 'Đến ngày', key: 'endDate', type: 'date' }].map(({ label, key, type }) => (
-            <div key={key} className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</label>
-              <input type={type} value={filters[key]} onChange={e => setFilter(key, e.target.value)}
-                className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 cursor-pointer transition-all" />
-            </div>
-          ))}
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Chọn phim</label>
-            <select value={filters.maPhim} onChange={e => setFilter('maPhim', e.target.value)}
-              className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 cursor-pointer transition-all [&>option]:bg-[#0a0d14]">
-              <option value="">Tất cả phim</option>
-              {movies.map(m => <option key={m.MaPhim} value={m.MaPhim}>{m.TenPhim}</option>)}
-            </select>
-          </div>
-          <button onClick={resetFilters}
-            className="w-full bg-white/5 hover:bg-white/10 border border-white/5 text-slate-400 hover:text-white rounded-xl py-2.5 text-sm font-bold flex items-center justify-center gap-2 cursor-pointer h-[42px] transition-all active:scale-95">
-            <RefreshCw size={14} /> Đặt lại
-          </button>
-        </div>
+  return <AdminLayout>
+    <AdminPageHeader title="Tổng quan" subtitle="Dữ liệu từ API. Lịch chiếu theo ngày tại Việt Nam." action={<AdminButton variant="outline" icon={RefreshCw} onClick={reload} disabled={loading}>Làm mới</AdminButton>} />
+    {loading ? <AdminLoadingSkeleton /> : error ? <AdminErrorState onRetry={reload} /> : data && <>
+      <div className="admin-metrics-grid">
+        <KPICard title="Doanh thu còn hiệu lực · toàn kỳ" value={new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.revenue)} icon={WalletCards} color="bg-emerald-500" />
+        <KPICard title={'Suất chiếu · ' + data.day} value={data.showtimes.length} icon={CalendarClock} color="bg-blue-500" />
+        <KPICard title="Lấp đầy ghế · hôm nay" value={data.occupancy + '%'} icon={Theater} color="bg-red-500" />
+        <KPICard title="Yêu cầu hoàn tiền chờ xử lý" value={data.pendingRefunds} icon={ReceiptText} color="bg-amber-500" />
       </div>
-
-      {/* Content */}
-      {loading || !stats ? (
-        <div className="flex flex-col items-center justify-center h-64 text-slate-500 bg-white/[0.02] border border-white/10 rounded-3xl">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500 mb-4" />
-          Đang tính toán dữ liệu báo cáo...
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <KPICard title="Tổng doanh thu" value={formatPrice(stats.totalRevenue)} icon={TrendingUp} color="bg-red-500" />
-            <KPICard title="Số vé bán ra" value={`${stats.ticketsSold} vé`} icon={Ticket} color="bg-amber-500" />
-            <KPICard title="Tỷ lệ lấp đầy" value={stats.occupancyRate} icon={Users} color="bg-blue-500" />
-            <KPICard title="Phim hot nhất" value={stats.hotMovie} icon={Film} color="bg-emerald-500" />
-          </div>
-          <StatsCharts stats={stats} />
-        </>
-      )}
-
-      {/* Export Modal */}
-      <Modal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} title="Chọn định dạng xuất báo cáo">
-        <div className="space-y-6">
-          <p className="text-sm text-slate-400">Hệ thống sẽ đóng gói dữ liệu doanh thu dựa trên bộ lọc đang chọn và tải tệp về thiết bị của bạn.</p>
-          <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 space-y-3 font-mono text-xs text-slate-400">
-            {[
-              { label: 'Từ ngày:', value: filters.startDate || 'Tất cả' },
-              { label: 'Đến ngày:', value: filters.endDate || 'Tất cả' },
-              { label: 'Phim:', value: filters.maPhim ? movies.find(m => m.MaPhim === filters.maPhim)?.TenPhim : 'Tất cả phim' },
-            ].map(({ label, value }) => (
-              <div key={label} className="flex justify-between">
-                <span>{label}</span><span className="text-white font-bold truncate max-w-[200px] text-right">{value}</span>
-              </div>
-            ))}
-          </div>
-          {isExporting ? (
-            <div className="flex flex-col items-center justify-center py-6 text-slate-400">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500 mb-3" />
-              <span>Đang xuất dữ liệu...</span>
-            </div>
-          ) : (
-            <div className="flex gap-4">
-              <button onClick={() => handleExport('Excel')} className="flex-1 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl font-bold flex flex-col items-center gap-2 cursor-pointer transition-all shadow-lg shadow-emerald-500/10 active:scale-95">
-                <Table size={24} /><span className="text-xs uppercase tracking-widest">Xuất Excel</span>
-              </button>
-              <button onClick={() => handleExport('PDF')} className="flex-1 py-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white rounded-2xl font-bold flex flex-col items-center gap-2 cursor-pointer transition-all shadow-lg shadow-red-500/10 active:scale-95">
-                <FileText size={24} /><span className="text-xs uppercase tracking-widest">Xuất PDF</span>
-              </button>
-            </div>
-          )}
-        </div>
-      </Modal>
-    </AdminLayout>
-  );
-};
-
-export default Stats;
+      <section className="admin-dashboard-panel">
+        <div className="admin-panel-heading"><div><h2>Lịch chiếu hôm nay</h2><p>Ghế đã đặt / tổng ghế. Doanh thu toàn kỳ loại giao dịch đã hoàn và đơn đã hủy.</p></div><Link to="/admin/showtimes">Quản lý suất chiếu</Link></div>
+        {data.showtimes.length === 0 ? <AdminEmptyState title="Hôm nay chưa có suất chiếu" /> : <div className="admin-showtime-list">
+          {data.showtimes.map(show => <div key={show.MaSuatChieu}>
+            <time>{show.GioChieu.slice(11, 16)}</time>
+            <span><strong>{show.TenPhim}</strong><small>{show.TenPhong}</small></span>
+            <em>{show.SoGheDaDat}/{show.TongSoGhe} ghế</em>
+          </div>)}
+        </div>}
+      </section>
+    </>}
+    <section className="admin-quick-links" aria-label="Truy cập nhanh">
+      <div><h2>Truy cập nhanh</h2><p>Các luồng đã kết nối backend.</p></div>
+      <nav><Link to="/admin/movies/new">Thêm phim</Link><Link to="/admin/showtimes">Xếp lịch chiếu</Link><Link to="/admin/transactions">Xử lý hoàn tiền</Link></nav>
+    </section>
+  </AdminLayout>;
+}

@@ -1,4 +1,3 @@
-import React from 'react';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 const AdminPagination = ({ page, pageSize, total, onPageChange, onPageSizeChange }) => {
@@ -23,10 +22,10 @@ const AdminPagination = ({ page, pageSize, total, onPageChange, onPageSizeChange
   };
 
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 px-4 py-4 bg-white/[0.02] border border-white/5 rounded-2xl">
+    <nav className="admin-pagination" aria-label="Phân trang">
       {/* Count text */}
-      <span className="text-slate-400 text-xs font-semibold">
-        Hiển thị <span className="text-white font-bold">{startIdx}–{endIdx}</span> trong <span className="text-white font-bold">{total}</span> kết quả
+      <span>
+        Hiển thị <strong>{startIdx}–{endIdx}</strong> trong <strong>{total}</strong> kết quả
       </span>
 
       <div className="flex flex-wrap items-center gap-4">
@@ -37,7 +36,8 @@ const AdminPagination = ({ page, pageSize, total, onPageChange, onPageSizeChange
             <select
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="bg-white/[0.04] border border-white/10 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/20 cursor-pointer [&>option]:bg-[#0a0d14]"
+              className="admin-pagination-size"
+              aria-label="Số dòng mỗi trang"
             >
               {[5, 10, 20, 50].map((size) => (
                 <option key={size} value={size}>
@@ -55,6 +55,7 @@ const AdminPagination = ({ page, pageSize, total, onPageChange, onPageSizeChange
             disabled={page === 1}
             type="button"
             className="p-2 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-white/5 text-slate-400 hover:text-white rounded-lg transition-all cursor-pointer border border-white/5 disabled:cursor-not-allowed"
+            aria-label="Trang đầu"
           >
             <ChevronsLeft size={16} />
           </button>
@@ -63,6 +64,7 @@ const AdminPagination = ({ page, pageSize, total, onPageChange, onPageSizeChange
             disabled={page === 1}
             type="button"
             className="p-2 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-white/5 text-slate-400 hover:text-white rounded-lg transition-all cursor-pointer border border-white/5 disabled:cursor-not-allowed"
+            aria-label="Trang trước"
           >
             <ChevronLeft size={16} />
           </button>
@@ -76,6 +78,7 @@ const AdminPagination = ({ page, pageSize, total, onPageChange, onPageSizeChange
             disabled={page === totalPages}
             type="button"
             className="p-2 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-white/5 text-slate-400 hover:text-white rounded-lg transition-all cursor-pointer border border-white/5 disabled:cursor-not-allowed"
+            aria-label="Trang tiếp theo"
           >
             <ChevronRight size={16} />
           </button>
@@ -84,12 +87,13 @@ const AdminPagination = ({ page, pageSize, total, onPageChange, onPageSizeChange
             disabled={page === totalPages}
             type="button"
             className="p-2 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-white/5 text-slate-400 hover:text-white rounded-lg transition-all cursor-pointer border border-white/5 disabled:cursor-not-allowed"
+            aria-label="Trang cuối"
           >
             <ChevronsRight size={16} />
           </button>
         </div>
       </div>
-    </div>
+    </nav>
   );
 };
 

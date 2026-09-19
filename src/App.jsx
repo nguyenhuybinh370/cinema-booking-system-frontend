@@ -16,10 +16,12 @@ import Register from './pages/Auth/Register';
 import ForgotPassword from './pages/Auth/ForgotPassword';
 import ClientProfile from './pages/Client/Profile';
 import VNPayReturn from './pages/Client/VNPayReturn';
+import SystemErrorPage from './pages/SystemErrorPage';
 
 // Admin Pages
 import Rooms from './pages/Admin/Rooms';
 import Movies from './pages/Admin/Movies';
+import MovieEditor from './pages/Admin/MovieEditor';
 import SeatMaps from './pages/Admin/SeatMaps';
 import Pricing from './pages/Admin/Pricing';
 import Personnel from './pages/Admin/Personnel';
@@ -42,6 +44,7 @@ import TransactionHistory from './pages/Staff/TransactionHistory/index';
 function App() {
   const isAdminRoute = useLocation().pathname.startsWith("/admin");
   const isStaffRoute = useLocation().pathname.startsWith("/staff");
+  const isErrorRoute = ['/403', '/404'].includes(useLocation().pathname);
 
   return (
     <>
@@ -69,7 +72,7 @@ function App() {
           },
         }}
       />
-      {!isAdminRoute && !isStaffRoute && <Navbar />}
+      {!isAdminRoute && !isStaffRoute && !isErrorRoute && <Navbar />}
       
       <Routes>
         {/* === PUBLIC CLIENT ROUTES === */}
@@ -113,6 +116,8 @@ function App() {
           <Route path="/admin/rooms" element={<Rooms />} />
           <Route path="/admin/rooms/:roomId/seats" element={<SeatMaps />} />
           <Route path="/admin/movies" element={<Movies />} />
+          <Route path="/admin/movies/new" element={<MovieEditor />} />
+          <Route path="/admin/movies/:id" element={<MovieEditor />} />
           <Route path="/admin/seat-templates" element={<SeatMapTemplates />} />
           <Route path="/admin/pricing" element={<Pricing />} />
           <Route path="/admin/personnel" element={<Personnel />} />
@@ -123,11 +128,12 @@ function App() {
           <Route path="/admin/stats" element={<Stats />} />
         </Route>
 
-        {/* Catch-all redirect */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/403" element={<SystemErrorPage code={403} />} />
+        <Route path="/404" element={<SystemErrorPage code={404} />} />
+        <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>
 
-      {!isAdminRoute && !isStaffRoute && <Footer />}
+      {!isAdminRoute && !isStaffRoute && !isErrorRoute && <Footer />}
     </>
   );
 }

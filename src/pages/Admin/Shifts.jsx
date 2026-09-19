@@ -39,7 +39,10 @@ const Shifts = () => {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    const timeoutId = window.setTimeout(fetchData, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   // Shift CRUD
   const openAddShift = () => {
@@ -52,7 +55,7 @@ const Shifts = () => {
     setShiftForm({ TenCa: shift.TenCa || '', GioBatDau: shift.GioBatDau?.substring(0, 5) || '', GioKetThuc: shift.GioKetThuc?.substring(0, 5) || '', SoNguoiToiDa: shift.SoNguoiToiDa || 5, KhaDung: shift.KhaDung ?? 1 });
     setIsShiftModalOpen(true);
   };
-  const handleShiftSubmit = async (e) => {
+  const handleShiftSubmit = async () => {
     try {
       if (editingShift) { await adminService.updateShift(editingShift.MaCaLamViec, shiftForm); showSuccess('Cập nhật ca thành công!'); }
       else { await adminService.addShift(shiftForm); showSuccess('Thêm ca làm việc thành công!'); }
@@ -70,10 +73,6 @@ const Shifts = () => {
   };
 
   // Registration CRUD
-  const openAddReg = () => {
-    setRegForm({ MaNhanVien: staffList[0]?.MaNhanVien || '', MaCaLamViec: shifts.filter(s => s.KhaDung === 1)[0]?.MaCaLamViec || '', NgayLam: new Date().toISOString().substring(0, 10), GhiChu: '', KieuLap: '', NgayLap: '' });
-    setIsRegModalOpen(true);
-  };
   const handleRegSubmit = async (e) => {
     e.preventDefault(); setLoading(true);
     try {

@@ -1,11 +1,11 @@
 import Modal from '../Common/Modal';
 
 const getSeatColor = (status, khaDung, isVIP) => {
-  if (khaDung === 0) return 'bg-slate-800 border-slate-900 text-slate-600 cursor-not-allowed';
-  if (status === 1) return 'bg-red-500 border-red-400 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]';
-  if (status === 2) return 'bg-amber-500 border-amber-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]';
-  if (isVIP) return 'bg-purple-600/20 border-purple-500/30 text-purple-400 hover:bg-purple-500/30 shadow-[inset_0_0_8px_rgba(168,85,247,0.15)]';
-  return 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30';
+  if (khaDung === 0) return 'admin-showtime-seat--locked';
+  if (status === 1) return 'admin-showtime-seat--sold';
+  if (status === 2) return 'admin-showtime-seat--held';
+  if (isVIP) return 'admin-showtime-seat--vip';
+  return 'admin-showtime-seat--empty';
 };
 
 const SeatsGrid = ({ seats }) => {
@@ -45,9 +45,9 @@ const SeatsGrid = ({ seats }) => {
   rowKeys.forEach(r => rowsMap[r].sort((a, b) => a.col - b.col));
 
   return (
-    <div className="flex flex-col items-center py-6 bg-black/40 rounded-3xl border border-white/5 overflow-x-auto">
-      <div className="w-full max-w-xl h-1 bg-gradient-to-r from-transparent via-slate-600 to-transparent rounded-full mb-12 relative shrink-0">
-        <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-black uppercase tracking-[0.6em] text-slate-500">MÀN HÌNH</div>
+    <div className="admin-showtime-seat-map">
+      <div className="admin-showtime-screen">
+        <span>Màn hình</span>
       </div>
       <div className="space-y-2 px-6">
         {rowKeys.sort().map(rowName => (
@@ -60,7 +60,7 @@ const SeatsGrid = ({ seats }) => {
                   <div
                     key={seat.MaGheSuatChieu}
                     title={`Ghế: ${seat.label} | Loại: ${seat.TenLoaiGhe || 'Thường'} | ${seat.TrangThai === 0 ? 'Trống' : seat.TrangThai === 1 ? 'Đã đặt' : 'Đang giữ'}`}
-                    className={`w-8 h-8 rounded border text-[9px] font-black flex items-center justify-center transition-all ${getSeatColor(seat.TrangThai, seat.KhaDung, isVIP)}`}
+                    className={`admin-showtime-seat ${getSeatColor(seat.TrangThai, seat.KhaDung, isVIP)}`}
                   >
                     {seat.label}
                   </div>
@@ -71,16 +71,16 @@ const SeatsGrid = ({ seats }) => {
           </div>
         ))}
       </div>
-      <div className="mt-8 flex flex-wrap justify-center gap-6 text-[10px] uppercase font-black tracking-wider text-slate-400 border-t border-white/5 pt-6 w-full px-6">
+      <div className="admin-showtime-seat-legend">
         {[
-          { color: 'bg-emerald-500/20 border-emerald-500/30', label: 'Trống' },
-          { color: 'bg-purple-600/20 border-purple-500/30', label: 'Ghế VIP' },
-          { color: 'bg-amber-500 border-amber-400', label: 'Đang giữ' },
-          { color: 'bg-red-500 border-red-400', label: 'Đã bán' },
-          { color: 'bg-slate-800 border-slate-900', label: 'Bị khóa' },
+          { color: 'admin-showtime-seat--empty', label: 'Trống' },
+          { color: 'admin-showtime-seat--vip', label: 'Ghế VIP' },
+          { color: 'admin-showtime-seat--held', label: 'Đang giữ' },
+          { color: 'admin-showtime-seat--sold', label: 'Đã bán' },
+          { color: 'admin-showtime-seat--locked', label: 'Bị khóa' },
         ].map(({ color, label }) => (
           <div key={label} className="flex items-center gap-2">
-            <div className={`w-4 h-4 rounded ${color} border`} />
+            <div className={`admin-showtime-seat-swatch ${color}`} />
             <span>{label}</span>
           </div>
         ))}
