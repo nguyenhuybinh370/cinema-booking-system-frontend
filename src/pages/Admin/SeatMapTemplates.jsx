@@ -11,6 +11,7 @@ import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
 import { useClientPagination } from '../../hooks/useClientPagination';
 import AdminToolbar from '../../components/Admin/Common/AdminToolbar';
 import AdminPagination from '../../components/Admin/Common/AdminPagination';
+import AdminButton from '../../components/Admin/Common/AdminButton';
 
 const SeatMapTemplates = () => {
   const [templates, setTemplates] = useState([]);
@@ -147,22 +148,25 @@ const SeatMapTemplates = () => {
         <div className="flex justify-end gap-2">
           <button 
             onClick={() => setPreviewTemplate(t)}
-            className="p-2 bg-white/5 hover:bg-white/10 border border-white/5 text-blue-500 hover:text-blue-400 rounded-xl transition-all cursor-pointer"
+            className="admin-table-action"
             title="Xem trước"
+            aria-label={`Xem trước ${t.TenSoDo}`}
           >
             <Eye size={16} />
           </button>
           <button 
             onClick={() => handleEdit(t)}
-            className="p-2 bg-white/5 hover:bg-white/10 border border-white/5 text-emerald-500 hover:text-emerald-400 rounded-xl transition-all cursor-pointer"
+            className="admin-table-action"
             title="Sửa"
+            aria-label={`Sửa ${t.TenSoDo}`}
           >
             <Edit2 size={16} />
           </button>
           <button 
             onClick={() => handleDelete(t.MaSoDoGhe)}
-            className="p-2 bg-white/5 hover:bg-white/10 border border-white/5 text-red-500 hover:text-red-400 rounded-xl transition-all cursor-pointer"
+            className="admin-table-action admin-table-action--danger"
             title="Xóa"
+            aria-label={`Xóa ${t.TenSoDo}`}
           >
             <Trash2 size={16} />
           </button>
@@ -213,13 +217,7 @@ const SeatMapTemplates = () => {
         title="Sơ đồ ghế mẫu"
         subtitle="Quản lý các khuôn mẫu sơ đồ ghế (Template) dùng khi tạo phòng chiếu."
         action={
-          <button 
-            onClick={handleOpenAddModal}
-            className="w-full md:w-auto bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2 cursor-pointer text-sm"
-          >
-            <Plus size={18} />
-            Tạo mẫu mới
-          </button>
+          <AdminButton icon={Plus} onClick={handleOpenAddModal} className="w-full justify-center md:w-auto">Tạo mẫu mới</AdminButton>
         }
       />
 
@@ -252,7 +250,7 @@ const SeatMapTemplates = () => {
         </div>
       ) : (
         <>
-          <AdminTable columns={columns} data={paginatedItems} rowKey="MaSoDoGhe" />
+          <AdminTable columns={columns} data={paginatedItems} rowKey="MaSoDoGhe" showDetailAction={false} />
           <AdminPagination
             page={page}
             pageSize={pageSize}
@@ -351,20 +349,18 @@ const SeatMapTemplates = () => {
         title={`Xem trước: ${previewTemplate?.MaSoDoGhe}`}
       >
         <div className="flex flex-col items-center p-8">
-          <div className="w-full max-w-md h-1 bg-slate-700 rounded-full mb-12 relative">
-            <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-black text-slate-500 uppercase tracking-[0.8em]">Screen</span>
+          <div className="admin-template-screen">
+            <span>Màn hình</span>
           </div>
           
           <div 
-            className="inline-grid gap-1.5 p-4 bg-black/40 rounded-2xl border border-white/5 overflow-auto max-w-full custom-scrollbar"
+            className="admin-template-seat-grid custom-scrollbar"
             style={{ gridTemplateColumns: `repeat(${previewTemplate?.TongCot}, minmax(0, 1fr))` }}
           >
             {previewMatrix.flat().map((cell, i) => (
               <div 
                 key={i}
-                className={`w-6 h-6 rounded-sm border flex items-center justify-center text-[8px] font-bold ${
-                  cell.isAisle ? 'bg-transparent border-transparent text-slate-800' : 'bg-slate-700 border-slate-600 text-slate-400'
-                }`}
+                className={cell.isAisle ? 'admin-template-seat admin-template-seat--aisle' : 'admin-template-seat'}
               >
                 {!cell.isAisle && cell.id}
               </div>

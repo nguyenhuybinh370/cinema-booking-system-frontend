@@ -70,13 +70,13 @@ const ShowtimeTable = ({ showtimes, onEdit, onDelete, onViewSeatMap }) => (
             </td>
             <td className="px-6 py-4 text-right">
               <div className="flex justify-end gap-1.5">
-                <button onClick={() => onViewSeatMap(st)} className="p-2 hover:bg-white/5 border border-transparent hover:border-white/5 text-slate-400 hover:text-white rounded-xl transition-all cursor-pointer" title="Xem sơ đồ ghế">
+                <button onClick={() => onViewSeatMap(st)} className="admin-table-action" title="Xem sơ đồ ghế" aria-label={`Xem sơ đồ ghế ${st.TenPhim}`}>
                   <LayoutGrid size={16} />
                 </button>
-                <button onClick={() => onEdit(st)} className="p-2 hover:bg-white/5 border border-transparent hover:border-white/5 text-blue-500 hover:text-blue-400 rounded-xl transition-all cursor-pointer" title="Sửa">
+                <button onClick={() => onEdit(st)} className="admin-table-action" title="Sửa" aria-label={`Sửa suất chiếu ${st.TenPhim}`}>
                   <Edit2 size={16} />
                 </button>
-                <button onClick={() => onDelete(st)} className="p-2 hover:bg-white/5 border border-transparent hover:border-white/5 text-red-500 hover:text-red-400 rounded-xl transition-all cursor-pointer" title="Xóa">
+                <button onClick={() => onDelete(st)} className="admin-table-action admin-table-action--danger" title="Xóa" aria-label={`Xóa suất chiếu ${st.TenPhim}`}>
                   <Trash2 size={16} />
                 </button>
               </div>

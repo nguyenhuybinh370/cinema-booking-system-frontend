@@ -5,6 +5,7 @@ import adminService from '../../services/adminService';
 import { Lock, Unlock, Save } from 'lucide-react';
 import { showSuccess, showError } from '../../utils/toastHelper';
 import AdminPageHeader from '../../components/Admin/Common/AdminPageHeader';
+import AdminButton from '../../components/Admin/Common/AdminButton';
 
 const SeatMaps = () => {
   const { roomId } = useParams();
@@ -136,16 +137,16 @@ const SeatMaps = () => {
   };
 
   const getSeatColor = (typeId, khaDung) => {
-    if (khaDung === 0) return 'bg-slate-800 border-slate-700 text-slate-600 shadow-inner';
+    if (khaDung === 0) return 'admin-seat--locked';
     const type = seatTypes.find(t => t.MaLoaiGhe === typeId);
     const typeName = type?.TenLoaiGhe || '';
     if (typeName.includes('VIP')) {
-      return 'bg-amber-500 border-amber-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.3)]';
+      return 'admin-seat--vip';
     }
     if (typeName.includes('Sweetbox')) {
-      return 'bg-rose-500 border-rose-400 text-white shadow-[0_0_15px_rgba(244,63,94,0.3)]';
+      return 'admin-seat--sweetbox';
     }
-    return 'bg-slate-700 border-slate-600 text-slate-300';
+    return 'admin-seat--standard';
   };
 
   if (loading) return (
@@ -169,13 +170,7 @@ const SeatMaps = () => {
         subtitle={`Sơ đồ gốc: ${template.MaSoDoGhe} (${template.TongHang}x${template.TongCot})`}
         backPath="/admin/rooms"
         action={
-          <button 
-            onClick={handleSave}
-            className="w-full md:w-auto bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-xs"
-          >
-            <Save size={18} />
-            Lưu cấu hình
-          </button>
+          <AdminButton icon={Save} onClick={handleSave} className="w-full justify-center md:w-auto">Lưu cấu hình</AdminButton>
         }
       />
 
@@ -239,20 +234,16 @@ const SeatMaps = () => {
 
         {/* Matrix Canvas */}
         <div className="lg:col-span-9">
-          <div className="bg-white/[0.02] border border-white/10 rounded-[2.5rem] p-16 flex flex-col items-center shadow-2xl relative overflow-hidden">
-            {/* Ambient background glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-40 bg-red-500/5 blur-[100px]"></div>
-
+          <div className="admin-seat-map-canvas">
             {/* Screen */}
-            <div className="w-full max-w-2xl h-1 bg-gradient-to-r from-transparent via-slate-700 to-transparent rounded-full mb-24 relative">
+            <div className="admin-cinema-screen">
               <div className="absolute -top-10 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                <span className="text-[10px] font-black uppercase tracking-[0.8em] text-slate-600">Screen</span>
-                <div className="w-40 h-px bg-white/5 mt-2"></div>
+                <span>Màn hình</span>
               </div>
             </div>
 
             <div 
-              className="inline-grid gap-2 p-8 bg-black/40 rounded-[2rem] border border-white/5 overflow-auto max-w-full custom-scrollbar" 
+              className="admin-seat-grid custom-scrollbar"
               style={{ gridTemplateColumns: `repeat(${template.TongCot}, minmax(0, 1fr))` }}
             >
               {matrix.flat().map((seat) => {
@@ -265,11 +256,9 @@ const SeatMaps = () => {
                   <button
                     key={seat.MaChiTietSoDo}
                     onClick={(e) => handleSeatClick(seat.MaChiTietSoDo, e)}
-                    className={`
-                      w-9 h-9 rounded-md border text-[9px] font-black transition-all cursor-pointer
-                      flex items-center justify-center relative group/seat
+                    className={`admin-seat group/seat
                       ${getSeatColor(seat.MaLoaiGhe, seat.KhaDung)}
-                      ${selectedSeats.includes(seat.MaChiTietSoDo) ? 'ring-2 ring-red-500 ring-offset-4 ring-offset-[#0b0f19] scale-110 z-10 shadow-2xl' : 'hover:scale-105'}
+                      ${selectedSeats.includes(seat.MaChiTietSoDo) ? 'admin-seat--selected' : ''}
                     `}
                   >
                     {seat.KhaDung === 0 ? <Lock size={12} className="opacity-50" /> : `${seat.Hang}${seat.Cot}`}
@@ -284,22 +273,22 @@ const SeatMaps = () => {
             </div>
 
             {/* Legend */}
-            <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="admin-seat-legend">
               <div className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-md bg-slate-700 border border-slate-600"></div>
+                <div className="admin-seat-swatch admin-seat--standard"></div>
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Thường</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-md bg-amber-500 border border-amber-400"></div>
+                <div className="admin-seat-swatch admin-seat--vip"></div>
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">VIP</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-md bg-rose-500 border border-rose-400"></div>
+                <div className="admin-seat-swatch admin-seat--sweetbox"></div>
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Sweetbox</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-md bg-slate-800 border border-slate-700 flex items-center justify-center">
-                  <Lock size={10} className="text-slate-600" />
+                <div className="admin-seat-swatch admin-seat--locked flex items-center justify-center">
+                  <Lock size={10} />
                 </div>
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Đã Khóa</span>
               </div>

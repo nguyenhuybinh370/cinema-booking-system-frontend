@@ -13,6 +13,7 @@ import { showSuccess, showError, showWarning } from '../../utils/toastHelper';
 import { useClientPagination } from '../../hooks/useClientPagination';
 import AdminToolbar from '../../components/Admin/Common/AdminToolbar';
 import AdminPagination from '../../components/Admin/Common/AdminPagination';
+import AdminButton from '../../components/Admin/Common/AdminButton';
 
 const today = new Date().toISOString().substring(0, 10);
 
@@ -219,12 +220,7 @@ const Showtimes = () => {
                 </button>
               ))}
             </div>
-            <button 
-              onClick={openAddModal}
-              className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 active:scale-95 flex items-center gap-2 cursor-pointer text-sm"
-            >
-              <Plus size={18} /> Thêm suất chiếu
-            </button>
+            <AdminButton icon={Plus} onClick={openAddModal}>Thêm suất chiếu</AdminButton>
           </div>
         }
       />

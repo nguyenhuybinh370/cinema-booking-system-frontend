@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Eye } from 'lucide-react';
 import AdminDetailDialog from './AdminDetailDialog';
 
-const AdminTable = ({ columns, data = [], rowKey, onRowClick }) => {
+const AdminTable = ({ columns, data = [], rowKey, onRowClick, showDetailAction = true }) => {
   const [detailRow, setDetailRow] = useState(null);
   const getDetailTitle = (row) => row?.TenPhim || row?.TenPhong || row?.HoTen || row?.title || row?.name || 'Chi tiết dữ liệu';
   const detailTitle = getDetailTitle(detailRow);
@@ -40,7 +40,7 @@ const AdminTable = ({ columns, data = [], rowKey, onRowClick }) => {
               >
                 {columns.map((col, idx) => (
                   <td key={idx} className={`px-5 py-4 align-middle text-[var(--admin-text)] ${idx === columns.length - 1 ? 'admin-table-sticky-action' : ''} ${col.className || ''}`}>
-                    {idx === columns.length - 1 ? <div className="admin-table-actions"><button type="button" className="admin-table-action" aria-label={`Xem chi tiết ${getDetailTitle(row)}`} onClick={(event) => { event.stopPropagation(); setDetailRow(row); }}><Eye size={16} /></button>{col.render ? col.render(row) : <span className="text-sm">{row[col.accessor]}</span>}</div> : col.render ? col.render(row) : <span className="text-sm">{row[col.accessor]}</span>}
+                    {idx === columns.length - 1 ? <div className="admin-table-actions">{showDetailAction && <button type="button" className="admin-table-action" aria-label={`Xem chi tiết ${getDetailTitle(row)}`} onClick={(event) => { event.stopPropagation(); setDetailRow(row); }}><Eye size={16} /></button>}{col.render ? col.render(row) : <span className="text-sm">{row[col.accessor]}</span>}</div> : col.render ? col.render(row) : <span className="text-sm">{row[col.accessor]}</span>}
                   </td>
                 ))}
               </tr>

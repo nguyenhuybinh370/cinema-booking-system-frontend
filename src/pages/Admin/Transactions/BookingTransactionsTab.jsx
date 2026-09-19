@@ -13,10 +13,6 @@ export default function BookingTransactionsTab() {
   const { loading, loadError, loadTransactions, handleOpenRefund, searchQuery, setSearchQuery, filters, setFilterVal, page, setPage, pageSize, setPageSize, totalItems, paginatedItems } = model;
   const columns = [
     {
-      header: 'Tham Chiếu Đối Tác',
-      render: (t) => <span className="text-slate-400 text-xs font-mono">{t.MaThamChieuDoiTac}</span>
-    },
-    {
       header: 'Khách hàng',
       render: (t) => <span className="font-bold text-slate-200 text-sm">{t.KhachHang}</span>
     },

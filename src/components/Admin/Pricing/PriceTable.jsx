@@ -3,6 +3,7 @@ import { Edit2, Eye, Trash2, Plus } from 'lucide-react';
 import { useClientPagination } from '../../../hooks/useClientPagination';
 import AdminPagination from '../Common/AdminPagination';
 import AdminDetailDialog from '../Common/AdminDetailDialog';
+import AdminButton from '../Common/AdminButton';
 
 const formatPrice = (price) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -56,11 +57,7 @@ const PriceTable = ({ title, data, typeKey, nameKey, onAdd, onEdit, onDelete }) 
             <option value={0}>Không KD</option>
           </select>
 
-          <button onClick={onAdd}
-            type="button"
-            className="bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/5 hover:border-white/10 cursor-pointer px-4 py-2.5 rounded-xl font-bold flex items-center gap-1.5 text-[10px] uppercase tracking-widest transition-all active:scale-95">
-            <Plus size={12} /> Thêm mới
-          </button>
+          <AdminButton icon={Plus} onClick={onAdd}>Thêm mới</AdminButton>
         </div>
       </div>
 
@@ -106,11 +103,11 @@ const PriceTable = ({ title, data, typeKey, nameKey, onAdd, onEdit, onDelete }) 
                     <td className="px-6 py-4 text-xs font-mono text-slate-500">{item.NgayCapNhat || <span className="text-slate-700 italic">Chưa có</span>}</td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-1.5">
-                        <button onClick={() => setDetailItem(item)} className="p-2 hover:bg-white/5 border border-transparent hover:border-white/5 rounded-xl text-slate-400 hover:text-white cursor-pointer transition-all" title="Xem chi tiết"><Eye size={14} /></button>
-                        <button onClick={() => onEdit(item)} className="p-2 hover:bg-white/5 border border-transparent hover:border-white/5 rounded-xl text-slate-400 hover:text-white cursor-pointer transition-all" title="Sửa">
+                        <button onClick={() => setDetailItem(item)} className="admin-table-action" title="Xem chi tiết" aria-label={`Xem chi tiết ${item[nameKey]}`}><Eye size={14} /></button>
+                        <button onClick={() => onEdit(item)} className="admin-table-action" title="Sửa" aria-label={`Sửa ${item[nameKey]}`}>
                           <Edit2 size={14} />
                         </button>
-                        <button onClick={() => onDelete(item[typeKey])} className="p-2 hover:bg-white/5 border border-transparent hover:border-white/5 rounded-xl text-red-400 hover:text-white cursor-pointer transition-all" title="Xóa">
+                        <button onClick={() => onDelete(item[typeKey])} className="admin-table-action admin-table-action--danger" title="Xóa" aria-label={`Xóa ${item[nameKey]}`}>
                           <Trash2 size={14} />
                         </button>
                       </div>

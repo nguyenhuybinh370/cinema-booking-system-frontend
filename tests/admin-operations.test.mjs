@@ -94,3 +94,21 @@ test('operational routes no longer mount mock editors or CMS', async () => {
   const stats = await readFile(new URL('../src/pages/Admin/Stats.jsx', import.meta.url), 'utf8');
   assert.doesNotMatch(stats, /adminContentData|showSuccess|handleExport/);
 });
+
+test('Admin visual cleanup keeps actions consistent, seats bright and partner reference hidden', async () => {
+  const [showtimes, templates, seatMap, transactions, styles] = await Promise.all([
+    readFile(new URL('../src/pages/Admin/Showtimes.jsx', import.meta.url), 'utf8'),
+    readFile(new URL('../src/pages/Admin/SeatMapTemplates.jsx', import.meta.url), 'utf8'),
+    readFile(new URL('../src/pages/Admin/SeatMaps.jsx', import.meta.url), 'utf8'),
+    readFile(new URL('../src/pages/Admin/Transactions/BookingTransactionsTab.jsx', import.meta.url), 'utf8'),
+    readFile(new URL('../src/styles/admin.css', import.meta.url), 'utf8'),
+  ]);
+  assert.match(showtimes, /<AdminButton icon=\{Plus\}/);
+  assert.match(templates, /<AdminButton icon=\{Plus\}/);
+  assert.match(templates, /showDetailAction=\{false\}/);
+  assert.match(seatMap, /admin-seat-map-canvas/);
+  assert.match(seatMap, /admin-seat--standard/);
+  assert.match(styles, /\.admin-seat--standard \{[^}]*background: #3b82f6/);
+  assert.match(styles, /\.admin-legacy-table th:last-child[^}]*background: var\(--admin-surface\)/);
+  assert.doesNotMatch(transactions, /Tham Chiếu Đối Tác|MaThamChieuDoiTac/);
+});
