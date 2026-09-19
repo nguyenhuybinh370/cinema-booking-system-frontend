@@ -81,7 +81,7 @@ const statsService = {
     });
 
     const roomOccupancyData = Object.entries(roomMap)
-      .filter(([_, d]) => d.capacity > 0)
+      .filter(([, d]) => d.capacity > 0)
       .map(([name, d]) => ({
         name,
         value: Math.round((d.tickets / d.capacity) * 100)
@@ -118,7 +118,7 @@ const statsService = {
     };
   },
 
-  exportRevenueReport: async (format, filters = {}) => {
+  exportRevenueReport: async (format) => {
     const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
     await delay(1200);
     return {

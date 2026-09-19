@@ -44,9 +44,9 @@ const seatService = {
   },
 
   saveSeatConfig: async (roomId, overrides) => {
-    const ghes = Object.entries(overrides)
-      .filter(([_, value]) => value.MaGhe) // Must have MaGhe (UUID)
-      .map(([_, value]) => ({
+    const ghes = Object.values(overrides)
+      .filter((value) => value.MaGhe) // Must have MaGhe (UUID)
+      .map((value) => ({
         maGhe: value.MaGhe,
         maLoaiGhe: value.MaLoaiGhe,
         khaDung: value.KhaDung === 1

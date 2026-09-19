@@ -8,7 +8,7 @@ let server;
 let RefundDetail;
 let DirectRefund;
 before(async () => {
-  server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: 'custom' });
+  server = await createServer({ server: { middlewareMode: true, hmr: false, ws: false }, appType: 'custom' });
   RefundDetail = (await server.ssrLoadModule('/src/pages/Admin/Transactions/RefundDetailModal.jsx')).default;
   DirectRefund = (await server.ssrLoadModule('/src/pages/Admin/Transactions/TransactionRefundModal.jsx')).default;
 });

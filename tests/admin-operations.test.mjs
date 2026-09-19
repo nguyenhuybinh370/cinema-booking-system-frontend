@@ -9,7 +9,7 @@ let server, dashboard, movies, client, MovieModal;
 const originalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
 before(async () => {
   Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: () => null } });
-  server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: 'custom' });
+  server = await createServer({ server: { middlewareMode: true, hmr: false, ws: false }, appType: 'custom' });
   dashboard = await server.ssrLoadModule('/src/services/admin/dashboardService.js');
   movies = (await server.ssrLoadModule('/src/services/admin/movieService.js')).default;
   client = (await server.ssrLoadModule('/src/api/axiosClient.js')).default;
