@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { showWarning } from '../../../utils/toastHelper';
 
@@ -32,6 +32,7 @@ const getEmbedUrl = (videoUrl) => {
 const MovieDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // ── Data + review logic ───────────────────────────────────────────────────
   const {
@@ -63,13 +64,13 @@ const MovieDetails = () => {
     setSelectedSlotIndex,
     handleSelectDate,
     hasShowtimes,
-  } = useMovieShowtimes(showtimes);
+  } = useMovieShowtimes(showtimes, location.state?.preferredShowtimeId);
 
   const currentSlot = availableSlots[selectedSlotIndex];
 
   // ── Booking flow state ────────────────────────────────────────────────────
   // 'detail' | 'seat' | 'payment' | 'ticket'
-  const [bookingStage, setBookingStage] = useState('detail');
+  const [bookingStage, setBookingStage] = useState(() => location.state?.startBooking ? 'seat' : 'detail');
   const [confirmedSeats, setConfirmedSeats] = useState([]);
   const [confirmedTotalPrice, setConfirmedTotalPrice] = useState(0);
   const [shouldReloadSeatMap, setShouldReloadSeatMap] = useState(0);
@@ -82,7 +83,6 @@ const MovieDetails = () => {
     setConfirmedTotalPrice(0);
     setBookingStage('seat');
     setShouldReloadSeatMap(Date.now());
-    await holdTimer.releaseHold();
   };
 
   const holdTimer = useSeatHoldTimer(handleHoldExpiry);
@@ -115,7 +115,7 @@ const MovieDetails = () => {
   };
 
   const handleBackFromSeats = () => {
-    if (holdTimer.hasActiveHoldRef.current && holdTimer.heldSeatIds.length > 0) {
+    if (holdTimer.heldSeatIds.length > 0) {
       holdTimer.releaseHold();
       setConfirmedSeats([]);
       setConfirmedTotalPrice(0);
@@ -124,16 +124,10 @@ const MovieDetails = () => {
   };
 
   const handleBackFromPayment = async () => {
-    const maSuatChieu = holdTimer.maSuatChieuRef.current;
-    const seatIds = holdTimer.heldSeatIds;
     setConfirmedTotalPrice(0);
     setBookingStage('seat');
     setShouldReloadSeatMap(Date.now());
-    holdTimer.hasActiveHoldRef.current = false;
-    holdTimer.releaseHold();
-    if (seatIds.length > 0 && maSuatChieu) {
-      // releaseHold already calls cancelHeldSeats, no need to repeat
-    }
+    await holdTimer.releaseHold();
   };
 
   const handleConfirmBooking = (seats, totalPrice, heldIds, maSuatChieu) => {
@@ -198,7 +192,7 @@ const MovieDetails = () => {
         timeLeft={holdTimer.timeLeft}
         shouldReloadSeatMap={shouldReloadSeatMap}
         bookingResult={bookingResult}
-        maSuatChieu={holdTimer.maSuatChieuRef.current}
+        maSuatChieu={holdTimer.activeShowtimeId}
         onBackFromSeats={handleBackFromSeats}
         onBackFromPayment={handleBackFromPayment}
         onConfirmBooking={handleConfirmBooking}

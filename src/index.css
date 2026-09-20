@@ -13,6 +13,16 @@
     /* Cinematic Accent: Luxury Gold / Amber */
     --btn-neon: #FFB000;       
     --btn-neon-hover: #E59A00; 
+
+    /* Client design system — Cinematic Luxury */
+    --client-bg: #080b12;
+    --client-surface: #111722;
+    --client-surface-soft: #182131;
+    --client-text: #f8fafc;
+    --client-muted: #94a3b8;
+    --client-primary: #e11d2e;
+    --client-primary-hover: #be123c;
+    --client-secondary: #f5b942;
   }
 
   body {
@@ -29,6 +39,80 @@
 }
 
 @layer components {
+  .client-nav-link {
+    @apply rounded-lg px-3 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/6 hover:text-white;
+  }
+
+  .client-nav-link.is-active {
+    color: var(--client-secondary);
+    background: color-mix(in srgb, var(--client-secondary) 10%, transparent);
+  }
+
+  .client-search {
+    @apply w-48 rounded-full border border-white/10 bg-white/6 py-2.5 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:w-64 focus:border-white/25 focus:bg-white/10;
+  }
+
+  .client-search-results {
+    @apply absolute right-0 top-full mt-3 max-h-96 w-80 overflow-y-auto rounded-2xl border border-white/10 bg-[#111722]/98 p-2 shadow-2xl;
+  }
+
+  .client-search-result {
+    @apply flex w-full items-center gap-3 rounded-xl p-2 text-left transition hover:bg-white/6;
+  }
+
+  .client-primary-button {
+    @apply inline-flex min-h-10 items-center gap-2 rounded-lg bg-[#e11d2e] px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-[#be123c] active:scale-[0.98];
+  }
+
+  .client-secondary-button {
+    @apply inline-flex min-h-10 items-center gap-2 rounded-lg border border-white/15 bg-white/8 px-5 py-2.5 text-sm font-bold text-white transition hover:border-white/30 hover:bg-white/12 active:scale-[0.98];
+  }
+
+  .client-icon-button {
+    @apply inline-flex size-10 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/6 text-slate-200 transition hover:border-white/20 hover:bg-white/10 hover:text-white;
+  }
+
+  .client-section {
+    @apply mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8;
+  }
+
+  .client-eyebrow {
+    color: var(--client-secondary);
+    @apply mb-2 text-xs font-bold uppercase tracking-[0.22em];
+  }
+
+  .client-section-title {
+    @apply text-2xl font-extrabold tracking-tight text-white sm:text-3xl;
+  }
+
+  .client-empty-state {
+    @apply rounded-2xl border border-dashed border-white/10 px-6 py-12 text-center text-sm text-slate-400;
+  }
+
+  .client-page-state {
+    @apply flex min-h-screen flex-col items-center justify-center gap-5 px-4 pt-20 text-center text-slate-300;
+  }
+
+  .client-loader {
+    @apply size-11 animate-spin rounded-full border-2 border-white/10 border-t-[#e11d2e];
+  }
+
+  .showtime-chip {
+    @apply inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-bold text-white transition hover:border-[#e11d2e] hover:bg-[#e11d2e]/10;
+  }
+
+  .showtime-chip span {
+    @apply text-xs font-medium text-slate-400;
+  }
+
+  .client-footer-title {
+    @apply mb-4 text-sm font-bold uppercase tracking-wider text-white;
+  }
+
+  .client-footer-link {
+    @apply transition hover:text-white;
+  }
+
   /* Premium gold glowing button with smooth gradients */
   .btn-bright {
     @apply px-7 py-3 bg-gradient-to-r from-[var(--btn-neon)] to-[#E59A00] hover:from-[var(--btn-neon-hover)] hover:to-[#CC8800]

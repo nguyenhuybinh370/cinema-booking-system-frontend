@@ -1,15 +1,12 @@
-import { Route, Routes, Navigate, useLocation } from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import { Toaster } from 'react-hot-toast';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
+import ClientLayout from './layouts/ClientLayout';
 
 // Client Pages
 import Home from './pages/Client/Home';
-import MovieDetail from './pages/Client/MovieDetail'; // legacy single detail
-import MovieDetails from './pages/Client/MovieDetails'; // plural (refactored)
-import SeatSelection from './pages/Client/SeatSelection';
-import Checkout from './pages/Client/Checkout';
+import MovieDetails from './pages/Client/MovieDetails';
+import BookingEntry from './pages/Client/BookingEntry';
 import MoviesPage from './pages/Client/MoviesPage';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
@@ -42,10 +39,6 @@ import Schedule from './pages/Staff/Schedule/index';
 import TransactionHistory from './pages/Staff/TransactionHistory/index';
 
 function App() {
-  const isAdminRoute = useLocation().pathname.startsWith("/admin");
-  const isStaffRoute = useLocation().pathname.startsWith("/staff");
-  const isErrorRoute = ['/403', '/404'].includes(useLocation().pathname);
-
   return (
     <>
       <Toaster
@@ -72,29 +65,21 @@ function App() {
           },
         }}
       />
-      {!isAdminRoute && !isStaffRoute && !isErrorRoute && <Navbar />}
-      
       <Routes>
-        {/* === PUBLIC CLIENT ROUTES === */}
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        
-        {/* Map movie detail routes: old singular and new plural */}
-        <Route path="/movie/:id" element={<MovieDetails />} />
-        <Route path="/movie-old/:id" element={<MovieDetail />} />
-        
-        <Route path="/booking/:showtimeId" element={<SeatSelection />} />
-        <Route path="/checkout" element={<Checkout />} />
-        
-        <Route path="/movies/now-showing" element={<MoviesPage key="now" initialType="now" />} />
-        <Route path="/movies/coming-soon" element={<MoviesPage key="soon" initialType="soon" />} />
+        <Route element={<ClientLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/movie/:id" element={<MovieDetails />} />
+          <Route path="/booking/:showtimeId" element={<BookingEntry />} />
+          <Route path="/movies/now-showing" element={<MoviesPage key="now" initialType="now" />} />
+          <Route path="/movies/coming-soon" element={<MoviesPage key="soon" initialType="soon" />} />
 
-        {/* === CUSTOMER PROTECTED ROUTES === */}
-        <Route element={<ProtectedRoute allowedRoles={["CUSTOMER"]} />}>
-          <Route path="/profile" element={<ClientProfile />} />
-          <Route path="/payment/vnpay-return" element={<VNPayReturn />} />
+          <Route element={<ProtectedRoute allowedRoles={["CUSTOMER"]} />}>
+            <Route path="/profile" element={<ClientProfile />} />
+            <Route path="/payment/vnpay-return" element={<VNPayReturn />} />
+          </Route>
         </Route>
 
         {/* === STAFF ROUTES (Role: STAFF) === */}
@@ -133,7 +118,6 @@ function App() {
         <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>
 
-      {!isAdminRoute && !isStaffRoute && !isErrorRoute && <Footer />}
     </>
   );
 }

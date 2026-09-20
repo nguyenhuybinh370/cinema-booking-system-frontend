@@ -76,6 +76,10 @@ const mapShowtime = (sc) => {
     showId: sc.MaSuatChieu,
     MaSuatChieu: sc.MaSuatChieu,
     MaPhong: sc.MaPhong,
+    MaPhim: sc.MaPhim || sc.Phim?.MaPhim,
+    TenPhim: sc.Phim?.TenPhim || 'Phim chưa cập nhật',
+    HinhAnh: sc.Phim?.HinhAnh || '',
+    ThoiLuong: thoiLuong,
     TenPhong: sc.PhongChieu?.TenPhong || 'N/A',
     LoaiPhong: sc.PhongChieu?.LoaiPhong?.TenLoaiPhong || '',
     startTime: sc.GioChieu || '',
@@ -97,18 +101,12 @@ const clientService = {
    * Lấy danh sách phim (public, chỉ phim khả dụng).
    * Backend mặc định trả về phim đang chiếu nếu không có includeInactive.
    */
-  getMovies: async ({ limit = 30, page = 1 } = {}) => {
+  getMovies: async ({ limit = 30, page = 1, ...filters } = {}) => {
     const res = await axiosPublic.get(`/phim`, {
-      params: { limit, page },
+      params: { limit, page, ...filters },
     });
     // Backend trả về dạng paginated: { data, pagination }
-    const items = Array.isArray(res)
-      ? res
-      : res?.data
-        ? res.data
-        : Array.isArray(res)
-          ? res
-          : [];
+    const items = Array.isArray(res) ? res : (res?.data || []);
     return items.map(mapMovie);
   },
 
@@ -135,6 +133,12 @@ const clientService = {
     return items
       .filter((sc) => sc.KhaDung)
       .map(mapShowtime);
+  },
+
+  /** Lấy một suất chiếu để khởi tạo luồng đặt vé trực tiếp. */
+  getShowtimeById: async (maSuatChieu) => {
+    const showtime = await axiosPublic.get(`/suat-chieu/${maSuatChieu}`);
+    return mapShowtime(showtime);
   },
 
   /**

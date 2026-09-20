@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { cancelHeldSeats } from '../../api/bookingApi';
 
 /**
@@ -14,6 +14,7 @@ import { cancelHeldSeats } from '../../api/bookingApi';
 const useSeatHoldTimer = (onExpire) => {
   const [heldSeatIds, setHeldSeatIds] = useState([]);
   const [timeLeft, setTimeLeft] = useState(600); // seconds
+  const [activeShowtimeId, setActiveShowtimeId] = useState('');
 
   // Stable refs so cleanup closures always have fresh values
   const hasActiveHoldRef = useRef(false);
@@ -44,6 +45,23 @@ const useSeatHoldTimer = (onExpire) => {
     };
   }, []);
 
+  /** Cancel hold explicitly (back button, timer expiry). */
+  const releaseHold = useCallback(async () => {
+    const seatIds = heldSeatIdsRef.current;
+    const maSuatChieu = maSuatChieuRef.current;
+    hasActiveHoldRef.current = false;
+    setHeldSeatIds([]);
+    setActiveShowtimeId('');
+    setTimeLeft(600);
+    if (seatIds.length > 0 && maSuatChieu) {
+      try {
+        await cancelHeldSeats(maSuatChieu, seatIds);
+      } catch (err) {
+        console.error('Failed to release held seats:', err);
+      }
+    }
+  }, []);
+
   // ── 10-minute countdown ───────────────────────────────────────────────────
   useEffect(() => {
     let timerId = null;
@@ -52,17 +70,15 @@ const useSeatHoldTimer = (onExpire) => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
             clearInterval(timerId);
-            onExpireRef.current?.();
+            releaseHold().finally(() => onExpireRef.current?.());
             return 600;
           }
           return prev - 1;
         });
       }, 1000);
-    } else {
-      setTimeLeft(600);
     }
     return () => { if (timerId) clearInterval(timerId); };
-  }, [heldSeatIds]);
+  }, [heldSeatIds, releaseHold]);
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
@@ -70,6 +86,7 @@ const useSeatHoldTimer = (onExpire) => {
   const activateHold = (seatIds, maSuatChieu) => {
     heldSeatIdsRef.current = seatIds;
     maSuatChieuRef.current = maSuatChieu;
+    setActiveShowtimeId(maSuatChieu);
     hasActiveHoldRef.current = true;
     isPaymentSuccessRef.current = false;
     setHeldSeatIds(seatIds);
@@ -81,29 +98,13 @@ const useSeatHoldTimer = (onExpire) => {
     isPaymentSuccessRef.current = true;
     hasActiveHoldRef.current = false;
     setHeldSeatIds([]);
-  };
-
-  /** Cancel hold explicitly (back button, timer expiry) */
-  const releaseHold = async () => {
-    const seatIds = heldSeatIdsRef.current;
-    const maSuatChieu = maSuatChieuRef.current;
-    hasActiveHoldRef.current = false;
-    setHeldSeatIds([]);
-    if (seatIds.length > 0 && maSuatChieu) {
-      try {
-        await cancelHeldSeats(maSuatChieu, seatIds);
-      } catch (err) {
-        console.error('Failed to release held seats:', err);
-      }
-    }
+    setActiveShowtimeId('');
   };
 
   return {
     heldSeatIds,
     timeLeft,
-    hasActiveHoldRef,
-    maSuatChieuRef,
-    isPaymentSuccessRef,
+    activeShowtimeId,
     activateHold,
     markPaymentSuccess,
     releaseHold,

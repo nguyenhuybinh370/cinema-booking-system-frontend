@@ -1,19 +1,20 @@
 import axiosClient from './axiosClient';
+import axiosPublic from './axiosPublic';
 
 export const getMovies = (params) => {
-  return axiosClient.get('/phim', { params });
+  return axiosPublic.get('/phim', { params });
 };
 
 export const getMovieDetail = (maPhim) => {
-  return axiosClient.get(`/phim/${maPhim}`);
+  return axiosPublic.get(`/phim/${maPhim}`);
 };
 
 export const getMovieReviews = (maPhim, params) => {
-  return axiosClient.get(`/phim/${maPhim}/danh-gia`, { params });
+  return axiosPublic.get(`/phim/${maPhim}/danh-gia`, { params });
 };
 
 export const getMovieShowtimes = (maPhim) => {
-  return axiosClient.get(`/phim/${maPhim}/suat-chieu`);
+  return axiosPublic.get(`/phim/${maPhim}/suat-chieu`);
 };
 
 export const createReview = (payload) => {

@@ -1,71 +1,49 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 const DAYS_OF_WEEK = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+const toDateId = (value) => new Date(value).toISOString().slice(0, 10);
 
-/**
- * useMovieShowtimes
- *
- * Groups raw showtime array into date-keyed buckets and derives the
- * available date list + current slot list based on selected date.
- *
- * @param {Array}  showtimes – raw API showtimes array
- */
-const useMovieShowtimes = (showtimes) => {
-  const [selectedDateId, setSelectedDateId] = useState('');
-  const [selectedSlotIndex, setSelectedSlotIndex] = useState(0);
+/** Gom suất chiếu theo ngày và quản lý lựa chọn hiện tại. */
+const useMovieShowtimes = (showtimes = [], preferredShowtimeId) => {
+  const [selection, setSelection] = useState({ dateId: '', slotIndex: 0 });
 
-  // ── Group showtimes by date ───────────────────────────────────────────────
-  const groupedShowtimes = useMemo(() => {
-    const groups = {};
-    if (Array.isArray(showtimes)) {
-      showtimes.forEach((st) => {
-        const d = new Date(st.NgayChieu);
-        const dateStr = `${d.getFullYear()}-${(d.getMonth() + 1)
-          .toString()
-          .padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
-        if (!groups[dateStr]) groups[dateStr] = [];
-        groups[dateStr].push(st);
-      });
-    }
+  const groupedShowtimes = useMemo(() => showtimes.reduce((groups, showtime) => {
+    const dateId = toDateId(showtime.NgayChieu);
+    groups[dateId] ??= [];
+    groups[dateId].push(showtime);
     return groups;
-  }, [showtimes]);
+  }, {}), [showtimes]);
 
-  // ── Derive sorted date list ───────────────────────────────────────────────
-  const realDates = useMemo(() => {
-    return Object.keys(groupedShowtimes)
-      .sort()
-      .map((dateStr) => {
-        const dateObj = new Date(dateStr);
-        return {
-          id: dateStr,
-          dayName: DAYS_OF_WEEK[dateObj.getDay()],
-          dateNum: dateObj.getDate(),
-        };
-      });
-  }, [groupedShowtimes]);
+  const realDates = useMemo(() => Object.keys(groupedShowtimes).sort().map((dateId) => {
+    const date = new Date(dateId);
+    return { id: dateId, dayName: DAYS_OF_WEEK[date.getDay()], dateNum: date.getDate() };
+  }), [groupedShowtimes]);
 
-  // ── Sync selectedDateId when realDates loads ──────────────────────────────
-  useEffect(() => {
-    if (realDates.length > 0) {
-      if (!selectedDateId || !realDates.some((rd) => rd.id === selectedDateId)) {
-        setSelectedDateId(realDates[0].id);
-        setSelectedSlotIndex(0);
-      }
-    } else {
-      setSelectedDateId('');
-    }
-  }, [realDates, selectedDateId]);
+  const preferred = useMemo(() => {
+    const showtime = showtimes.find((item) => item.MaSuatChieu === preferredShowtimeId);
+    if (!showtime) return null;
+    const dateId = toDateId(showtime.NgayChieu);
+    const slotIndex = (groupedShowtimes[dateId] || []).findIndex((item) => item.MaSuatChieu === preferredShowtimeId);
+    return { dateId, slotIndex: Math.max(0, slotIndex) };
+  }, [groupedShowtimes, preferredShowtimeId, showtimes]);
 
-  // ── Available slots for selected date ────────────────────────────────────
-  const availableSlots = useMemo(() => {
-    const rawSlots = groupedShowtimes[selectedDateId] || [];
-    return rawSlots.map((st) => ({ ...st, time: st.GioChieu, showId: st.MaSuatChieu }));
-  }, [groupedShowtimes, selectedDateId]);
+  const selectedDateId = groupedShowtimes[selection.dateId]
+    ? selection.dateId
+    : (preferred?.dateId || realDates[0]?.id || '');
+  const availableSlots = useMemo(() => (groupedShowtimes[selectedDateId] || []).map((showtime) => ({
+    ...showtime,
+    time: showtime.GioChieu,
+    showId: showtime.MaSuatChieu,
+  })), [groupedShowtimes, selectedDateId]);
+  const selectedSlotIndex = selection.dateId
+    ? Math.min(selection.slotIndex, Math.max(0, availableSlots.length - 1))
+    : (preferred?.slotIndex || 0);
 
-  const handleSelectDate = (dateId) => {
-    setSelectedDateId(dateId);
-    setSelectedSlotIndex(0);
-  };
+  const handleSelectDate = (dateId) => setSelection({ dateId, slotIndex: 0 });
+  const setSelectedSlotIndex = (slotIndex) => setSelection((current) => ({
+    dateId: selectedDateId || current.dateId,
+    slotIndex,
+  }));
 
   return {
     realDates,
